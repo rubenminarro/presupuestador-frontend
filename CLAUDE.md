@@ -126,8 +126,8 @@ Base: `/api`. Todas las respuestas son JSON (el backend fuerza `Accept: applicat
 * Actualizaciones parciales con `PATCH`.
 * **Archivos (PDF/CSV):** `budgets/{id}/pdf`, `invoices/{id}/pdf`, `payments/{id}/receipt`,
   `vehicle-deliveries/{id}/pdf` y los reportes con `?format=csv|pdf` responden el archivo
-  (`Content-Disposition: attachment`). Pedirlos con `responseType: 'blob'`; si fallan, el error llega como JSON dentro
-  del blob y hay que parsearlo para leer el `error_code`.
+  (`Content-Disposition: attachment`, expuesto por CORS). Usar `downloadFile` de `src/services/api.ts`: pide un blob,
+  toma el nombre del header y, si falla, lee el `error_code` del JSON que viene dentro del blob.
 
 ### Autenticación
 

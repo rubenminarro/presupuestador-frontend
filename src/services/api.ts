@@ -141,8 +141,8 @@ export async function deleteData<T = null>(url: string): Promise<T> {
 }
 
 /**
- * Descarga un archivo (PDF/CSV). El backend no expone `Content-Disposition` por CORS, así que el nombre por defecto
- * lo da quien llama; si algún día se expone, se usa el del servidor.
+ * Descarga un archivo (PDF/CSV) con el nombre que manda el servidor en `Content-Disposition` (expuesto por CORS);
+ * `fallbackName` se usa si el header no llega.
  */
 export async function downloadFile(url: string, fallbackName: string, params?: ListParams): Promise<void> {
   const response = await api.get<Blob>(url, { params: cleanParams(params), responseType: 'blob' })

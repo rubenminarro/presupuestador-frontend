@@ -45,8 +45,8 @@ Rama `feature/f0-base` (2026-10-21). Lint y build en verde. Flujo verificado por
       responsive; páginas 404/403; plantilla Vite eliminada.
 - [x] Cliente Axios (`src/services/api.ts`): `ApiError` normalizado, Bearer desde `localStorage`, `401` con token →
       limpia la sesión y vuelve al login; helpers `getData`, `getPage`, `postData`, `putData`, `patchData`, `deleteData`.
-- [x] Descarga de archivos (`downloadFile`): blob, error JSON dentro del blob. El nombre lo pasa quien llama porque
-      el backend no expone `Content-Disposition` en CORS (`config/cors.php`, `exposed_headers: []`).
+- [x] Descarga de archivos (`downloadFile`): blob, error JSON dentro del blob, nombre desde `Content-Disposition`
+      (expuesto en CORS por la rama `fix/cors-content-disposition` del backend) con un nombre de respaldo.
 - [x] Tipos base: `ApiEnvelope`, `Paginated<T>`, `Pagination`, `ValidationErrors`, `ListParams`.
 - [x] TanStack Query: reintentos solo en red/5xx; errores de mutaciones → toast (salvo 422/401 o
       `meta.skipErrorToast`); `meta.successMessage` → toast de éxito. Query keys: `[módulo, ...]` (sesión: `['me']`).
