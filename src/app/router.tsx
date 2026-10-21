@@ -8,8 +8,13 @@ import { BrandsPage } from '@/features/brands/BrandsPage'
 import { ChecklistsPage } from '@/features/checklists/ChecklistsPage'
 import { ClientDetailPage } from '@/features/clients/ClientDetailPage'
 import { ClientsPage } from '@/features/clients/ClientsPage'
+import { InventoryPage } from '@/features/inventory/InventoryPage'
 import { MechanicsPage } from '@/features/mechanics/MechanicsPage'
+import { PartCategoriesPage } from '@/features/parts/PartCategoriesPage'
+import { PartDetailPage } from '@/features/parts/PartDetailPage'
+import { PartsPage } from '@/features/parts/PartsPage'
 import { ServicesPage } from '@/features/services/ServicesPage'
+import { SuppliersPage } from '@/features/suppliers/SuppliersPage'
 import { VehiclesPage } from '@/features/vehicles/VehiclesPage'
 import { ComingSoonPage } from '@/pages/ComingSoonPage'
 import { NotFoundPage } from '@/pages/ErrorPages'
@@ -29,6 +34,11 @@ const moduleRoutes: RouteObject[] = [
   guarded('checklists', 'checklists.index', <ChecklistsPage />),
   guarded('services', 'services.index', <ServicesPage />),
   guarded('mechanics', 'mechanics.index', <MechanicsPage />),
+  guarded('part-categories', 'part-categories.index', <PartCategoriesPage />),
+  guarded('suppliers', 'suppliers.index', <SuppliersPage />),
+  guarded('parts', 'parts.index', <PartsPage />),
+  guarded('parts/:id', 'parts.show', <PartDetailPage />),
+  guarded('inventory', 'inventory.index', <InventoryPage />),
 ]
 
 const builtPaths = new Set(moduleRoutes.map((route) => route.path))

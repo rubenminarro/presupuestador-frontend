@@ -96,10 +96,31 @@ Limitaciones del backend que condicionan la UI:
 
 ## F2 — Catálogo de repuestos e inventario
 
-- [ ] Categorías de repuestos (`part-categories`) y proveedores (`suppliers`).
-- [ ] Repuestos (`parts`): activar / desactivar / descontinuar, proveedores del repuesto, movimientos.
-- [ ] Stock (`inventory/stocks`) y movimientos (`inventory/movements`).
-- [ ] Entrada inicial, salidas y ajustes por conteo (`inventory/entries|exits|adjustments`).
+Rama `feature/f2-inventario` (2026-10-21). Lint y build en verde. Verificado por HTTP contra el backend local (con
+`fix/opcionales-inventario`): CORS, filtros de cada listado, altas, ediciones que vacían opcionales, bajas, los
+`error_code` de inventario (`INVENTORY_INITIAL_ALREADY_REGISTERED`, `INVENTORY_FRACTIONAL_QUANTITY_NOT_ALLOWED`,
+`INSUFFICIENT_STOCK`, `INVENTORY_NO_DIFFERENCE`) y los 403 del mecánico (sin `suppliers.index` ni operaciones de
+stock).
+
+- [x] Categorías de repuestos (`/part-categories`, filtro activa/inactiva, `is_active`) y proveedores
+      (`/suppliers`, filtro por estado; la edición pide el detalle por dirección y notas).
+- [x] Repuestos (`/parts`, `/parts/:id`): filtros por categoría, proveedor y estado; ficha con stock, proveedores
+      del repuesto (vincular, editar código/último costo/preferido, desvincular) y movimientos; activar / desactivar
+      / descontinuar (con confirmación, es definitivo).
+- [x] Stock y movimientos (`/inventory`, dos pestañas): stock con filtros bajo mínimo / con existencia; kardex con
+      filtros por tipo y fechas y detalle del movimiento (`inventory.show`).
+- [x] Stock inicial, salidas (devolución a proveedor / baja) y ajuste por conteo desde la fila del stock o la ficha
+      (`InventoryOperationModal`); paso 1 en unidades enteras (`unit|set|kit`).
+- [x] Revisión visual en el navegador (hecha por el usuario, 2026-10-21; usuario local `deposito@mail.com.py`
+      creado con tinker, no está en el seeder).
+
+Limitaciones del backend que condicionan la UI:
+
+- **Resueltas en `fix/opcionales-inventario` del backend (2026-10-21; mergear junto con esta rama):** las ediciones
+  de repuesto, proveedor y vínculo repuesto–proveedor aceptan `null` para vaciar los opcionales (el frontend manda
+  `null`); `last_cost` al editar valida `min:0` y máximo; `minimum_stock` en `null` → 422 (antes el alta daba 500):
+  el frontend lo omite si está vacío (alta: 0; edición: sin cambios).
+- Los movimientos no aceptan `search`: solo filtros (`type`, fechas, `part_id`, `supplier_id`, `created_by`).
 
 ## F3 — Recepción y diagnóstico
 
