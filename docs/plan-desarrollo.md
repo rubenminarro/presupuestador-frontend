@@ -87,12 +87,12 @@ Limitaciones del backend que condicionan la UI:
   las dos juntas):** filtro `brand_id` en `vehicle-models` (el select ya no carga los 250 modelos); los opcionales
   se vacían al editar (el frontend manda `null`); bajas de marca/modelo con vehículos → 409
   `BRAND_HAS_VEHICLES` / `VEHICLE_MODEL_HAS_VEHICLES` (toast con el mensaje).
-- `ClientResource` (listado) no trae `document_number`: el listado de clientes no muestra RUC/CI (la búsqueda sí lo
-  encuentra; la ficha lo muestra).
+- **Resueltas en `fix/decisiones-datos-maestros` del backend (2026-10-21):** el listado de clientes trae
+  `document_number` (columna RUC/CI y buscador de clientes); marca con modelos → 409 `BRAND_HAS_MODELS`; costo y
+  comisión del mecánico en `null` → 422 (antes 500). El frontend los omite si están vacíos (alta: 0; edición: sin
+  cambios).
 - `MechanicResource` no trae `user_id`: el usuario del mecánico no se puede cambiar desde la edición.
 - `checklists.required` llega como `1/0`, no como booleano.
-- Costo y comisión del mecánico no se pueden vaciar (columnas `NOT NULL`); en el alta, `null` da 500 en el backend
-  (handoff 14, punto 10, pendiente de decisión): el frontend no los envía si están vacíos.
 
 ## F2 — Catálogo de repuestos e inventario
 

@@ -7,7 +7,7 @@ import { cx } from '@/lib/cx'
 export interface ClientOption {
   id: number
   name: string
-  /** Teléfono o email, para distinguir homónimos. */
+  /** Documento y teléfono, para distinguir homónimos. */
   detail?: string
 }
 
@@ -83,11 +83,13 @@ export function ClientPicker({ label = 'Cliente', value, onChange, error, requir
                     role="option"
                     aria-selected={false}
                     className="list-group-item list-group-item-action"
-                    onClick={() => onChange({ id: client.id, name: clientName(client), detail: `${client.phone} · ${client.email}` })}
+                    onClick={() =>
+                      onChange({ id: client.id, name: clientName(client), detail: `${client.document_number} · ${client.phone}` })
+                    }
                   >
                     <div>{clientName(client)}</div>
                     <div className="small text-secondary">
-                      {client.phone} · {client.email}
+                      {client.document_number} · {client.phone} · {client.email}
                     </div>
                   </button>
                 ))}

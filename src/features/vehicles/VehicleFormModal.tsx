@@ -33,7 +33,7 @@ export function VehicleFormModal({ vehicle, fixedClient, onClose }: VehicleFormM
   const [client, setClient] = useState<ClientOption | null>(
     fixedClient ??
       (vehicle?.client
-        ? { id: vehicle.client.id, name: vehicle.client.full_name, detail: `${vehicle.client.phone} · ${vehicle.client.email}` }
+        ? { id: vehicle.client.id, name: vehicle.client.full_name, detail: `${vehicle.client.document_number} · ${vehicle.client.phone}` }
         : null),
   )
   const [brandId, setBrandId] = useState(toInput(vehicle?.brand?.id))

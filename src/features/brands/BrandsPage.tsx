@@ -94,7 +94,7 @@ function BrandsTable() {
           title="Eliminar marca"
           message={
             <>
-              ¿Eliminar la marca <strong>{deleting.name}</strong>?
+              ¿Eliminar la marca <strong>{deleting.name}</strong>? Solo se puede si no tiene modelos ni vehículos registrados.
             </>
           }
           onDelete={() => brandsApi.remove(deleting.id)}
@@ -199,7 +199,7 @@ function VehicleModelsTable() {
           title="Eliminar modelo"
           message={
             <>
-              ¿Eliminar el modelo <strong>{deleting.name}</strong>?
+              ¿Eliminar el modelo <strong>{deleting.name}</strong>? Solo se puede si no tiene vehículos registrados.
             </>
           }
           onDelete={() => vehicleModelsApi.remove(deleting.id)}

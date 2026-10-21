@@ -181,7 +181,7 @@ function MechanicForm({ mechanic, onClose }: { mechanic: Mechanic | null; onClos
         specialty: nullIfEmpty(specialty),
         hire_date: hireDate || null,
         notes: nullIfEmpty(notes),
-        // Costo y comisión son NOT NULL en la base: vacíos no se envían (en el alta, null daría 500; ver handoff 14).
+        // Costo y comisión no admiten null (422): vacíos no se envían; en el alta quedan en 0, al editar no cambian.
         ...compact({ hour_cost: toNumber(hourCost), commission_percentage: toNumber(commission) }),
       }
       return mechanic

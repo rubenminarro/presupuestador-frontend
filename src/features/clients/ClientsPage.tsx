@@ -21,9 +21,9 @@ export function ClientsPage() {
     placeholderData: keepPreviousData,
   })
 
-  // El listado del backend no trae el documento; está en la ficha (y la búsqueda sí lo encuentra).
   const columns: Column<ClientSummary>[] = [
     { key: 'name', header: 'Cliente', render: (client) => <strong>{clientName(client)}</strong> },
+    { key: 'document', header: 'RUC / CI', className: 'text-nowrap', render: (client) => client.document_number },
     { key: 'phone', header: 'Teléfono', className: 'text-nowrap', render: (client) => client.phone },
     { key: 'email', header: 'Email', render: (client) => client.email },
     {
