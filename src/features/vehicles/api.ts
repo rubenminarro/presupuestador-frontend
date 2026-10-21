@@ -33,20 +33,21 @@ export interface Vehicle {
   updated_at: string
 }
 
+/** Los opcionales en null se guardan vacíos (alta y edición). Los obligatorios en null los rechaza el backend (422). */
 export interface VehicleInput {
-  client_id?: number
-  brand_id?: number
-  vehicle_model_id?: number
+  client_id: number | null
+  brand_id: number | null
+  vehicle_model_id: number | null
   no_plate: boolean
-  plate?: string
-  chassis?: string
-  year?: number
-  color?: VehicleColor
-  engine_number?: string
-  mileage?: number
-  fuel_type?: FuelType
-  transmission?: TransmissionType
-  notes?: string
+  plate: string | null
+  chassis: string | null
+  year: number | null
+  color: VehicleColor | null
+  engine_number: string | null
+  mileage: number | null
+  fuel_type: FuelType | null
+  transmission: TransmissionType | null
+  notes: string | null
 }
 
 // Etiquetas de los enums del backend (VehicleColor, FuelType, TransmissionType).

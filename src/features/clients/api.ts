@@ -22,13 +22,14 @@ export interface Client extends ClientSummary {
 }
 
 export interface ClientInput {
-  document_number?: string
-  first_name?: string
-  last_name?: string
-  email?: string
-  phone?: string
-  notifications_enabled?: boolean
-  notes?: string
+  document_number: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  notifications_enabled: boolean
+  /** null la vacía. */
+  notes: string | null
 }
 
 export function clientName(client: Pick<ClientSummary, 'first_name' | 'last_name'>): string {

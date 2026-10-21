@@ -18,15 +18,16 @@ export interface Mechanic {
   created_at: string
 }
 
+/** `specialty`, `hire_date` y `notes` en null se vacían; costo y comisión no admiten null (se omiten). */
 export interface MechanicInput {
   user_id?: number
   employee_code?: string
-  specialty?: string
-  hire_date?: string
+  specialty?: string | null
+  hire_date?: string | null
   hour_cost?: number
   commission_percentage?: number
   status?: MechanicStatus
-  notes?: string
+  notes?: string | null
 }
 
 export const MECHANIC_STATUS: StatusMap = {

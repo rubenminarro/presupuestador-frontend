@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { FormModal } from '@/components/ui/FormModal'
 import { SelectField, SwitchField, TextareaField, TextField } from '@/components/ui/FormField'
-import { useAllBrands, useAllVehicleModels } from '@/features/brands/api'
+import { useAllBrands, useVehicleModelsByBrand } from '@/features/brands/api'
 import { ClientPicker, type ClientOption } from '@/features/clients/ClientPicker'
 import {
   COLOR_LABELS,
@@ -14,7 +14,7 @@ import {
   type VehicleColor,
   type VehicleInput,
 } from '@/features/vehicles/api'
-import { compact, toInput, toNumber } from '@/lib/forms'
+import { nullIfEmpty, toInput, toNumber } from '@/lib/forms'
 import { useApiMutation } from '@/lib/useApiMutation'
 import { validationErrors } from '@/services/api'
 
@@ -29,7 +29,6 @@ const CURRENT_YEAR = new Date().getFullYear()
 
 export function VehicleFormModal({ vehicle, fixedClient, onClose }: VehicleFormModalProps) {
   const brands = useAllBrands()
-  const models = useAllVehicleModels()
 
   const [client, setClient] = useState<ClientOption | null>(
     fixedClient ??
@@ -50,27 +49,25 @@ export function VehicleFormModal({ vehicle, fixedClient, onClose }: VehicleFormM
   const [transmission, setTransmission] = useState<TransmissionType | ''>(vehicle?.transmission ?? '')
   const [notes, setNotes] = useState(vehicle?.notes ?? '')
 
-  // El backend no filtra modelos por marca: se filtra aquí.
-  const brandModels = models.data?.filter((model) => String(model.brand?.id) === brandId) ?? []
+  const models = useVehicleModelsByBrand(toNumber(brandId))
 
   const mutation = useApiMutation(
     () => {
+      // Los opcionales vacíos van como null: al editar, así se vacían.
       const body: VehicleInput = {
-        ...compact({
-          client_id: client?.id,
-          brand_id: toNumber(brandId),
-          vehicle_model_id: toNumber(modelId),
-          plate: noPlate ? '' : plate.trim().toUpperCase(),
-          chassis: chassis.trim(),
-          year: toNumber(year),
-          color: color || undefined,
-          engine_number: engineNumber.trim(),
-          mileage: toNumber(mileage),
-          fuel_type: fuelType || undefined,
-          transmission: transmission || undefined,
-          notes,
-        }),
+        client_id: client?.id ?? null,
+        brand_id: toNumber(brandId),
+        vehicle_model_id: toNumber(modelId),
         no_plate: noPlate,
+        plate: noPlate ? null : nullIfEmpty(plate.toUpperCase()),
+        chassis: nullIfEmpty(chassis),
+        year: toNumber(year),
+        color: color || null,
+        engine_number: nullIfEmpty(engineNumber),
+        mileage: toNumber(mileage),
+        fuel_type: fuelType || null,
+        transmission: transmission || null,
+        notes: nullIfEmpty(notes),
       }
       if (vehicle) return vehiclesApi.update(vehicle.id, body)
       return fixedClient ? vehiclesApi.createForClient(fixedClient.id, body) : vehiclesApi.create(body)
@@ -130,10 +127,10 @@ export function VehicleFormModal({ vehicle, fixedClient, onClose }: VehicleFormM
             value={modelId}
             onChange={(event) => setModelId(event.target.value)}
             errors={errors}
-            disabled={!brandId || models.isPending}
+            disabled={!brandId || models.isFetching}
           >
-            <option value="">{brandId ? 'Seleccione un modelo' : 'Elija primero la marca'}</option>
-            {brandModels.map((model) => (
+            <option value="">{!brandId ? 'Elija primero la marca' : models.isFetching ? 'Cargando…' : 'Seleccione un modelo'}</option>
+            {models.data?.map((model) => (
               <option key={model.id} value={model.id}>
                 {model.name}
               </option>

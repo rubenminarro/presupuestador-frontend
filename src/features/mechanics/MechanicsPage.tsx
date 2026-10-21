@@ -12,7 +12,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
 import { MECHANIC_STATUS, mechanicsApi, type Mechanic, type MechanicInput, type MechanicStatus } from '@/features/mechanics/api'
 import { formatDecimal, formatMoney } from '@/lib/format'
-import { compact, toInput, toNumber } from '@/lib/forms'
+import { compact, nullIfEmpty, toInput, toNumber } from '@/lib/forms'
 import { useApiMutation } from '@/lib/useApiMutation'
 import { useListParams } from '@/lib/useListParams'
 import { getPage, validationErrors } from '@/services/api'
@@ -176,14 +176,14 @@ function MechanicForm({ mechanic, onClose }: { mechanic: Mechanic | null; onClos
 
   const mutation = useApiMutation(
     () => {
-      const body: MechanicInput = compact({
-        employee_code: employeeCode,
-        specialty,
-        hire_date: hireDate,
-        hour_cost: toNumber(hourCost),
-        commission_percentage: toNumber(commission),
-        notes,
-      })
+      const body: MechanicInput = {
+        employee_code: employeeCode.trim(),
+        specialty: nullIfEmpty(specialty),
+        hire_date: hireDate || null,
+        notes: nullIfEmpty(notes),
+        // Costo y comisión son NOT NULL en la base: vacíos no se envían (en el alta, null daría 500; ver handoff 14).
+        ...compact({ hour_cost: toNumber(hourCost), commission_percentage: toNumber(commission) }),
+      }
       return mechanic
         ? mechanicsApi.update(mechanic.id, { ...body, status })
         : mechanicsApi.create({ ...body, user_id: toNumber(userId) ?? undefined })

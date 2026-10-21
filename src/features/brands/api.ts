@@ -53,12 +53,12 @@ export function useAllBrands(enabled = true) {
   })
 }
 
-/** Todos los modelos: el backend no filtra por marca, se filtra en el cliente (`brand.id`). */
-export function useAllVehicleModels(enabled = true) {
+/** Modelos de una marca (`GET vehicle-models?brand_id=`); sin marca no consulta. */
+export function useVehicleModelsByBrand(brandId: number | null) {
   return useQuery({
-    queryKey: ['vehicle-models', 'all'],
-    queryFn: async () => (await vehicleModelsApi.list(ALL)).items.sort(byName),
+    queryKey: ['vehicle-models', 'by-brand', brandId],
+    queryFn: async () => (await vehicleModelsApi.list({ ...ALL, brand_id: brandId })).items.sort(byName),
     staleTime: 5 * 60_000,
-    enabled,
+    enabled: brandId !== null,
   })
 }

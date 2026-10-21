@@ -81,16 +81,18 @@ listado/detalle y campos de cada 422). Falta la revisión visual.
 Piezas compartidas nuevas: `FormModal`, `DeleteDialog`, `IconButton`, `SwitchField`, `useApiMutation`,
 `lib/forms.ts` (`compact`, `toNumber`, `toInput`), `formatMoney`.
 
-Limitaciones del backend que condicionan la UI (sin cambios en el backend; a decidir si se ajustan):
+Limitaciones del backend que condicionan la UI:
 
+- **Resueltas en `fix/ajustes-datos-maestros` del backend + `feature/f1-ajustes` del frontend (2026-10-21; mergear
+  las dos juntas):** filtro `brand_id` en `vehicle-models` (el select ya no carga los 250 modelos); los opcionales
+  se vacían al editar (el frontend manda `null`); bajas de marca/modelo con vehículos → 409
+  `BRAND_HAS_VEHICLES` / `VEHICLE_MODEL_HAS_VEHICLES` (toast con el mensaje).
 - `ClientResource` (listado) no trae `document_number`: el listado de clientes no muestra RUC/CI (la búsqueda sí lo
   encuentra; la ficha lo muestra).
-- `vehicle-models` no filtra por marca: el select de modelos carga todos (`per_page=1000`) y filtra en el cliente.
-- Las actualizaciones validan los opcionales como `sometimes` sin `nullable` (p. ej. `notes: null` → 422): el
-  frontend no envía los campos vacíos, así que **un campo opcional no se puede vaciar** al editar.
 - `MechanicResource` no trae `user_id`: el usuario del mecánico no se puede cambiar desde la edición.
 - `checklists.required` llega como `1/0`, no como booleano.
-- Bajas de marcas y modelos sin verificación de uso (soft delete aunque tengan vehículos).
+- Costo y comisión del mecánico no se pueden vaciar (columnas `NOT NULL`); en el alta, `null` da 500 en el backend
+  (handoff 14, punto 10, pendiente de decisión): el frontend no los envía si están vacíos.
 
 ## F2 — Catálogo de repuestos e inventario
 

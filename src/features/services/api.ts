@@ -28,12 +28,13 @@ export interface Service {
   updated_at: string
 }
 
+/** `description` y `estimated_hours` en null se vacían; obligatorios en null → 422 del backend. */
 export interface ServiceInput {
-  service_category_id: number
+  service_category_id: number | null
   name: string
-  description?: string
-  standard_price: number
-  estimated_hours?: number
+  description: string | null
+  standard_price: number | null
+  estimated_hours: number | null
 }
 
 export const SERVICE_STATUS: StatusMap = {
@@ -45,7 +46,7 @@ export const servicesApi = {
   list: (params: ListParams) => getPage<Service>('/services', params),
   show: (id: number) => getData<Service>(`/services/${id}`),
   create: (body: ServiceInput) => postData<Service>('/services', body),
-  update: (id: number, body: Partial<ServiceInput>) => patchData<Service>(`/services/${id}`, body),
+  update: (id: number, body: ServiceInput) => patchData<Service>(`/services/${id}`, body),
   activate: (id: number) => postData<Service>(`/services/${id}/activate`),
   deactivate: (id: number) => postData<Service>(`/services/${id}/deactivate`),
   remove: (id: number) => deleteData(`/services/${id}`),

@@ -12,7 +12,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
 import { SERVICE_STATUS, servicesApi, useServiceCategories, type Service, type ServiceInput } from '@/features/services/api'
 import { formatDecimal, formatMoney } from '@/lib/format'
-import { compact, toInput, toNumber } from '@/lib/forms'
+import { nullIfEmpty, toInput, toNumber } from '@/lib/forms'
 import { useApiMutation } from '@/lib/useApiMutation'
 import { useListParams } from '@/lib/useListParams'
 import { validationErrors } from '@/services/api'
@@ -190,15 +190,15 @@ function ServiceForm({ service, onClose }: { service: Service | null; onClose: (
 
   const mutation = useApiMutation(
     () => {
-      const body = compact({
+      // Descripción y horas vacías se borran (ambas nullable); los obligatorios vacíos dan 422 en su campo.
+      const body: ServiceInput = {
         service_category_id: toNumber(categoryId),
-        name,
-        description,
+        name: name.trim(),
+        description: nullIfEmpty(description),
         standard_price: toNumber(price),
         estimated_hours: toNumber(hours),
-      })
-      // Los obligatorios faltantes los rechaza el backend con 422 por campo.
-      return service ? servicesApi.update(service.id, body) : servicesApi.create(body as ServiceInput)
+      }
+      return service ? servicesApi.update(service.id, body) : servicesApi.create(body)
     },
     {
       invalidate: [['services'], ['service-categories']],

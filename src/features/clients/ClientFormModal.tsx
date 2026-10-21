@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { FormModal } from '@/components/ui/FormModal'
 import { SwitchField, TextareaField, TextField } from '@/components/ui/FormField'
 import { clientsApi, type Client } from '@/features/clients/api'
-import { compact } from '@/lib/forms'
+import { nullIfEmpty } from '@/lib/forms'
 import { useApiMutation } from '@/lib/useApiMutation'
 import { validationErrors } from '@/services/api'
 
@@ -23,16 +23,15 @@ export function ClientFormModal({ client, onClose, onSaved }: ClientFormModalPro
 
   const mutation = useApiMutation(
     () => {
+      // Los obligatorios se envían siempre (vacíos, el backend responde 422 en el campo); las notas vacías se borran.
       const body = {
-        ...compact({
-          document_number: documentNumber.trim(),
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          // El backend exige el email en minúsculas.
-          email: email.trim().toLowerCase(),
-          phone: phone.trim(),
-          notes,
-        }),
+        document_number: documentNumber.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        // El backend exige el email en minúsculas.
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        notes: nullIfEmpty(notes),
         notifications_enabled: notificationsEnabled,
       }
       return client ? clientsApi.update(client.id, body) : clientsApi.create(body)
