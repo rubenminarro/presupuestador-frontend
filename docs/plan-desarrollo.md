@@ -1,6 +1,6 @@
-# Plan de desarrollo — Frontend Presupuestador
+# Plan de desarrollo — Frontend SyncTaller
 
-Plan por fases para construir la SPA sobre la API existente (`../presupuestador`, FASES 10–25, 222 rutas).
+Plan por fases para construir la SPA sobre la API existente (`../synctaller-backend`, FASES 10–25, 222 rutas).
 Creado el 2026-10-21. Marcar `[x]` al cerrar cada punto (con lint, build y verificación en navegador).
 
 ## Decisiones tomadas (2026-10-21)
@@ -25,18 +25,18 @@ Pendientes de decidir cuando se llegue: librería de gráficos (F11), runner de 
 
 ## F0 — Base del proyecto (bloquea todo lo demás)
 
-**Backend** (rama propia en `../presupuestador`, cambio aprobado):
+**Backend** (rama propia en `../synctaller-backend`, cambio aprobado):
 
 - [x] `GET /api/me` bajo `auth:sanctum`, sin permiso específico: `data.user` (`UserResource`) +
       `data.permissions` (nombres ordenados; el administrador recibe todos los del guard `api`). Rama
-      `feature/endpoint-me` (2026-10-21), **pendiente de commit y merge**.
+      `feature/endpoint-me` (2026-10-21), mergeada.
 - [x] Tests en `tests/Feature/Auth/LoginTest` (cajero, administrador, sin token; suite: 300 en verde) y documentación
       del backend (`CLAUDE.md`, `README.md`, `handoff.md` 2.2, `guia-postman.md` B.2b).
 
 **Frontend:**
 
-Rama `feature/f0-base` (2026-10-21). Lint y build en verde. Flujo verificado por HTTP contra
-`presupuestador.test` con origen `localhost:5173`; falta la revisión visual en el navegador.
+Rama `feature/f0-base` (2026-10-21), mergeada. Lint y build en verde. Flujo verificado por HTTP contra el backend
+local (entonces `presupuestador.test`) con origen `localhost:5173`; falta la revisión visual en el navegador.
 
 - [x] `git init`, `.gitignore` (incluye `.env`), estructura: `src/app` (router, navegación), `src/services`,
       `src/types`, `src/components/{ui,layout}`, `src/features/<módulo>`, `src/pages`, `src/lib`; alias `@/`;

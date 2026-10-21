@@ -42,7 +42,7 @@ export function LoginPage() {
     <div className="page page-center">
       <div className="container container-tight py-4">
         <div className="text-center mb-4">
-          <h1 className="h2 mb-0">Presupuestador</h1>
+          <h1 className="h2 mb-0">SyncTaller</h1>
           <div className="text-secondary">Gestión del taller</div>
         </div>
         <form className="card card-md" onSubmit={handleSubmit} noValidate>

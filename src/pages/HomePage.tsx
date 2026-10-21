@@ -10,7 +10,7 @@ export function HomePage() {
 
   return (
     <>
-      <PageHeader pretitle="Presupuestador" title={`Hola, ${user?.first_name ?? ''}`} />
+      <PageHeader pretitle="SyncTaller" title={`Hola, ${user?.first_name ?? ''}`} />
       <PageBody>
         <div className="row row-cards">
           {sections.map((section) => (

@@ -1,15 +1,15 @@
-# CLAUDE.md — Presupuestador (Frontend)
+# CLAUDE.md — SyncTaller (Frontend)
 
-Instrucciones permanentes para trabajar en este repositorio: la SPA del Presupuestador. El backend (API Laravel)
-vive en un repositorio aparte, `../presupuestador`.
+Instrucciones permanentes para trabajar en este repositorio: la SPA de SyncTaller (antes llamado Presupuestador).
+El backend (API Laravel) vive en un repositorio aparte, `../synctaller-backend`.
 
 | Documento | Para qué |
 |---|---|
 | `CLAUDE.md` (este) | Reglas del frontend, contrato con la API y resumen de negocio |
-| [`../presupuestador/CLAUDE.md`](../presupuestador/CLAUDE.md) | Reglas del backend y **reglas de negocio detalladas** (sección 6), con sus `error_code` |
-| [`../presupuestador/README.md`](../presupuestador/README.md) | Instalación y estado del backend |
-| [`../presupuestador/docs/handoff.md`](../presupuestador/docs/handoff.md) | Historia y decisiones por fase; deuda técnica (sección 14) |
-| [`../presupuestador/docs/testing/guia-postman.md`](../presupuestador/docs/testing/guia-postman.md) | Requests, bodies y respuestas esperadas de cada endpoint |
+| [`../synctaller-backend/CLAUDE.md`](../synctaller-backend/CLAUDE.md) | Reglas del backend y **reglas de negocio detalladas** (sección 6), con sus `error_code` |
+| [`../synctaller-backend/README.md`](../synctaller-backend/README.md) | Instalación y estado del backend |
+| [`../synctaller-backend/docs/handoff.md`](../synctaller-backend/docs/handoff.md) | Historia y decisiones por fase; deuda técnica (sección 14) |
+| [`../synctaller-backend/docs/testing/guia-postman.md`](../synctaller-backend/docs/testing/guia-postman.md) | Requests, bodies y respuestas esperadas de cada endpoint |
 
 Si una regla de este archivo contradice al código (de este repositorio o del backend), **el código manda**: avisar
 de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un endpoint, consultar las rutas
@@ -20,14 +20,14 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
 ## 1. Estado actual (verificado el 2026-10-21)
 
 * **Backend/API:** Laravel 12.70, roadmap completo (FASES 10–25: hasta compras, pagos a proveedores,
-  notificaciones, exportación/comprobantes PDF y auditoría). 222 rutas API, 300 tests (incluye `GET /api/me`, en la
-  rama `feature/endpoint-me` del backend, pendiente de merge). CORS y Sanctum configurados para `http://localhost:5173`.
-  Antes de comparar contra el backend, actualizar su `main` (`git pull`): la copia local puede estar atrasada.
-* **Frontend:** base de la F0 construida en la rama `feature/f0-base` (sin commit todavía): cliente Axios, sesión con
-  `GET /me`, layout Tabler, menú por permisos y componentes compartidos. Los módulos de negocio muestran una pantalla
-  provisoria hasta su fase. Avance y estructura de carpetas en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md).
-  Antes de crear un componente, revisar `src/components/ui` y `src/lib`. F1 (datos maestros) construida en
-  `feature/f1-datos-maestros`.
+  notificaciones, exportación/comprobantes PDF y auditoría), más `GET /api/me`, CORS con `Content-Disposition` y los
+  ajustes de datos maestros. 222 rutas API, 310 tests. Se sirve en `http://synctaller-backend.test` (Laragon).
+  CORS y Sanctum configurados para `http://localhost:5173`. Antes de comparar contra el backend, actualizar su
+  `main` (`git pull`): la copia local puede estar atrasada.
+* **Frontend:** F0 (base: cliente Axios, sesión con `GET /me`, layout Tabler, menú por permisos, componentes
+  compartidos) y F1 (datos maestros) en `main`. Los módulos siguientes muestran una pantalla provisoria hasta su
+  fase. Avance y estructura de carpetas en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un
+  componente, revisar `src/components/ui` y `src/lib`.
 * **Estructura de un módulo** (seguir F1): `src/features/<módulo>/api.ts` (tipos según el Resource, etiquetas de
   enums, `xxxApi` con `getPage`/`postData`/…), páginas `XxxPage.tsx` con `DataTable` + `useListParams`, formularios
   en `FormModal` con `useApiMutation` (`invalidate` por prefijo de query key, `successMessage`) y errores de

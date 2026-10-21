@@ -45,7 +45,7 @@ function Sidebar({ open, onToggle, onNavigate }: SidebarProps) {
         </button>
         <div className="navbar-brand navbar-brand-autodark">
           <Link to="/" className="text-reset text-decoration-none" onClick={onNavigate}>
-            Presupuestador
+            SyncTaller
           </Link>
         </div>
         <div className={cx('collapse navbar-collapse', open && 'show')} id="sidebar-menu">

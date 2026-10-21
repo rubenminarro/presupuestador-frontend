@@ -1,4 +1,5 @@
-const KEY = 'presupuestador.token'
+// Cambiar la clave cierra las sesiones guardadas con la anterior ('presupuestador.token').
+const KEY = 'synctaller.token'
 
 // localStorage puede no estar disponible (modo privado, bloqueado): la app sigue funcionando sin persistir.
 export const tokenStorage = {
