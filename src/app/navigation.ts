@@ -104,7 +104,7 @@ export const navigation: NavSection[] = [
     items: [
       { label: 'Mecánicos', to: '/mechanics', icon: IconUserCog, permission: 'mechanics.index', phase: 'F1' },
       { label: 'Servicios', to: '/services', icon: IconTool, permission: 'services.index', phase: 'F1' },
-      { label: 'Marcas y modelos', to: '/brands', icon: IconCar, permission: 'brands.index', phase: 'F1' },
+      { label: 'Marcas y modelos', to: '/brands', icon: IconCar, permission: ['brands.index', 'vehicle_models.index'], phase: 'F1' },
       { label: 'Ítems de checklist', to: '/checklists', icon: IconListCheck, permission: 'checklists.index', phase: 'F1' },
       { label: 'Categorías de repuestos', to: '/part-categories', icon: IconCategory, permission: 'part-categories.index', phase: 'F2' },
       { label: 'Planes de mantenimiento', to: '/maintenance-plans', icon: IconCalendarStats, permission: 'maintenance-plans.index', phase: 'F9' },

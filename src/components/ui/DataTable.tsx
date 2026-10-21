@@ -13,6 +13,8 @@ export interface Column<T> {
 }
 
 interface DataTableProps<T> {
+  /** Título de la tarjeta (cuando hay varias tablas en la misma pantalla). */
+  title?: string
   columns: Column<T>[]
   rows: T[] | undefined
   rowKey: (row: T) => string | number
@@ -33,6 +35,7 @@ interface DataTableProps<T> {
 }
 
 export function DataTable<T>({
+  title,
   columns,
   rows,
   rowKey,
@@ -46,7 +49,7 @@ export function DataTable<T>({
   toolbar,
   onRowClick,
 }: DataTableProps<T>) {
-  const hasHeader = Boolean(search || toolbar)
+  const hasHeader = Boolean(title || search || toolbar)
 
   function renderBody() {
     if (error) return <ErrorState error={error} onRetry={onRetry} />
@@ -89,6 +92,7 @@ export function DataTable<T>({
     <div className="card">
       {hasHeader && (
         <div className="card-header gap-2 flex-wrap">
+          {title && <h3 className="card-title me-2">{title}</h3>}
           {search && (
             <div className="input-icon flex-fill" style={{ maxWidth: '22rem' }}>
               <span className="input-icon-addon">

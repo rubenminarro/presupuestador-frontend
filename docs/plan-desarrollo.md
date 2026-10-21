@@ -64,13 +64,33 @@ Rama `feature/f0-base` (2026-10-21). Lint y build en verde. Flujo verificado por
 
 ## F1 — Datos maestros del taller
 
-- [ ] Marcas (`brands`) y modelos (`vehicle-models`).
-- [ ] Clientes (`clients`, incluye `notifications_enabled`) con vehículos anidados (`clients/{client}/vehicles`);
-      editar/eliminar en `vehicles/{vehicle}`.
-- [ ] Vehículos (`vehicles`): placa o `no_plate` + chasis; enums de color, combustible y transmisión.
-- [ ] Ítems de checklist (`checklists`) y categorías de servicio (`service-categories`, solo lectura).
-- [ ] Servicios (`services`): activar / desactivar.
-- [ ] Mecánicos (`mechanics`).
+Rama `feature/f1-datos-maestros` (2026-10-21). Lint y build en verde; contratos verificados por HTTP (formas de
+listado/detalle y campos de cada 422). Falta la revisión visual.
+
+- [x] Marcas (`brands`) y modelos (`vehicle-models`, permisos `vehicle_models.*` con guion bajo): una pantalla con
+      dos tablas (`/brands`).
+- [x] Clientes (`/clients`, `/clients/:id`): listado, ficha con sus vehículos, alta/edición (incluye
+      `notifications_enabled`), baja; alta de vehículo por `clients/{client}/vehicles`.
+- [x] Vehículos (`/vehicles`): listado, alta con buscador de cliente (`ClientPicker`), edición y baja; chapa o
+      `no_plate` + chasis; enums de color, combustible y transmisión.
+- [x] Ítems de checklist (`/checklists`) y categorías de servicio (filtro y select, solo lectura).
+- [x] Servicios (`/services`): filtros por categoría y estado, activar / desactivar (`services.change-status`).
+- [x] Mecánicos (`/mechanics`): filtro por estado; el usuario se elige al crear (requiere `users.index`).
+- [ ] Revisión visual en el navegador.
+
+Piezas compartidas nuevas: `FormModal`, `DeleteDialog`, `IconButton`, `SwitchField`, `useApiMutation`,
+`lib/forms.ts` (`compact`, `toNumber`, `toInput`), `formatMoney`.
+
+Limitaciones del backend que condicionan la UI (sin cambios en el backend; a decidir si se ajustan):
+
+- `ClientResource` (listado) no trae `document_number`: el listado de clientes no muestra RUC/CI (la búsqueda sí lo
+  encuentra; la ficha lo muestra).
+- `vehicle-models` no filtra por marca: el select de modelos carga todos (`per_page=1000`) y filtra en el cliente.
+- Las actualizaciones validan los opcionales como `sometimes` sin `nullable` (p. ej. `notes: null` → 422): el
+  frontend no envía los campos vacíos, así que **un campo opcional no se puede vaciar** al editar.
+- `MechanicResource` no trae `user_id`: el usuario del mecánico no se puede cambiar desde la edición.
+- `checklists.required` llega como `1/0`, no como booleano.
+- Bajas de marcas y modelos sin verificación de uso (soft delete aunque tengan vehículos).
 
 ## F2 — Catálogo de repuestos e inventario
 

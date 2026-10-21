@@ -81,6 +81,39 @@ export function SelectField({ label, name, errors, hint, required, className, id
   )
 }
 
+interface SwitchFieldProps extends FieldBase {
+  checked: boolean
+  onChange: (checked: boolean) => void
+  disabled?: boolean
+}
+
+/** Booleano como switch de Tabler. */
+export function SwitchField({ label, name, errors, hint, checked, onChange, disabled }: SwitchFieldProps) {
+  const error = errors?.[name]
+
+  return (
+    <div className="mb-3">
+      <label className="form-check form-switch">
+        <input
+          type="checkbox"
+          name={name}
+          className={cx('form-check-input', error && 'is-invalid')}
+          checked={checked}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.checked)}
+        />
+        <span className="form-check-label">{label}</span>
+      </label>
+      {error?.map((message) => (
+        <div key={message} className="invalid-feedback d-block">
+          {message}
+        </div>
+      ))}
+      {hint && <small className="form-hint">{hint}</small>}
+    </div>
+  )
+}
+
 type TextareaFieldProps = FieldBase & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'name'>
 
 export function TextareaField({ label, name, errors, hint, required, className, id, ...props }: TextareaFieldProps) {

@@ -1,27 +1,46 @@
+import type { ReactNode } from 'react'
 import { createBrowserRouter, type RouteObject } from 'react-router-dom'
 import { navigation } from '@/app/navigation'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute, RequirePermission } from '@/features/auth/guards'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { BrandsPage } from '@/features/brands/BrandsPage'
+import { ChecklistsPage } from '@/features/checklists/ChecklistsPage'
+import { ClientDetailPage } from '@/features/clients/ClientDetailPage'
+import { ClientsPage } from '@/features/clients/ClientsPage'
+import { MechanicsPage } from '@/features/mechanics/MechanicsPage'
+import { ServicesPage } from '@/features/services/ServicesPage'
+import { VehiclesPage } from '@/features/vehicles/VehiclesPage'
 import { ComingSoonPage } from '@/pages/ComingSoonPage'
 import { NotFoundPage } from '@/pages/ErrorPages'
 import { HomePage } from '@/pages/HomePage'
 
+/** Ruta de un módulo con su permiso de lectura (el backend lo vuelve a validar). */
+function guarded(path: string, permission: string | string[], element: ReactNode): RouteObject {
+  return { path, element: <RequirePermission permission={permission}>{element}</RequirePermission> }
+}
+
+// Módulos construidos (F1 en adelante).
+const moduleRoutes: RouteObject[] = [
+  guarded('clients', 'clients.index', <ClientsPage />),
+  guarded('clients/:id', 'clients.show', <ClientDetailPage />),
+  guarded('vehicles', 'vehicles.index', <VehiclesPage />),
+  guarded('brands', ['brands.index', 'vehicle_models.index'], <BrandsPage />),
+  guarded('checklists', 'checklists.index', <ChecklistsPage />),
+  guarded('services', 'services.index', <ServicesPage />),
+  guarded('mechanics', 'mechanics.index', <MechanicsPage />),
+]
+
+const builtPaths = new Set(moduleRoutes.map((route) => route.path))
+
 // Módulos aún no construidos: una pantalla provisoria por ítem del menú, con su permiso.
-// Cada fase reemplaza la suya por las rutas reales del módulo.
 const pendingModules: RouteObject[] = navigation
   .flatMap((section) => section.items)
-  .filter((item) => item.to !== '/')
-  .map((item) => ({
-    path: item.to.slice(1),
-    element: item.permission ? (
-      <RequirePermission permission={item.permission}>
-        <ComingSoonPage title={item.label} phase={item.phase} />
-      </RequirePermission>
-    ) : (
-      <ComingSoonPage title={item.label} phase={item.phase} />
-    ),
-  }))
+  .filter((item) => item.to !== '/' && !builtPaths.has(item.to.slice(1)))
+  .map((item) => {
+    const page = <ComingSoonPage title={item.label} phase={item.phase} />
+    return item.permission ? guarded(item.to.slice(1), item.permission, page) : { path: item.to.slice(1), element: page }
+  })
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -30,7 +49,7 @@ export const router = createBrowserRouter([
     children: [
       {
         element: <AppLayout />,
-        children: [{ index: true, element: <HomePage /> }, ...pendingModules, { path: '*', element: <NotFoundPage /> }],
+        children: [{ index: true, element: <HomePage /> }, ...moduleRoutes, ...pendingModules, { path: '*', element: <NotFoundPage /> }],
       },
     ],
   },

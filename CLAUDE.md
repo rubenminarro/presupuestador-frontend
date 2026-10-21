@@ -26,7 +26,13 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
 * **Frontend:** base de la F0 construida en la rama `feature/f0-base` (sin commit todavía): cliente Axios, sesión con
   `GET /me`, layout Tabler, menú por permisos y componentes compartidos. Los módulos de negocio muestran una pantalla
   provisoria hasta su fase. Avance y estructura de carpetas en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md).
-  Antes de crear un componente, revisar `src/components/ui` y `src/lib`.
+  Antes de crear un componente, revisar `src/components/ui` y `src/lib`. F1 (datos maestros) construida en
+  `feature/f1-datos-maestros`.
+* **Estructura de un módulo** (seguir F1): `src/features/<módulo>/api.ts` (tipos según el Resource, etiquetas de
+  enums, `xxxApi` con `getPage`/`postData`/…), páginas `XxxPage.tsx` con `DataTable` + `useListParams`, formularios
+  en `FormModal` con `useApiMutation` (`invalidate` por prefijo de query key, `successMessage`) y errores de
+  `validationErrors(mutation.error)`; bajas con `DeleteDialog`; la ruta se registra en `src/app/router.tsx`
+  (`guarded(path, permiso, página)`).
 * **Pendiente en el backend (sin diseño ni fase):** notificaciones por WhatsApp.
 
 ---

@@ -24,6 +24,12 @@ export function formatGuarani(value: Numeric): string {
   return number === null ? '—' : `Gs. ${guaraniFormat.format(number)}`
 }
 
+/** Importes sin IVA (precios de catálogo, presupuestos): guaraníes con hasta 2 decimales, `Gs. 90.909,09`. */
+export function formatMoney(value: Numeric): string {
+  const number = toNumber(value)
+  return number === null ? '—' : `Gs. ${new Intl.NumberFormat('es-PY', { maximumFractionDigits: 2 }).format(number)}`
+}
+
 /** Número con decimales fijos (importes sin IVA, porcentajes). */
 export function formatDecimal(value: Numeric, digits = 2): string {
   const number = toNumber(value)
