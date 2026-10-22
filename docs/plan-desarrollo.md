@@ -124,11 +124,37 @@ Limitaciones del backend que condicionan la UI:
 
 ## F3 — Recepción y diagnóstico
 
-- [ ] Recepciones: alta con categorías de servicio, edición, eliminación (solo `pending`), cancelación con motivo.
-- [ ] Checklist de la recepción (`reception-check-lists`): valor según tipo de ítem.
-- [ ] Fotos de recepción.
-- [ ] Diagnósticos e ítems de diagnóstico (severidad, estado, fotos).
-- [ ] **Ficha de recepción**: pantalla eje que luego muestra presupuestos, OT, factura y entrega.
+Rama `feature/f3-recepcion-diagnostico` (2026-10-22). Lint y build en verde. Verificado por HTTP contra el backend
+local con `fix/contrato-recepciones`: formas de listado y detalle, checklist (guardar, valor inválido, procesada →
+`RECEPTION_CHECKLIST_NOT_EDITABLE`), fotos (subida multipart, URL servida, descripción, baja), alta sin combustible,
+diagnóstico sin prioridad, ítem con foto, edición del mecánico sin `mechanic_id`, cancelación con motivo y
+`RECEPTION_CLOSED` / `RECEPTION_NOT_DELETABLE`.
+
+- [x] Recepciones (`/receptions`): filtros por estado y fecha de ingreso; alta con buscador de cliente, vehículo del
+      cliente y categorías de servicio; edición (cliente y vehículo fijos; categorías solo en `pending`); eliminación
+      (solo `pending`); cancelación con motivo.
+- [x] Checklist de la recepción: control según el tipo (Sí/No, número, Bueno/Malo/No aplica) y observación; solo
+      editable en `pending`.
+- [x] Fotos de recepción (`PhotoGallery`, compartido con los ítems de diagnóstico).
+- [x] Diagnósticos (`/diagnostics`, `/diagnostics/:id`): alta desde la ficha de la recepción, edición con estado,
+      ítems con severidad, estado, estimados y fotos.
+- [x] **Ficha de recepción** (`/receptions/:id`): datos, checklist, diagnósticos y fotos; las fases siguientes suman
+      presupuestos, OT, factura y entrega.
+- [x] Revisión visual en el navegador (hecha por el usuario, 2026-10-22).
+
+Limitaciones del backend que condicionan la UI:
+
+- **Resueltas en `fix/contrato-recepciones` del backend (2026-10-22; mergear junto con esta rama):** fechas `Y-m-d` y
+  kilometraje entero en recepciones y diagnósticos (antes `"11/10/2026"`, `"Km: 125000"`); el detalle de la recepción
+  trae `check_list.id` (antes no había forma de llegar al checklist), marca, modelo, chasis y color con label;
+  `DiagnosticResource` traía siempre `model: null`; el detalle del diagnóstico suma `requires_parts` /
+  `requires_repair`; la edición del diagnóstico vacía textos y mecánico; `fuel_level`, `priority` y la
+  severidad/estado del ítem en `null` daban 500 → 422 (el frontend los omite o siempre manda un valor).
+- El mecánico no tiene `clients.index` ni `mechanics.index`: al editar una recepción, cliente y vehículo quedan fijos
+  para todos; en el diagnóstico solo elige mecánico quien puede listarlos.
+- La descripción de una foto de diagnóstico no se puede vaciar (`required_without_all:file`); la de recepción sí.
+- El estado del checklist lo calcula el backend: `completed` con todos los obligatorios cargados y al menos el 20 %
+  de los ítems con valor.
 
 ## F4 — Presupuestos
 

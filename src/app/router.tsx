@@ -8,11 +8,15 @@ import { BrandsPage } from '@/features/brands/BrandsPage'
 import { ChecklistsPage } from '@/features/checklists/ChecklistsPage'
 import { ClientDetailPage } from '@/features/clients/ClientDetailPage'
 import { ClientsPage } from '@/features/clients/ClientsPage'
+import { DiagnosticDetailPage } from '@/features/diagnostics/DiagnosticDetailPage'
+import { DiagnosticsPage } from '@/features/diagnostics/DiagnosticsPage'
 import { InventoryPage } from '@/features/inventory/InventoryPage'
 import { MechanicsPage } from '@/features/mechanics/MechanicsPage'
 import { PartCategoriesPage } from '@/features/parts/PartCategoriesPage'
 import { PartDetailPage } from '@/features/parts/PartDetailPage'
 import { PartsPage } from '@/features/parts/PartsPage'
+import { ReceptionDetailPage } from '@/features/receptions/ReceptionDetailPage'
+import { ReceptionsPage } from '@/features/receptions/ReceptionsPage'
 import { ServicesPage } from '@/features/services/ServicesPage'
 import { SuppliersPage } from '@/features/suppliers/SuppliersPage'
 import { VehiclesPage } from '@/features/vehicles/VehiclesPage'
@@ -27,6 +31,10 @@ function guarded(path: string, permission: string | string[], element: ReactNode
 
 // Módulos construidos (F1 en adelante).
 const moduleRoutes: RouteObject[] = [
+  guarded('receptions', 'receptions.index', <ReceptionsPage />),
+  guarded('receptions/:id', 'receptions.show', <ReceptionDetailPage />),
+  guarded('diagnostics', 'diagnostics.index', <DiagnosticsPage />),
+  guarded('diagnostics/:id', 'diagnostics.show', <DiagnosticDetailPage />),
   guarded('clients', 'clients.index', <ClientsPage />),
   guarded('clients/:id', 'clients.show', <ClientDetailPage />),
   guarded('vehicles', 'vehicles.index', <VehiclesPage />),
