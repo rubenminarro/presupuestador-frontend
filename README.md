@@ -1,75 +1,87 @@
-# React + TypeScript + Vite
+# SyncTaller — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SPA de SyncTaller (antes Presupuestador), el sistema de gestión del taller mecánico: recepción de vehículos,
+diagnóstico, presupuestos, órdenes de trabajo, inventario, facturación y entrega.
 
-Currently, two official plugins are available:
+Consume la API Laravel del repositorio [`../synctaller-backend`](../synctaller-backend), que tiene que estar
+funcionando para usar la aplicación.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+* React 19 + TypeScript, compilado con Vite.
+* Tabler UI (`@tabler/core`) sobre Bootstrap 5, con iconos `@tabler/icons-react`.
+* React Router 7, Axios y TanStack Query.
+* ESLint (`typescript-eslint`, `react-hooks`).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Requisitos
 
-## Expanding the ESLint configuration
+* Node.js 22 o superior (incluye npm).
+* El backend instalado y servido en `http://synctaller-backend.test` (Laragon). Ver su
+  [README](../synctaller-backend/README.md).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Este repositorio no usa Composer: `composer install` corresponde al backend.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Instalación
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm ci          # instala las dependencias exactas de package-lock.json (crea node_modules)
+cp .env.example .env
+npm run dev     # http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Si al ejecutar un script aparece `"vite" no se reconoce…` o `"tsc" no se reconoce…`, faltan las dependencias:
+ejecutar `npm ci` (o `npm install`).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Variables de entorno
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Variable | Valor por defecto | Descripción |
+|---|---|---|
+| `VITE_API_URL` | `http://synctaller-backend.test/api` | URL base de la API, con el prefijo `/api` |
+
+## Scripts
+
+Los scripts se ejecutan con `npm run <script>` (por ejemplo, `npm run build`, no `npm build`).
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Servidor de desarrollo en `http://localhost:5173` |
+| `npm run build` | Comprobación de tipos (`tsc -b`) y build de producción en `dist/` |
+| `npm run lint` | ESLint sobre todo el proyecto |
+| `npm run preview` | Sirve el build de `dist/` para revisarlo |
+
+El puerto 5173 es fijo (`strictPort`): es el único origen que permiten el CORS y Sanctum del backend. Si está
+ocupado, Vite falla en lugar de usar otro puerto. Para cambiarlo hay que ajustar también `config/cors.php` y
+`SANCTUM_STATEFUL_DOMAINS` en el backend.
+
+## Estructura
 
 ```
+src/
+  app/          rutas (router.tsx) y menú por permisos (navigation.ts)
+  components/   layout de la aplicación y componentes compartidos en ui/ (tablas, formularios, modales, estados)
+  features/     un módulo por dominio: api.ts (tipos y servicio) y sus páginas
+  lib/          utilidades: formatos, formularios, mutaciones, parámetros de listados, roles, token, avisos
+  pages/        inicio, páginas de error y pantalla provisoria de módulos pendientes
+  services/     cliente Axios centralizado (api.ts) y autenticación
+  types/        tipos compartidos de la API
+```
+
+## Estado
+
+Fases F0 a F5 terminadas: base, datos maestros, repuestos e inventario, recepción y diagnóstico, presupuestos y
+órdenes de trabajo. Los módulos siguientes muestran una pantalla provisoria. El detalle está en
+[`docs/plan-desarrollo.md`](docs/plan-desarrollo.md).
+
+## Documentación
+
+* [`CLAUDE.md`](CLAUDE.md): reglas del frontend, contrato con la API, roles y permisos.
+* [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md): plan por fases y decisiones tomadas.
+* [`../synctaller-backend/CLAUDE.md`](../synctaller-backend/CLAUDE.md): reglas de negocio y `error_code`.
+* [`../synctaller-backend/docs/testing/guia-postman.md`](../synctaller-backend/docs/testing/guia-postman.md):
+  requests y respuestas de cada endpoint.
+
+## Flujo de trabajo
+
+* No se trabaja en `main`: una rama por tarea (`feature/…`, `fix/…`, `docs/…`).
+* Antes de dar un cambio por terminado: `npm run lint` y `npm run build`.
+* Commits en español, explicando el porqué.
