@@ -3,6 +3,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { PageBody, PageHeader } from '@/components/ui/Page'
 import { ErrorState, LoadingState } from '@/components/ui/States'
 import { paymentsApi, type CashSummary } from '@/features/payments/api'
+import { ByMethodTable } from '@/features/payments/ByMethodTable'
 import { formatDate, formatGuarani } from '@/lib/format'
 
 /** Resumen de caja: pagos vigentes por medio de pago en el período (sin fechas, el día de hoy). */
@@ -93,38 +94,7 @@ function SummaryCards({ summary }: { summary: CashSummary }) {
           </div>
         </div>
         <div className="col-12 col-lg-8">
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Por medio de pago</h3>
-            </div>
-            <div className="table-responsive">
-              <table className="table card-table table-vcenter">
-                <thead>
-                  <tr>
-                    <th>Medio</th>
-                    <th className="text-end">Pagos</th>
-                    <th className="text-end">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.by_method.map((row) => (
-                    <tr key={row.method}>
-                      <td>{row.label}</td>
-                      <td className="text-end">{row.payments_count}</td>
-                      <td className="text-end text-nowrap">{formatGuarani(row.total)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <th>Total</th>
-                    <th className="text-end">{summary.payments_count}</th>
-                    <th className="text-end text-nowrap">{formatGuarani(summary.total)}</th>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
+          <ByMethodTable rows={summary.by_method} paymentsCount={summary.payments_count} total={summary.total} />
         </div>
       </div>
     </>

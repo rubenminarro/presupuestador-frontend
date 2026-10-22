@@ -24,6 +24,11 @@ import { PartDetailPage } from '@/features/parts/PartDetailPage'
 import { PartsPage } from '@/features/parts/PartsPage'
 import { CashSummaryPage } from '@/features/payments/CashSummaryPage'
 import { PaymentsPage } from '@/features/payments/PaymentsPage'
+import { AccountsPayablePage } from '@/features/purchases/AccountsPayablePage'
+import { PurchaseDetailPage } from '@/features/purchases/PurchaseDetailPage'
+import { PurchasesPage } from '@/features/purchases/PurchasesPage'
+import { SupplierPaymentsPage } from '@/features/supplier-payments/SupplierPaymentsPage'
+import { SupplierPaymentsSummaryPage } from '@/features/supplier-payments/SupplierPaymentsSummaryPage'
 import { ReceptionDetailPage } from '@/features/receptions/ReceptionDetailPage'
 import { ReceptionsPage } from '@/features/receptions/ReceptionsPage'
 import { ServicesPage } from '@/features/services/ServicesPage'
@@ -57,6 +62,11 @@ const moduleRoutes: RouteObject[] = [
   guarded('payments', 'payments.index', <PaymentsPage />),
   guarded('cash-summary', 'payments.summary', <CashSummaryPage />),
   guarded('invoice-stamps', 'invoice-stamps.index', <InvoiceStampsPage />),
+  guarded('purchases', 'purchases.index', <PurchasesPage />),
+  guarded('purchases/:id', 'purchases.show', <PurchaseDetailPage />),
+  guarded('supplier-payments', 'supplier-payments.index', <SupplierPaymentsPage />),
+  guarded('supplier-payments/summary', 'supplier-payments.summary', <SupplierPaymentsSummaryPage />),
+  guarded('accounts-payable', 'accounts-payable.view', <AccountsPayablePage />),
   guarded('clients', 'clients.index', <ClientsPage />),
   guarded('clients/:id', 'clients.show', <ClientDetailPage />),
   guarded('vehicles', 'vehicles.index', <VehiclesPage />),

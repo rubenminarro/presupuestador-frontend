@@ -85,6 +85,7 @@ export const navigation: NavSection[] = [
       { label: 'Cobros', to: '/payments', icon: IconCash, permission: 'payments.index', phase: 'F6' },
       { label: 'Resumen de caja', to: '/cash-summary', icon: IconReportMoney, permission: 'payments.summary', phase: 'F6' },
       { label: 'Pagos a proveedores', to: '/supplier-payments', icon: IconWallet, permission: 'supplier-payments.index', phase: 'F8' },
+      { label: 'Resumen de egresos', to: '/supplier-payments/summary', icon: IconReportMoney, permission: 'supplier-payments.summary', phase: 'F8' },
       { label: 'Cuentas por pagar', to: '/accounts-payable', icon: IconReceipt, permission: 'accounts-payable.view', phase: 'F8' },
     ],
   },

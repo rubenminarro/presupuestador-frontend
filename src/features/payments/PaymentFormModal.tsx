@@ -3,16 +3,10 @@ import { FormModal } from '@/components/ui/FormModal'
 import { SelectField, TextareaField, TextField } from '@/components/ui/FormField'
 import type { Invoice } from '@/features/invoices/api'
 import { PAYMENT_METHODS, paymentsApi, type PaymentMethod } from '@/features/payments/api'
-import { formatDate, formatGuarani } from '@/lib/format'
+import { formatDate, formatGuarani, todayInput } from '@/lib/format'
 import { nullIfEmpty, toInput, toNumber } from '@/lib/forms'
 import { useApiMutation } from '@/lib/useApiMutation'
 import { validationErrors } from '@/services/api'
-
-/** Fecha local de hoy (`YYYY-MM-DD`), tope del selector: el pago no puede ser futuro. */
-function today(): string {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-}
 
 /**
  * Pago contra una factura emitida, hasta su saldo. Referencia obligatoria salvo en efectivo; banco en cheque (opcional
@@ -131,7 +125,7 @@ export function PaymentFormModal({ invoice, onClose }: { invoice: Invoice; onClo
             name="payment_date"
             type="date"
             min={invoice.issue_date ?? undefined}
-            max={today()}
+            max={todayInput()}
             value={paymentDate}
             onChange={(event) => setPaymentDate(event.target.value)}
             errors={errors}

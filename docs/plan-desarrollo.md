@@ -237,7 +237,9 @@ uno); 403 de la recepcionista en facturar y cobros, y del cajero al crear timbra
 - [x] Resumen de caja (`/cash-summary`, nuevo ítem del menú con `payments.summary`): total, por medio de pago,
       efectivo recibido y vuelto; sin fechas, el día de hoy.
 - [x] PDF de factura y recibo (`DownloadButton`, nuevo componente compartido).
-- [ ] Revisión visual en el navegador.
+- [x] Revisión visual en el navegador (2026-10-22, Chrome headless con Playwright, administrador, escritorio y móvil):
+      facturas, detalle de factura, detalle del pago, cobros, resumen de caja, timbrados y alta, OT con su factura; sin
+      errores de consola ni de API. Corrigió el encabezado de página en móvil (en `feature/f8-compras`).
 
 Notas:
 
@@ -268,7 +270,9 @@ nueva entrega sin firma (`ENT-000002`); 403 del cajero al entregar y de la recep
 - [x] Listado (`/vehicle-deliveries`) con filtros por estado y fechas; detalle (`/vehicle-deliveries/:id`) con la
       firma y anulación con motivo (administrador).
 - [x] PDF del comprobante de entrega.
-- [ ] Revisión visual en el navegador.
+- [x] Revisión visual en el navegador (2026-10-22, igual que F6): ficha de la recepción entregada, listado y detalle
+      de la entrega `ENT-000001` registrada desde la app (sin firma: la imagen de la firma no se vio en pantalla; las
+      imágenes subidas se sirven tras el `storage:link`).
 
 Notas:
 
@@ -281,9 +285,36 @@ Notas:
 
 ## F8 — Compras y proveedores
 
-- [ ] Compras: borrador, líneas (costo con IVA y tasa), recibir, anular, eliminar borrador.
-- [ ] Pagos a proveedores desde la compra; listado, anulación y resumen de egresos.
-- [ ] Cuentas por pagar (`accounts-payable`).
+Rama `feature/f8-compras` (2026-10-22). Lint y build en verde. Verificado con requests HTTP reales al kernel de Laravel
+dentro de una transacción revertida, con depósito, cajero y jefe de taller: borrador con opcionales en `null` (totales
+`null` sin líneas), 422 de cabecera, `PURCHASE_WITHOUT_ITEMS`, `INVENTORY_FRACTIONAL_QUANTITY_NOT_ALLOWED`, líneas con
+IVA 10%/exenta y edición a 5%; `PURCHASE_DOCUMENT_REQUIRED`, `PURCHASE_DUE_DATE_INVALID`, recibir (stock 10 → 14),
+`PURCHASE_NOT_EDITABLE`, `PURCHASE_DUPLICATE_DOCUMENT`; pagos (`SUPPLIER_PAYMENT_DATE_BEFORE_DOCUMENT`,
+`SUPPLIER_PAYMENT_EXCEEDS_BALANCE`, parcial), cuentas por pagar (vencido y detalle por proveedor), resumen de egresos;
+`PURCHASE_HAS_PAYMENTS`, anular pago y compra (stock 14 → 10), `PURCHASE_NOT_CANCELLABLE`; 403 del cajero al comprar,
+del depósito al pagar y anular pagos, y del jefe de taller al recibir y en el resumen.
+
+- [x] Compras (`/purchases`, `/purchases/:id`): listado con filtros por proveedor, estado y fecha de la factura; alta
+      del borrador; cabecera (proveedor, factura, timbrado, condición, vencimiento a crédito, notas) y líneas (repuesto,
+      cantidad, costo con IVA, tasa) editables en borrador; recibir, anular con motivo, eliminar el borrador. Totales
+      por tasa e IVA, y el neto sin IVA que entra al inventario, del backend.
+- [x] Pagos a proveedores desde la compra recibida (monto propuesto = saldo, referencia, banco, recibo del proveedor;
+      fecha entre la factura y hoy); listado (`/supplier-payments`) con filtros; detalle con anulación.
+- [x] Resumen de egresos (`/supplier-payments/summary`, nuevo ítem del menú con `supplier-payments.summary`); la tabla
+      por medio de pago se comparte con el resumen de caja (`ByMethodTable`).
+- [x] Cuentas por pagar (`/accounts-payable`): saldo total, vencido y por vencer; por proveedor, desplegable con sus
+      compras (días de atraso).
+- [x] Revisión visual en el navegador (2026-10-22, Chrome headless con Playwright, administrador): flujo completo desde
+      la UI sobre la base local (alta, línea, recibir sin factura → error, datos de la factura, recibir, pago parcial,
+      cuentas por pagar, resumen, anular con pagos → error, anular pago y compra; escritorio y móvil). Quedó la compra
+      `COM-000006` anulada con su pago `PAG-000001` anulado; el stock volvió a su valor.
+
+Notas:
+
+- Al editar una línea, `PurchaseItemResource.part` no trae la unidad del repuesto: el campo cantidad admite decimales y
+  el backend rechaza fracciones en repuestos por unidad (`INVENTORY_FRACTIONAL_QUANTITY_NOT_ALLOWED`).
+- El cajero y el jefe de taller no listan proveedores (`suppliers.index`): el filtro por proveedor del listado de
+  compras solo aparece para quien puede.
 
 ## F9 — Historial y mantenimiento preventivo
 

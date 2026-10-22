@@ -51,6 +51,12 @@ function toDate(value: string | null | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
+/** Hoy en formato `YYYY-MM-DD` (fecha local), para topes de inputs `date`. */
+export function todayInput(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
 export function formatDate(value: string | null | undefined): string {
   const date = toDate(value)
   return date ? dateFormat.format(date) : '—'
