@@ -18,6 +18,7 @@ import {
   IconMail,
   IconReceipt,
   IconReportAnalytics,
+  IconReportMoney,
   IconShieldLock,
   IconShoppingCart,
   IconStethoscope,
@@ -82,6 +83,7 @@ export const navigation: NavSection[] = [
     items: [
       { label: 'Facturas', to: '/invoices', icon: IconFileInvoice, permission: 'invoices.index', phase: 'F6' },
       { label: 'Cobros', to: '/payments', icon: IconCash, permission: 'payments.index', phase: 'F6' },
+      { label: 'Resumen de caja', to: '/cash-summary', icon: IconReportMoney, permission: 'payments.summary', phase: 'F6' },
       { label: 'Pagos a proveedores', to: '/supplier-payments', icon: IconWallet, permission: 'supplier-payments.index', phase: 'F8' },
       { label: 'Cuentas por pagar', to: '/accounts-payable', icon: IconReceipt, permission: 'accounts-payable.view', phase: 'F8' },
     ],

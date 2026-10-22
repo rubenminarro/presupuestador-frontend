@@ -1,5 +1,6 @@
 import type { StatusMap } from '@/components/ui/StatusBadge'
 import type { Budget } from '@/features/budgets/api'
+import type { InvoiceStatus } from '@/features/invoices/api'
 import type { Mechanic } from '@/features/mechanics/api'
 import type { PartUnit } from '@/features/parts/api'
 import type { ReceptionSummary } from '@/features/receptions/api'
@@ -106,7 +107,7 @@ export interface WorkOrder {
   }
   parts_summary?: { total_cost: string; total_price: string; unresolved_count: number }
   /** Solo con `invoices.show`. */
-  invoice?: { id: number; number: string | null; status: { value: string; label: string }; total: string } | null
+  invoice?: { id: number; number: string | null; status: { value: InvoiceStatus; label: string }; total: string } | null
   /** Solo con `work-orders.view-economics`. */
   economic_summary?: EconomicSummary
   created_at: string

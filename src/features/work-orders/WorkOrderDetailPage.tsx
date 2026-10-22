@@ -9,6 +9,7 @@ import { SelectField, TextareaField } from '@/components/ui/FormField'
 import { ErrorState, LoadingState } from '@/components/ui/States'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
+import { WorkOrderInvoice } from '@/features/invoices/WorkOrderInvoice'
 import { useActiveMechanics } from '@/features/mechanics/api'
 import { receptionVehicleLabel } from '@/features/receptions/api'
 import { WORK_ORDER_STATUS, workOrdersApi, type EconomicSummary, type WorkOrder, type WorkOrderAction } from '@/features/work-orders/api'
@@ -158,14 +159,6 @@ function WorkOrderDetail({ workOrder }: { workOrder: WorkOrder }) {
                   <dd className="col-7">{formatDateTime(workOrder.started_at)}</dd>
                   <dt className="col-5">Fin</dt>
                   <dd className="col-7">{formatDateTime(workOrder.completed_at)}</dd>
-                  {workOrder.invoice && (
-                    <>
-                      <dt className="col-5">Factura</dt>
-                      <dd className="col-7">
-                        {workOrder.invoice.number ?? 'Borrador'} · {workOrder.invoice.status.label}
-                      </dd>
-                    </>
-                  )}
                   {workOrder.notes && (
                     <>
                       <dt className="col-12">Notas</dt>
@@ -177,6 +170,7 @@ function WorkOrderDetail({ workOrder }: { workOrder: WorkOrder }) {
                 </dl>
               </div>
             </div>
+            <WorkOrderInvoice workOrder={workOrder} />
             <LaborCard workOrder={workOrder} />
             {workOrder.economic_summary && <EconomicCard summary={workOrder.economic_summary} />}
           </div>

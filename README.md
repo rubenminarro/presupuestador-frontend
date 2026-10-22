@@ -68,8 +68,8 @@ src/
 
 ## Estado
 
-Fases F0 a F5 terminadas: base, datos maestros, repuestos e inventario, recepción y diagnóstico, presupuestos y
-órdenes de trabajo. Los módulos siguientes muestran una pantalla provisoria. El detalle está en
+Fases F0 a F6 terminadas: base, datos maestros, repuestos e inventario, recepción y diagnóstico, presupuestos,
+órdenes de trabajo, y facturación y cobros. Los módulos siguientes muestran una pantalla provisoria. El detalle está en
 [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md).
 
 ## Documentación

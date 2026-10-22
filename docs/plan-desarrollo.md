@@ -213,11 +213,41 @@ Notas:
 
 ## F6 — Facturación y cobros
 
-- [ ] Timbrados (`invoice-stamps`, administrador).
-- [ ] Facturar OT (`work-orders/{id}/invoice`), editar borrador y líneas, emitir, anular.
-- [ ] Pagos de factura (medios, vuelto en efectivo, recibo a crédito); listado de pagos y anulación con motivo.
-- [ ] Resumen de caja (`payments/summary`).
-- [ ] PDF de factura (`invoices/{id}/pdf`) y recibo (`payments/{id}/receipt`, solo facturas a crédito).
+Rama `feature/f6-facturacion-cobros` (2026-10-22). Lint y build en verde. Verificado con requests HTTP reales al kernel
+de Laravel dentro de una transacción revertida, con usuarios cajero, recepcionista y administrador: OT completada
+desde el presupuesto B2 → borrador (contado, IVA 10%) y `WORK_ORDER_ALREADY_INVOICED`; edición con opcionales en
+`null`; `INVOICE_CUSTOMER_TAX_ID_REQUIRED`, `INVOICE_DUE_DATE_REQUIRED`; línea a IVA 5% con descuento y
+`INVOICE_DISCOUNT_EXCEEDS_AMOUNT`; emitir (`001-001-0000001`), `INVOICE_NOT_EDITABLE`; pagos (422 de referencia, banco,
+entregado fuera de efectivo y fecha futura; `PAYMENT_EXCEEDS_BALANCE`, vuelto, `INVOICE_ALREADY_PAID`, recibos
+`REC-…` solo a crédito y `PAYMENT_WITHOUT_RECEIPT`); resumen de caja; PDF de factura y recibo con nombre del backend;
+`INVOICE_HAS_PAYMENTS`, anular pagos y factura, volver a facturar y eliminar el borrador; timbrados
+(`INVOICE_STAMP_OVERLAP`, `INVOICE_STAMP_INVALID_PERIOD`, `INVOICE_STAMP_REQUIRED` con dos vigentes y emisión eligiendo
+uno); 403 de la recepcionista en facturar y cobros, y del cajero al crear timbrados.
+
+- [x] Timbrados (`/invoice-stamps`): listado con estado (activo y vigente, fuera de vigencia, inactivo); alta y
+      edición (vencimiento y activo) solo administrador.
+- [x] Facturar la OT completada desde su detalle (borrador con lo realmente usado); la OT muestra su factura vigente.
+      Listado (`/invoices`) con filtros por estado y fechas de emisión; detalle (`/invoices/:id`) con datos del cliente,
+      condición y vencimiento editables en borrador, líneas (descripción, IVA 0/5/10 y descuento), totales por tasa e
+      IVA liquidado del backend; emitir (elige timbrado si hay más de uno vigente), anular con motivo, eliminar el
+      borrador.
+- [x] Pagos desde la factura emitida (monto propuesto = saldo; referencia salvo efectivo; banco en cheque y
+      transferencia; entregado y vuelto en efectivo; fecha entre la emisión y hoy). Cobros (`/payments`) con filtros
+      por medio, estado y fechas; detalle del pago con recibo y anulación con motivo.
+- [x] Resumen de caja (`/cash-summary`, nuevo ítem del menú con `payments.summary`): total, por medio de pago,
+      efectivo recibido y vuelto; sin fechas, el día de hoy.
+- [x] PDF de factura y recibo (`DownloadButton`, nuevo componente compartido).
+- [ ] Revisión visual en el navegador.
+
+Notas:
+
+- Los importes de factura y pagos se muestran como guaraníes enteros (`formatGuarani`), con IVA incluido. El vuelto
+  que se ve al cargar un pago en efectivo es solo una ayuda: el que se guarda lo calcula el backend.
+- La recepcionista ve facturas (`invoices.index|show`) pero no pagos: en el detalle no ve el botón de cobro.
+- **Resuelto en `fix/contrato-cobros` del backend (2026-10-22; mergear junto con esta rama):** el listado de cobros
+  trae el nombre del cliente (`customer_name`) además del número de factura.
+- Los datos locales no tienen ninguna OT: para probar hay que generar una desde el presupuesto aprobado B2,
+  completarla y facturarla. El timbrado `12345678` (001-001) está activo y vigente.
 
 ## F7 — Entrega del vehículo
 

@@ -13,10 +13,15 @@ import { ClientsPage } from '@/features/clients/ClientsPage'
 import { DiagnosticDetailPage } from '@/features/diagnostics/DiagnosticDetailPage'
 import { DiagnosticsPage } from '@/features/diagnostics/DiagnosticsPage'
 import { InventoryPage } from '@/features/inventory/InventoryPage'
+import { InvoiceStampsPage } from '@/features/invoice-stamps/InvoiceStampsPage'
+import { InvoiceDetailPage } from '@/features/invoices/InvoiceDetailPage'
+import { InvoicesPage } from '@/features/invoices/InvoicesPage'
 import { MechanicsPage } from '@/features/mechanics/MechanicsPage'
 import { PartCategoriesPage } from '@/features/parts/PartCategoriesPage'
 import { PartDetailPage } from '@/features/parts/PartDetailPage'
 import { PartsPage } from '@/features/parts/PartsPage'
+import { CashSummaryPage } from '@/features/payments/CashSummaryPage'
+import { PaymentsPage } from '@/features/payments/PaymentsPage'
 import { ReceptionDetailPage } from '@/features/receptions/ReceptionDetailPage'
 import { ReceptionsPage } from '@/features/receptions/ReceptionsPage'
 import { ServicesPage } from '@/features/services/ServicesPage'
@@ -43,6 +48,11 @@ const moduleRoutes: RouteObject[] = [
   guarded('budgets/:id', 'budgets.show', <BudgetDetailPage />),
   guarded('work-orders', 'work-orders.index', <WorkOrdersPage />),
   guarded('work-orders/:id', 'work-orders.show', <WorkOrderDetailPage />),
+  guarded('invoices', 'invoices.index', <InvoicesPage />),
+  guarded('invoices/:id', 'invoices.show', <InvoiceDetailPage />),
+  guarded('payments', 'payments.index', <PaymentsPage />),
+  guarded('cash-summary', 'payments.summary', <CashSummaryPage />),
+  guarded('invoice-stamps', 'invoice-stamps.index', <InvoiceStampsPage />),
   guarded('clients', 'clients.index', <ClientsPage />),
   guarded('clients/:id', 'clients.show', <ClientDetailPage />),
   guarded('vehicles', 'vehicles.index', <VehiclesPage />),

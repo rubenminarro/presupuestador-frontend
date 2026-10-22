@@ -26,7 +26,7 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   `main` (`git pull`): la copia local puede estar atrasada.
 * **Frontend:** F0 (base: cliente Axios, sesión con `GET /me`, layout Tabler, menú por permisos, componentes
   compartidos), F1 (datos maestros), F2 (repuestos e inventario), F3 (recepción y diagnóstico), F4 (presupuestos) y
-  F5 (órdenes de trabajo) en `main`. Los módulos siguientes muestran una pantalla provisoria hasta su
+  F5 (órdenes de trabajo) en `main`; F6 (facturación y cobros) en `feature/f6-facturacion-cobros`. Los módulos siguientes muestran una pantalla provisoria hasta su
   fase. Avance y estructura de carpetas en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un
   componente, revisar `src/components/ui` y `src/lib`.
 * **Estructura de un módulo** (seguir F1): `src/features/<módulo>/api.ts` (tipos según el Resource, etiquetas de
