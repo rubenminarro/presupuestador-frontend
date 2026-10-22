@@ -254,9 +254,30 @@ Notas:
 
 ## F7 — Entrega del vehículo
 
-- [ ] Registrar entrega desde la recepción (km, conformidad, firma en imagen).
-- [ ] Listado de entregas y anulación con motivo (administrador).
-- [ ] PDF del comprobante de entrega (`vehicle-deliveries/{id}/pdf`).
+Rama `feature/f7-entregas` (2026-10-22). Lint y build en verde. Verificado con requests HTTP reales al kernel de
+Laravel dentro de una transacción revertida (sobre la OT-000001 creada desde la app), enviando la entrega como multipart
+igual que el formulario: `DELIVERY_WORK_ORDER_NOT_INVOICED` (sin factura y con borrador), `DELIVERY_INVOICE_NOT_PAID`;
+422 de conformidad, km, nombre, firma que no es imagen y combustible; `DELIVERY_MILEAGE_BELOW_RECEPTION`; entrega con
+firma (`ENT-000001`, recepción → "Entregado", km del vehículo actualizado) y `DELIVERY_ALREADY_REGISTERED`; listado
+por recepción, búsqueda por chapa, detalle y PDF; anulación (recepción → "Terminado") y `DELIVERY_NOT_CANCELLABLE`;
+nueva entrega sin firma (`ENT-000002`); 403 del cajero al entregar y de la recepcionista al anular.
+
+- [x] Registrar entrega desde la ficha de la recepción terminada (km final propuesto = el de ingreso, combustible,
+      quién retira con los datos del cliente por defecto, conformidad obligatoria, firma en imagen opcional,
+      observaciones). La ficha muestra la entrega vigente o la última anulada.
+- [x] Listado (`/vehicle-deliveries`) con filtros por estado y fechas; detalle (`/vehicle-deliveries/:id`) con la
+      firma y anulación con motivo (administrador).
+- [x] PDF del comprobante de entrega.
+- [ ] Revisión visual en el navegador.
+
+Notas:
+
+- **Entorno local (no versionado, 2026-10-22):** el `.env` del backend se había regenerado desde `.env.example`
+  (`APP_URL=http://127.0.0.1:8000`, `APP_KEY` vacío) y faltaba `public/storage`: firma y fotos de diagnóstico salían con
+  una URL inaccesible y ninguna imagen subida se servía (403). Se corrigió `APP_URL=http://synctaller-backend.test`,
+  `php artisan key:generate` y `php artisan storage:link` (requisito anotado en el README).
+- **Resuelto en `fix/contrato-entregas` del backend (2026-10-22; mergear junto con esta rama):** el listado de
+  entregas trae el nombre del cliente (`client_name`) además de la chapa.
 
 ## F8 — Compras y proveedores
 

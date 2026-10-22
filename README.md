@@ -17,7 +17,8 @@ funcionando para usar la aplicación.
 
 * Node.js 22 o superior (incluye npm).
 * El backend instalado y servido en `http://synctaller-backend.test` (Laragon). Ver su
-  [README](../synctaller-backend/README.md).
+  [README](../synctaller-backend/README.md). Para que se vean las fotos y firmas, su `.env` necesita
+  `APP_URL=http://synctaller-backend.test` y hay que ejecutar `php artisan storage:link` una vez.
 
 Este repositorio no usa Composer: `composer install` corresponde al backend.
 

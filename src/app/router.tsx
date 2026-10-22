@@ -10,6 +10,8 @@ import { BudgetsPage } from '@/features/budgets/BudgetsPage'
 import { ChecklistsPage } from '@/features/checklists/ChecklistsPage'
 import { ClientDetailPage } from '@/features/clients/ClientDetailPage'
 import { ClientsPage } from '@/features/clients/ClientsPage'
+import { DeliveriesPage } from '@/features/deliveries/DeliveriesPage'
+import { DeliveryDetailPage } from '@/features/deliveries/DeliveryDetailPage'
 import { DiagnosticDetailPage } from '@/features/diagnostics/DiagnosticDetailPage'
 import { DiagnosticsPage } from '@/features/diagnostics/DiagnosticsPage'
 import { InventoryPage } from '@/features/inventory/InventoryPage'
@@ -48,6 +50,8 @@ const moduleRoutes: RouteObject[] = [
   guarded('budgets/:id', 'budgets.show', <BudgetDetailPage />),
   guarded('work-orders', 'work-orders.index', <WorkOrdersPage />),
   guarded('work-orders/:id', 'work-orders.show', <WorkOrderDetailPage />),
+  guarded('vehicle-deliveries', 'vehicle-deliveries.index', <DeliveriesPage />),
+  guarded('vehicle-deliveries/:id', 'vehicle-deliveries.show', <DeliveryDetailPage />),
   guarded('invoices', 'invoices.index', <InvoicesPage />),
   guarded('invoices/:id', 'invoices.show', <InvoiceDetailPage />),
   guarded('payments', 'payments.index', <PaymentsPage />),

@@ -11,6 +11,7 @@ import { ErrorState, LoadingState } from '@/components/ui/States'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
 import { ReceptionBudgets } from '@/features/budgets/ReceptionBudgets'
+import { ReceptionDelivery } from '@/features/deliveries/ReceptionDelivery'
 import { DIAGNOSTIC_STATUS, diagnosticsApi, PRIORITY, type DiagnosticSummary } from '@/features/diagnostics/api'
 import { DiagnosticFormModal } from '@/features/diagnostics/DiagnosticFormModal'
 import { isReceptionOpen, RECEPTION_STATUS, receptionsApi, receptionVehicleLabel, type Reception } from '@/features/receptions/api'
@@ -46,10 +47,7 @@ export function ReceptionDetailPage() {
   return <ReceptionDetail reception={query.data} />
 }
 
-/**
- * Ficha de la recepción: el eje del trabajo sobre el vehículo. Las fases siguientes suman presupuestos, OT, factura y
- * entrega.
- */
+/** Ficha de la recepción: el eje del trabajo sobre el vehículo, desde el checklist hasta la entrega. */
 function ReceptionDetail({ reception }: { reception: Reception }) {
   const { can } = useAuth()
   const navigate = useNavigate()
@@ -124,6 +122,11 @@ function ReceptionDetail({ reception }: { reception: Reception }) {
           {can('work-orders.index') && (
             <div className="col-12">
               <ReceptionWorkOrders receptionId={reception.id} />
+            </div>
+          )}
+          {can('vehicle-deliveries.index') && (
+            <div className="col-12">
+              <ReceptionDelivery reception={reception} />
             </div>
           )}
           {can('receptions-photos.index') && (
