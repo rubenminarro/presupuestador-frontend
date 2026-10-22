@@ -244,6 +244,9 @@ Notas:
 - Los importes de factura y pagos se muestran como guaraníes enteros (`formatGuarani`), con IVA incluido. El vuelto
   que se ve al cargar un pago en efectivo es solo una ayuda: el que se guarda lo calcula el backend.
 - La recepcionista ve facturas (`invoices.index|show`) pero no pagos: en el detalle no ve el botón de cobro.
+- **Deuda técnica pendiente (2026-10-22):** los repuestos agregados en la OT fuera del presupuesto se facturan sin
+  aprobación registrada del cliente (backend `docs/handoff.md`, sección 14, #11). La decisión espera a los clientes
+  del taller; según cuál sea, puede cambiar la tarjeta de repuestos de la OT y el detalle de la factura.
 - **Resuelto en `fix/contrato-cobros` del backend (2026-10-22; mergear junto con esta rama):** el listado de cobros
   trae el nombre del cliente (`customer_name`) además del número de factura.
 - Los datos locales no tienen ninguna OT: para probar hay que generar una desde el presupuesto aprobado B2,
