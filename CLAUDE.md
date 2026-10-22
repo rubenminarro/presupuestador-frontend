@@ -150,8 +150,9 @@ Base: `/api`. Todas las respuestas son JSON (el backend fuerza `Accept: applicat
 
 * **Moneda:** guaraníes enteros en facturas, pagos y pagos a proveedores. Mostrar con separador de miles, sin
   decimales. No hacer aritmética de dinero en el cliente para valores que se guardan.
-* **IVA:** presupuestos y cierre económico **sin IVA**; facturas y compras **con IVA incluido** (10% / 5% / exento).
-  Rotular en cada pantalla si el importe incluye IVA.
+* **IVA:** precios del presupuesto **sin IVA**, con el IVA (`invoice.default_tax_rate`, 10%) sumado al total por el
+  backend (subtotal sin IVA + IVA = total); cierre económico **sin IVA**; facturas y compras **con IVA incluido**
+  (10% / 5% / exento). Rotular en cada pantalla si el importe incluye IVA.
 * **Cantidades de inventario:** hasta 3 decimales; repuestos `unit|set|kit` solo enteros.
 * **Documentos emitidos son inmutables** (factura emitida, pago, entrega, movimiento de inventario, compra recibida,
   pago a proveedor): la UI no ofrece "editar", solo "anular" (con motivo) cuando corresponde.
@@ -189,7 +190,7 @@ Detalle de reglas y `error_code`: backend `CLAUDE.md`, sección 6.
   `delivered` / `cancelled`); nunca se asigna desde la UI salvo cancelar (con motivo). Fotos de recepción.
 * **Diagnóstico:** ítems con severidad, estado y fotos.
 * **Presupuestos (`BUD-…`):** `draft → sent → approved`; `sent → rejected → draft`; cancelar desde `draft|sent`.
-  Solo `draft` es editable. Ítems `labor | service | part`. Precios sin IVA.
+  Solo `draft` es editable. Ítems `labor | service | part`. Precios sin IVA; el total suma el IVA.
 * **Órdenes de trabajo (`OT-000001`):** nacen de un presupuesto aprobado. `pending → in_progress ⇄ paused →
   completed`, `pending → cancelled`. Ítems, repuestos en OT (`pending → reserved → consumed → returned`),
   asignación de mecánicos y horas.

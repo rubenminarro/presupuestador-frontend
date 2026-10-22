@@ -185,11 +185,31 @@ Notas:
 
 ## F5 — Órdenes de trabajo
 
-- [ ] F5a: crear OT desde presupuesto aprobado; `start`, `pause`, `resume`, `complete`, `cancel`; editar responsable
-      y notas (`pending`); ítems: iniciar / completar / cancelar.
-- [ ] F5b: asignación de mecánicos por ítem (porcentajes) y horas; repuestos de la OT: agregar, reservar, consumir,
-      devolver, cancelar.
-- [ ] Cierre económico visible solo con `work-orders.view-economics`.
+Rama `feature/f5-ordenes-trabajo` (2026-10-22). Lint y build en verde. Verificado con requests HTTP reales al kernel
+de Laravel dentro de una transacción revertida (sin dejar datos): alta desde el presupuesto aprobado B2 y
+`WORK_ORDER_ALREADY_EXISTS`; edición; reparto 60/40 y `WORK_ORDER_ITEM_SHARES_INVALID`; iniciar/pausar/reanudar y
+`WORK_ORDER_NOT_IN_PROGRESS`; horas propias del mecánico (ajenas → 403) y de cualquiera con `log-hours-any`;
+`WORK_ORDER_HAS_PENDING_ITEMS`; repuesto extra (precio de venta, reserva automática, edición, fracción →
+`INVENTORY_FRACTIONAL_QUANTITY_NOT_ALLOWED`, cancelación); completar con cierre y comisiones congelados (recepción →
+"Terminado"); `WORK_ORDER_NOT_CANCELLABLE`; el mecánico no ve `economic_summary` ni crea OT.
+
+- [x] F5a: generar la OT desde el presupuesto aprobado (responsable obligatorio); `start`, `pause`, `resume`,
+      `complete`, `cancel` con confirmación; editar responsable y notas (`pending`); ítems: iniciar / completar /
+      cancelar (OT en reparación). Listado (`/work-orders`), detalle (`/work-orders/:id`) y OT en la ficha de la
+      recepción y en el presupuesto.
+- [x] F5b: reparto del ítem entre mecánicos (partes iguales o porcentajes que suman 100) y horas (el mecánico solo
+      las suyas); repuestos: agregar (fuera del presupuesto), editar, reservar, consumir (una vez, lo usado),
+      devolver con motivo, cancelar.
+- [x] Cierre económico (venta, costo, margen, sin IVA; provisorio o congelado) y costos de repuestos y mano de obra
+      solo con `work-orders.view-economics`; horas y comisiones para todos los que ven la OT.
+- [x] Revisión visual en el navegador (hecha por el usuario, 2026-10-22).
+
+Notas:
+
+- **Resuelto en `fix/contrato-ordenes-trabajo` del backend (2026-10-22; mergear junto con esta rama):** cada
+  asignación trae `mechanic.user_id` (el frontend ofrece al mecánico cargar solo sus horas) y la recepción trae marca y
+  modelo del vehículo.
+- Los datos locales no tienen ninguna OT: el presupuesto aprobado B2 (recepción 2) sirve para generar la primera.
 
 ## F6 — Facturación y cobros
 

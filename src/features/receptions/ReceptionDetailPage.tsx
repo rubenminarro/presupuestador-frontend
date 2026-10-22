@@ -16,6 +16,7 @@ import { DiagnosticFormModal } from '@/features/diagnostics/DiagnosticFormModal'
 import { isReceptionOpen, RECEPTION_STATUS, receptionsApi, receptionVehicleLabel, type Reception } from '@/features/receptions/api'
 import { ReceptionCheckListCard } from '@/features/receptions/ReceptionCheckListCard'
 import { ReceptionFormModal } from '@/features/receptions/ReceptionFormModal'
+import { ReceptionWorkOrders } from '@/features/work-orders/ReceptionWorkOrders'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { useApiMutation } from '@/lib/useApiMutation'
 
@@ -118,6 +119,11 @@ function ReceptionDetail({ reception }: { reception: Reception }) {
           {can('budgets.index') && (
             <div className="col-12">
               <ReceptionBudgets reception={reception} />
+            </div>
+          )}
+          {can('work-orders.index') && (
+            <div className="col-12">
+              <ReceptionWorkOrders receptionId={reception.id} />
             </div>
           )}
           {can('receptions-photos.index') && (

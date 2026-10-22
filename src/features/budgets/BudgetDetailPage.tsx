@@ -26,6 +26,7 @@ import { useAuth } from '@/features/auth/useAuth'
 import { BUDGET_ITEM_TYPES, BUDGET_STATUS, budgetsApi, type Budget, type BudgetAction, type BudgetItem } from '@/features/budgets/api'
 import { BudgetItemFormModal } from '@/features/budgets/BudgetItemFormModal'
 import { receptionVehicleLabel } from '@/features/receptions/api'
+import { BudgetWorkOrder } from '@/features/work-orders/BudgetWorkOrder'
 import { formatDate, formatDateTime, formatDecimal, formatMoney } from '@/lib/format'
 import { nullIfEmpty } from '@/lib/forms'
 import { useApiMutation } from '@/lib/useApiMutation'
@@ -201,6 +202,7 @@ function BudgetDetail({ budget }: { budget: Budget }) {
                 </dl>
               </div>
             </div>
+            <BudgetWorkOrder budget={budget} />
           </div>
           <div className="col-12 col-lg-8">
             <BudgetItemsTable budget={budget} />

@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import type { StatusMap } from '@/components/ui/StatusBadge'
 import { deleteData, getData, getPage, patchData, postData } from '@/services/api'
 import type { ListParams } from '@/types/api'
@@ -42,4 +43,14 @@ export const mechanicsApi = {
   create: (body: MechanicInput) => postData<Mechanic>('/mechanics', body),
   update: (id: number, body: MechanicInput) => patchData<Mechanic>(`/mechanics/${id}`, body),
   remove: (id: number) => deleteData(`/mechanics/${id}`),
+}
+
+/** Mecánicos activos para selects (requiere `mechanics.index`; sin permiso no consulta). */
+export function useActiveMechanics(enabled = true) {
+  return useQuery({
+    queryKey: ['mechanics', 'all-active'],
+    queryFn: async () => (await mechanicsApi.list({ per_page: 1000, status: 'active' })).items,
+    enabled,
+    staleTime: 5 * 60_000,
+  })
 }

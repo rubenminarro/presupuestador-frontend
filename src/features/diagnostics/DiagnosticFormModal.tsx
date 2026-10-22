@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { FormModal } from '@/components/ui/FormModal'
 import { SelectField, SwitchField, TextareaField } from '@/components/ui/FormField'
 import { useAuth } from '@/features/auth/useAuth'
 import { DIAGNOSTIC_STATUS, diagnosticsApi, PRIORITY, type Diagnostic, type DiagnosticInput, type DiagnosticStatus, type Priority } from '@/features/diagnostics/api'
-import { mechanicsApi } from '@/features/mechanics/api'
+import { useActiveMechanics } from '@/features/mechanics/api'
 import { nullIfEmpty, toInput, toNumber } from '@/lib/forms'
 import { useApiMutation } from '@/lib/useApiMutation'
 import { validationErrors } from '@/services/api'
@@ -23,12 +22,7 @@ export function DiagnosticFormModal({ diagnostic, receptionId, defaultComplaint,
   const { can } = useAuth()
   // Sin `mechanics.index` (p. ej. el mecánico) no se elige ni se cambia el mecánico.
   const canPickMechanic = can('mechanics.index')
-  const mechanics = useQuery({
-    queryKey: ['mechanics', 'all-active'],
-    queryFn: async () => (await mechanicsApi.list({ per_page: 1000, status: 'active' })).items,
-    enabled: canPickMechanic,
-    staleTime: 5 * 60_000,
-  })
+  const mechanics = useActiveMechanics(canPickMechanic)
   const [mechanicId, setMechanicId] = useState(toInput(diagnostic?.mechanic_id))
   const [complaint, setComplaint] = useState(diagnostic ? (diagnostic.customer_complaint ?? '') : (defaultComplaint ?? ''))
   const [diagnosis, setDiagnosis] = useState(diagnostic?.diagnosis ?? '')

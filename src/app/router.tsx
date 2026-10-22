@@ -22,6 +22,8 @@ import { ReceptionsPage } from '@/features/receptions/ReceptionsPage'
 import { ServicesPage } from '@/features/services/ServicesPage'
 import { SuppliersPage } from '@/features/suppliers/SuppliersPage'
 import { VehiclesPage } from '@/features/vehicles/VehiclesPage'
+import { WorkOrderDetailPage } from '@/features/work-orders/WorkOrderDetailPage'
+import { WorkOrdersPage } from '@/features/work-orders/WorkOrdersPage'
 import { ComingSoonPage } from '@/pages/ComingSoonPage'
 import { NotFoundPage } from '@/pages/ErrorPages'
 import { HomePage } from '@/pages/HomePage'
@@ -39,6 +41,8 @@ const moduleRoutes: RouteObject[] = [
   guarded('diagnostics/:id', 'diagnostics.show', <DiagnosticDetailPage />),
   guarded('budgets', 'budgets.index', <BudgetsPage />),
   guarded('budgets/:id', 'budgets.show', <BudgetDetailPage />),
+  guarded('work-orders', 'work-orders.index', <WorkOrdersPage />),
+  guarded('work-orders/:id', 'work-orders.show', <WorkOrderDetailPage />),
   guarded('clients', 'clients.index', <ClientsPage />),
   guarded('clients/:id', 'clients.show', <ClientDetailPage />),
   guarded('vehicles', 'vehicles.index', <VehiclesPage />),
