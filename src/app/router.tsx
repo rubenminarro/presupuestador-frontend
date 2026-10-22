@@ -5,6 +5,8 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute, RequirePermission } from '@/features/auth/guards'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { BrandsPage } from '@/features/brands/BrandsPage'
+import { BudgetDetailPage } from '@/features/budgets/BudgetDetailPage'
+import { BudgetsPage } from '@/features/budgets/BudgetsPage'
 import { ChecklistsPage } from '@/features/checklists/ChecklistsPage'
 import { ClientDetailPage } from '@/features/clients/ClientDetailPage'
 import { ClientsPage } from '@/features/clients/ClientsPage'
@@ -35,6 +37,8 @@ const moduleRoutes: RouteObject[] = [
   guarded('receptions/:id', 'receptions.show', <ReceptionDetailPage />),
   guarded('diagnostics', 'diagnostics.index', <DiagnosticsPage />),
   guarded('diagnostics/:id', 'diagnostics.show', <DiagnosticDetailPage />),
+  guarded('budgets', 'budgets.index', <BudgetsPage />),
+  guarded('budgets/:id', 'budgets.show', <BudgetDetailPage />),
   guarded('clients', 'clients.index', <ClientsPage />),
   guarded('clients/:id', 'clients.show', <ClientDetailPage />),
   guarded('vehicles', 'vehicles.index', <VehiclesPage />),

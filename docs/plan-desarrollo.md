@@ -158,10 +158,30 @@ Limitaciones del backend que condicionan la UI:
 
 ## F4 — Presupuestos
 
-- [ ] Listado y alta desde la recepción.
-- [ ] Editor de ítems `labor | service | part` (solo en `draft`); totales del backend.
-- [ ] Acciones `send`, `approve`, `reject`, `reopen`, `cancel` según estado y permiso.
-- [ ] Descargar PDF (`budgets/{id}/pdf`).
+Rama `feature/f4-presupuestos` (2026-10-22). Lint y build en verde. Verificado por HTTP contra el backend local con
+`fix/contrato-presupuestos`: alta (la recepción pasa a "En proceso" y vuelve a "Pendiente" al eliminar el borrador),
+ítems de los tres tipos (servicio sin precio toma el estándar y las horas del catálogo), fracción en repuesto por
+unidad → `INVENTORY_FRACTIONAL_QUANTITY_NOT_ALLOWED`, `BUDGET_WITHOUT_ITEMS`, `BUDGET_NOT_EDITABLE`, enviar → rechazar
+→ reabrir, PDF con nombre del backend y 403 del mecánico.
+
+- [x] Listado (`/budgets`) con filtros por estado y fechas; alta (borrador) desde la ficha de la recepción, que
+      muestra sus presupuestos.
+- [x] Detalle (`/budgets/:id`) con editor de ítems `labor | service | part` (solo en `draft`; buscador de repuestos y
+      servicios activos que sugiere nombre y precio) y totales del backend: subtotal sin IVA, IVA y total.
+- [x] Acciones `send`, `approve`, `reject`, `reopen`, `cancel` según estado y permiso, con confirmación; notas y baja
+      del borrador.
+- [x] Descargar PDF (`budgets/{id}/pdf`).
+- [x] Revisión visual en el navegador (hecha por el usuario, 2026-10-22).
+
+Notas:
+
+- **IVA:** los precios del presupuesto son sin IVA, pero el backend suma el IVA (`invoice.default_tax_rate`, 10 %)
+  al total, igual que el PDF. Se muestran subtotal (sin IVA), IVA y total; el listado rotula "Total (con IVA)".
+- **Resuelto en `fix/contrato-presupuestos` del backend (2026-10-22; mergear junto con esta rama):** el detalle trae
+  cada ítem con su repuesto o servicio y la recepción con marca y modelo; editar un ítem acepta `%` en la descripción
+  (como el alta) y vacía las notas.
+- Al editar un ítem el tipo queda fijo. Enviar un presupuesto genera un aviso por email al cliente (si tiene los
+  avisos activos).
 
 ## F5 — Órdenes de trabajo
 

@@ -10,6 +10,7 @@ import { PhotoGallery } from '@/components/ui/PhotoGallery'
 import { ErrorState, LoadingState } from '@/components/ui/States'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
+import { ReceptionBudgets } from '@/features/budgets/ReceptionBudgets'
 import { DIAGNOSTIC_STATUS, diagnosticsApi, PRIORITY, type DiagnosticSummary } from '@/features/diagnostics/api'
 import { DiagnosticFormModal } from '@/features/diagnostics/DiagnosticFormModal'
 import { isReceptionOpen, RECEPTION_STATUS, receptionsApi, receptionVehicleLabel, type Reception } from '@/features/receptions/api'
@@ -112,6 +113,11 @@ function ReceptionDetail({ reception }: { reception: Reception }) {
           {can('diagnostics.index') && (
             <div className="col-12">
               <ReceptionDiagnostics reception={reception} />
+            </div>
+          )}
+          {can('budgets.index') && (
+            <div className="col-12">
+              <ReceptionBudgets reception={reception} />
             </div>
           )}
           {can('receptions-photos.index') && (
