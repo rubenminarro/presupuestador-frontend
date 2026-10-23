@@ -17,16 +17,18 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
 
 ---
 
-## 1. Estado actual (verificado el 2026-10-21)
+## 1. Estado actual (verificado el 2026-10-22)
 
 * **Backend/API:** Laravel 12.70, roadmap completo (FASES 10–25: hasta compras, pagos a proveedores,
   notificaciones, exportación/comprobantes PDF y auditoría), más `GET /api/me`, CORS con `Content-Disposition` y los
-  ajustes de datos maestros. 222 rutas API, 310 tests. Se sirve en `http://synctaller-backend.test` (Laragon).
+  ajustes de contrato pedidos por cada fase del frontend. 222 rutas API, 327 tests. Se sirve en
+  `http://synctaller-backend.test` (Laragon).
   CORS y Sanctum configurados para `http://localhost:5173`. Antes de comparar contra el backend, actualizar su
   `main` (`git pull`): la copia local puede estar atrasada.
 * **Frontend:** F0 (base: cliente Axios, sesión con `GET /me`, layout Tabler, menú por permisos, componentes
-  compartidos), F1 (datos maestros), F2 (repuestos e inventario), F3 (recepción y diagnóstico), F4 (presupuestos) y
-  F5 (órdenes de trabajo), F6 (facturación y cobros) y F7 (entrega del vehículo) en `main`. Los módulos siguientes muestran una pantalla provisoria hasta su
+  compartidos), F1 (datos maestros), F2 (repuestos e inventario), F3 (recepción y diagnóstico), F4 (presupuestos),
+  F5 (órdenes de trabajo), F6 (facturación y cobros), F7 (entrega del vehículo), F8 (compras y proveedores) y F9
+  (historial y mantenimiento preventivo) en `main`. Los módulos siguientes muestran una pantalla provisoria hasta su
   fase. Avance y estructura de carpetas en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un
   componente, revisar `src/components/ui` y `src/lib`.
 * **Estructura de un módulo** (seguir F1): `src/features/<módulo>/api.ts` (tipos según el Resource, etiquetas de
