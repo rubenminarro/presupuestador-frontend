@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { User } from '@/types/auth'
+import type { LinkedMechanic, User } from '@/types/auth'
 
 export type AuthStatus = 'loading' | 'authenticated' | 'guest' | 'error'
 
@@ -7,6 +7,8 @@ export interface AuthContextValue {
   status: AuthStatus
   user: User | null
   permissions: string[]
+  /** Ficha de mecánico del usuario, si la tiene (p. ej. para ver sus comisiones sin `mechanics.index`). */
+  mechanic: LinkedMechanic | null
   /** Error al cargar la sesión (red caída, 5xx); con 401 la sesión pasa a `guest`. */
   error: unknown
   retry: () => void

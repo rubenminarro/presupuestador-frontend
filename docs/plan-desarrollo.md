@@ -378,7 +378,24 @@ Notas:
 
 ## F10 — Comisiones
 
-- [ ] Comisiones por mecánico y liquidación por período (administrador).
+- [x] Comisiones por mecánico (`/commissions`, `mechanic-commissions.index`): período (sin fechas, el mes en curso) y
+      estado; totales del período, pendiente y liquidado; detalle por trabajo con enlace a la OT. Importes sin IVA.
+      Con `mechanic-commissions.view-all` (y `mechanics.index`) se elige el mecánico, incluidos inactivos; sin él, el
+      mecánico ve las propias.
+- [x] Liquidar el período mostrado (`mechanic-commissions.settle`, administrador), con confirmación y el monto pendiente.
+- [x] Revisión visual en el navegador (2026-10-23, Chrome headless con Playwright): se completó la OT-000001 con la
+      desabolladura repartida 50/50 entre Juan Pérez y Carlos Gómez; el administrador eligió a Juan Pérez (Gs. 22.500
+      pendientes, 10% sobre Gs. 450.000 × 50%) y liquidó el período; el mecánico, en móvil, ve las propias sin selector
+      ni botón de liquidar. Sin errores de consola.
+
+Notas:
+
+- **Contrato (`fix/me-mecanico-vinculado` del backend, 2026-10-23; mergear junto con esta rama):** `GET /me` agrega
+  `data.mechanic` (`id`, `employee_code`, `full_name` o `null`). El rol `mechanic` no tiene `mechanics.index` y sin
+  `view-all` solo puede consultar su propio mecánico, así que no tenía cómo conocer su `id`. El frontend lo expone en
+  `useAuth().mechanic`.
+- Los totales que devuelve el backend respetan el filtro de estado: con "Liquidada" el pendiente es 0 y el botón de
+  liquidar se deshabilita.
 
 ## F11 — Reportes y dashboard
 

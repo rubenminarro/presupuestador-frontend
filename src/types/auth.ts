@@ -19,10 +19,18 @@ export interface User {
   roles: Role[]
 }
 
+/** Ficha de mecánico vinculada al usuario (`data.mechanic` de `GET /api/me`). */
+export interface LinkedMechanic {
+  id: number
+  employee_code: string
+  full_name: string
+}
+
 /** Respuesta de `GET /api/me`. */
 export interface Session {
   user: User
   permissions: string[]
+  mechanic: LinkedMechanic | null
 }
 
 /** Respuesta de `POST /api/login`. */

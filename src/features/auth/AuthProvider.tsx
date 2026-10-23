@@ -69,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       user: session.data?.user ?? null,
       permissions,
+      mechanic: session.data?.mechanic ?? null,
       error: session.error,
       retry: () => void session.refetch(),
       login,

@@ -28,7 +28,7 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
 * **Frontend:** F0 (base: cliente Axios, sesión con `GET /me`, layout Tabler, menú por permisos, componentes
   compartidos), F1 (datos maestros), F2 (repuestos e inventario), F3 (recepción y diagnóstico), F4 (presupuestos),
   F5 (órdenes de trabajo), F6 (facturación y cobros), F7 (entrega del vehículo), F8 (compras y proveedores) y F9
-  (historial y mantenimiento preventivo) en `main`. Los módulos siguientes muestran una pantalla provisoria hasta su
+  (historial y mantenimiento preventivo) en `main`; F10 (comisiones) en `feature/f10-comisiones`. Los módulos siguientes muestran una pantalla provisoria hasta su
   fase. Avance y estructura de carpetas en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un
   componente, revisar `src/components/ui` y `src/lib`.
 * **Estructura de un módulo** (seguir F1): `src/features/<módulo>/api.ts` (tipos según el Resource, etiquetas de
@@ -143,7 +143,8 @@ Base: `/api`. Todas las respuestas son JSON (el backend fuerza `Accept: applicat
 * Sanctum con tokens Bearer: `POST /api/login` (público) devuelve `data.token`; todo lo demás requiere
   `Authorization: Bearer <token>`. `POST /api/logout` revoca el token actual.
 * El token se guarda en `localStorage`. Al iniciar la app la sesión se hidrata con `GET /api/me`: `data.user` (igual
-  que el login) y `data.permissions` (nombres; el administrador recibe todos). `POST /login` solo trae IDs de permisos.
+  que el login), `data.permissions` (nombres; el administrador recibe todos) y `data.mechanic` (ficha de mecánico
+  vinculada o `null`, en `useAuth().mechanic`). `POST /login` solo trae IDs de permisos.
 * Los tokens no expiran: ante un `401` se limpia la sesión local y se redirige al login.
 * Ante un `403` se informa falta de permiso; no se reintenta.
 
