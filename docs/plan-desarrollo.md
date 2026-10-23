@@ -423,9 +423,31 @@ Notas:
 
 ## F12 — Administración
 
-- [ ] Usuarios con roles (`users`).
-- [ ] Roles con permisos agrupados por módulo (`roles/permissions-grouped-by-module`) y permisos.
-- Puede adelantarse si hace falta crear usuarios antes; mientras tanto se usan los del seeder.
+- [x] Usuarios (`/users`): listado con búsqueda (nombre, usuario, email o rol), alta y edición con un rol (por nombre)
+      y contraseña (en la edición, en blanco no cambia), baja. El propio usuario se marca "Vos", sin botón de eliminar y
+      con el rol bloqueado.
+- [x] Roles (`/roles`): listado, alta y edición con los permisos agrupados por módulo (casillas por módulo y por
+      acción, con filtro y contador; módulos y acciones traducidos en `roles/api.ts`), baja. El administrador no se
+      elimina ni se renombra, y no se le asignan permisos (los tiene todos).
+- [x] Permisos: **solo lectura** dentro del formulario del rol (decisión 2026-10-23). El backend tiene el ABM
+      `permissions`, pero un permiso nuevo no habilita nada (el código chequea los nombres del seeder) y renombrar uno
+      rompe su endpoint.
+- [x] Revisión visual en el navegador (2026-10-23, Chrome headless con Playwright, escritorio y móvil): se crearon los
+      usuarios `lbenitez` y `lbenitez2` (cajero) y el rol `turnos` (módulo Clientes); eliminar el rol cajero con
+      usuarios devolvió `ROLE_IN_USE`. Sin errores de consola fuera de los 422/409 esperados.
+
+Notas:
+
+- **Contrato (`fix/proteccion-roles-usuarios` del backend, 2026-10-23; mergear junto con esta rama):**
+  `ROLE_PROTECTED` (422) al eliminar, renombrar o cambiar el guard de `administrador`; `ROLE_IN_USE` (409) al eliminar
+  un rol con usuarios; `USER_SELF_ACTION` (422) al eliminarse o cambiarse el propio rol. También corrige las claves de
+  los mensajes de la regla `Password`, que salían en inglés.
+- El detalle del rol trae los permisos como IDs y la API los recibe por nombre: el formulario los traduce con
+  `permissions-grouped-by-module`.
+- `DataTable` pone `position-relative` en `.table-responsive`: el encabezado `visually-hidden` de la columna de
+  acciones (absoluto) se escapaba del scroll y en móvil ensanchaba toda la página (pasaba desde F1 en mecánicos,
+  clientes, etc.).
+- La regla `uncompromised` de la contraseña consulta haveibeenpwned: sin internet el alta puede fallar.
 
 ## F13 — Notificaciones
 

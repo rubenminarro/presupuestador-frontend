@@ -57,7 +57,9 @@ export function DataTable<T>({
     if (!rows || rows.length === 0) return <EmptyState message={emptyMessage} />
 
     return (
-      <div className="table-responsive">
+      // position-relative: los `visually-hidden` (absolutos) de la tabla quedan dentro del scroll; si no, en móvil
+      // desbordan la página entera.
+      <div className="table-responsive position-relative">
         <table className="table card-table table-vcenter">
           <thead>
             <tr>

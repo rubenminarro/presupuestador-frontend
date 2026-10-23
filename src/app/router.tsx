@@ -35,8 +35,10 @@ import { SupplierPaymentsSummaryPage } from '@/features/supplier-payments/Suppli
 import { ReceptionDetailPage } from '@/features/receptions/ReceptionDetailPage'
 import { ReceptionsPage } from '@/features/receptions/ReceptionsPage'
 import { ReportsPage } from '@/features/reports/ReportsPage'
+import { RolesPage } from '@/features/roles/RolesPage'
 import { ServicesPage } from '@/features/services/ServicesPage'
 import { SuppliersPage } from '@/features/suppliers/SuppliersPage'
+import { UsersPage } from '@/features/users/UsersPage'
 import { VehicleDetailPage } from '@/features/vehicle-history/VehicleDetailPage'
 import { VehiclesPage } from '@/features/vehicles/VehiclesPage'
 import { WorkOrderDetailPage } from '@/features/work-orders/WorkOrderDetailPage'
@@ -88,6 +90,8 @@ const moduleRoutes: RouteObject[] = [
   ),
   guarded('services', 'services.index', <ServicesPage />),
   guarded('mechanics', 'mechanics.index', <MechanicsPage />),
+  guarded('users', 'users.index', <UsersPage />),
+  guarded('roles', 'roles.index', <RolesPage />),
   guarded('part-categories', 'part-categories.index', <PartCategoriesPage />),
   guarded('suppliers', 'suppliers.index', <SuppliersPage />),
   guarded('parts', 'parts.index', <PartsPage />),
