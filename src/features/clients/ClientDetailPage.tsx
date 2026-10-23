@@ -9,6 +9,7 @@ import { ErrorState, LoadingState } from '@/components/ui/States'
 import { useAuth } from '@/features/auth/useAuth'
 import { clientName, clientsApi, type Client } from '@/features/clients/api'
 import { ClientFormModal } from '@/features/clients/ClientFormModal'
+import { ClientNotificationsCard } from '@/features/notifications/ClientNotificationsCard'
 import type { Vehicle } from '@/features/vehicles/api'
 import { VehicleFormModal } from '@/features/vehicles/VehicleFormModal'
 import { DeleteVehicleDialog } from '@/features/vehicles/DeleteVehicleDialog'
@@ -150,6 +151,11 @@ function ClientDetail({ client }: { client: Client }) {
               }
             />
           </div>
+          {can('client-notifications.index') && (
+            <div className="col-12">
+              <ClientNotificationsCard clientId={client.id} enabled={client.notifications_enabled} />
+            </div>
+          )}
         </div>
       </PageBody>
 

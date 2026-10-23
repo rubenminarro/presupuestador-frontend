@@ -22,6 +22,8 @@ import { InvoicesPage } from '@/features/invoices/InvoicesPage'
 import { MaintenanceAlertsPage } from '@/features/maintenance/MaintenanceAlertsPage'
 import { MaintenancePlansPage } from '@/features/maintenance/MaintenancePlansPage'
 import { MechanicsPage } from '@/features/mechanics/MechanicsPage'
+import { ClientNotificationsPage } from '@/features/notifications/ClientNotificationsPage'
+import { NotificationsPage } from '@/features/notifications/NotificationsPage'
 import { PartCategoriesPage } from '@/features/parts/PartCategoriesPage'
 import { PartDetailPage } from '@/features/parts/PartDetailPage'
 import { PartsPage } from '@/features/parts/PartsPage'
@@ -75,6 +77,9 @@ const moduleRoutes: RouteObject[] = [
   guarded('supplier-payments/summary', 'supplier-payments.summary', <SupplierPaymentsSummaryPage />),
   guarded('accounts-payable', 'accounts-payable.view', <AccountsPayablePage />),
   guarded('clients', 'clients.index', <ClientsPage />),
+  guarded('client-notifications', 'client-notifications.index', <ClientNotificationsPage />),
+  // Bandeja interna: sin permiso, cada usuario ve solo sus avisos.
+  { path: 'notifications', element: <NotificationsPage /> },
   guarded('clients/:id', 'clients.show', <ClientDetailPage />),
   guarded('vehicles', 'vehicles.index', <VehiclesPage />),
   guarded('vehicles/:id', 'vehicle-history.view', <VehicleDetailPage />),

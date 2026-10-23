@@ -451,11 +451,29 @@ Notas:
 
 ## F13 — Notificaciones
 
-- [ ] Bandeja interna en la topbar: contador (`meta.unread_count`), listado con filtros `unread`/`type`, marcar leído
-      y todo leído (`me/notifications`). Sin permiso: cualquier usuario.
-- [ ] Avisos a clientes (`client-notifications`): listado con filtros, detalle, reenvío
-      (`CLIENT_NOTIFICATION_PENDING`, `CLIENT_WITHOUT_EMAIL`, …); pestaña de avisos en la ficha del cliente.
-- La bandeja puede adelantarse a F0/F1 si se quiere la campana desde el inicio.
+- [x] Campana en la topbar (`NotificationBell`): contador de no leídos (`meta.unread_count`, se refresca cada minuto),
+      los últimos 6 avisos y "Marcar todo como leído". Abrir un aviso lo marca leído y lleva al documento
+      (presupuesto, OT o cuentas por pagar).
+- [x] Bandeja completa (`/notifications`, sin permiso: cada usuario ve los suyos) con filtros sin leer / tipo, marcar
+      uno o todos como leídos.
+- [x] Avisos a clientes (`/client-notifications`): filtros por tipo, estado y fechas; detalle en un modal con motivo u
+      error, documento enlazado y reenvío (`client-notifications.resend`; deshabilitado mientras está en cola; los
+      `CLIENT_NOTIFICATION_PENDING`, `CLIENT_WITHOUT_EMAIL`, etc. salen como toast). Tras reenviar se muestra el aviso
+      nuevo.
+- [x] Tarjeta "Avisos enviados" en la ficha del cliente (`clients/{id}/notifications`, mismo modal).
+- [x] Revisión visual en el navegador (2026-10-23, Chrome headless con Playwright, escritorio y móvil, como la cajera
+      `lbenitez`): dos avisos internos generados con `InternalNotificationService` (OT-000001 completada y cuentas por
+      pagar vencidas); abrir uno llevó a la OT y bajó el contador; reenviar el aviso #5 creó el #7 en cola. Sin errores
+      de consola.
+
+Notas:
+
+- Los avisos a clientes se envían por cola (`QUEUE_CONNECTION=database`): en desarrollo quedan `pending` hasta correr
+  `php artisan queue:work` en el backend (con `MAIL_MAILER=log` el email va al log, no sale).
+- El listado de avisos a clientes trae el documento solo como tipo e id (el código viene en el detalle); el
+  mantenimiento no tiene pantalla propia por id y se muestra sin enlace.
+- El panel de la campana se ancla al contenedor de la barra superior (no a la campana) para no salirse de la pantalla
+  en móvil.
 
 ## F14 — Auditoría
 

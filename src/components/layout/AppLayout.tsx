@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 import { IconChevronDown, IconLogout } from '@tabler/icons-react'
 import { visibleNavigation } from '@/app/navigation'
 import { useAuth } from '@/features/auth/useAuth'
+import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { cx } from '@/lib/cx'
 import { roleLabel } from '@/lib/roles'
 
@@ -112,7 +113,8 @@ function Topbar() {
 
   return (
     <header className="navbar navbar-expand-md d-print-none">
-      <div className="container-xl justify-content-end">
+      <div className="container-xl justify-content-end position-relative">
+        <NotificationBell />
         <div className="nav-item dropdown" ref={menuRef}>
           <button
             type="button"
