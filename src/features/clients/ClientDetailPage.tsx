@@ -139,6 +139,7 @@ function ClientDetail({ client }: { client: Client }) {
               rows={client.vehicles.map(withOwner)}
               rowKey={(vehicle) => vehicle.id}
               emptyMessage="El cliente no tiene vehículos registrados."
+              onRowClick={can('vehicle-history.view') ? (vehicle) => navigate(`/vehicles/${vehicle.id}`) : undefined}
               toolbar={
                 can('vehicles.store') && (
                   <button type="button" className="btn btn-primary btn-sm" onClick={() => setEditingVehicle('new')}>

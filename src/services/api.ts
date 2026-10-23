@@ -120,6 +120,12 @@ export async function getPage<T>(url: string, params?: ListParams): Promise<Pagi
   }
 }
 
+/** Para respuestas cuyo `meta` trae más que la paginación (p. ej. contadores) o cuyo `data` no es una lista. */
+export async function getWithMeta<T, M>(url: string, params?: ListParams): Promise<{ data: T; meta: M }> {
+  const { data } = await api.get<ApiEnvelope<T, M>>(url, { params: cleanParams(params) })
+  return { data: data.data, meta: data.meta as M }
+}
+
 export async function postData<T>(url: string, body?: unknown): Promise<T> {
   const { data } = await api.post<ApiEnvelope<T>>(url, body)
   return data.data

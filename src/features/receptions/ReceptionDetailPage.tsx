@@ -197,7 +197,7 @@ function ReceptionDataCard({ reception }: { reception: Reception }) {
           </dd>
           <dt className="col-5">Vehículo</dt>
           <dd className="col-7">
-            {receptionVehicleLabel(vehicle)}
+            {can('vehicle-history.view') ? <Link to={`/vehicles/${vehicle.id}`}>{receptionVehicleLabel(vehicle)}</Link> : receptionVehicleLabel(vehicle)}
             <div className="small text-secondary">
               {[vehicle.brand, vehicle.model, vehicle.year, vehicle.color.label].filter(Boolean).join(' · ')}
             </div>

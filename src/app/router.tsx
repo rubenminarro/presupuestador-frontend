@@ -18,6 +18,8 @@ import { InventoryPage } from '@/features/inventory/InventoryPage'
 import { InvoiceStampsPage } from '@/features/invoice-stamps/InvoiceStampsPage'
 import { InvoiceDetailPage } from '@/features/invoices/InvoiceDetailPage'
 import { InvoicesPage } from '@/features/invoices/InvoicesPage'
+import { MaintenanceAlertsPage } from '@/features/maintenance/MaintenanceAlertsPage'
+import { MaintenancePlansPage } from '@/features/maintenance/MaintenancePlansPage'
 import { MechanicsPage } from '@/features/mechanics/MechanicsPage'
 import { PartCategoriesPage } from '@/features/parts/PartCategoriesPage'
 import { PartDetailPage } from '@/features/parts/PartDetailPage'
@@ -33,6 +35,7 @@ import { ReceptionDetailPage } from '@/features/receptions/ReceptionDetailPage'
 import { ReceptionsPage } from '@/features/receptions/ReceptionsPage'
 import { ServicesPage } from '@/features/services/ServicesPage'
 import { SuppliersPage } from '@/features/suppliers/SuppliersPage'
+import { VehicleDetailPage } from '@/features/vehicle-history/VehicleDetailPage'
 import { VehiclesPage } from '@/features/vehicles/VehiclesPage'
 import { WorkOrderDetailPage } from '@/features/work-orders/WorkOrderDetailPage'
 import { WorkOrdersPage } from '@/features/work-orders/WorkOrdersPage'
@@ -70,6 +73,9 @@ const moduleRoutes: RouteObject[] = [
   guarded('clients', 'clients.index', <ClientsPage />),
   guarded('clients/:id', 'clients.show', <ClientDetailPage />),
   guarded('vehicles', 'vehicles.index', <VehiclesPage />),
+  guarded('vehicles/:id', 'vehicle-history.view', <VehicleDetailPage />),
+  guarded('maintenance-plans', 'maintenance-plans.index', <MaintenancePlansPage />),
+  guarded('maintenance/alerts', 'maintenance-alerts.index', <MaintenanceAlertsPage />),
   guarded('brands', ['brands.index', 'vehicle_models.index'], <BrandsPage />),
   guarded('checklists', 'checklists.index', <ChecklistsPage />),
   guarded('services', 'services.index', <ServicesPage />),

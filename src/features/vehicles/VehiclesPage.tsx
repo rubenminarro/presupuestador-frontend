@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { IconPlus } from '@tabler/icons-react'
 import { DataTable } from '@/components/ui/DataTable'
@@ -12,6 +13,7 @@ import { useListParams } from '@/lib/useListParams'
 
 export function VehiclesPage() {
   const { can } = useAuth()
+  const navigate = useNavigate()
   const list = useListParams()
   const [editing, setEditing] = useState<Vehicle | 'new' | null>(null)
   const [deleting, setDeleting] = useState<Vehicle | null>(null)
@@ -54,6 +56,7 @@ export function VehiclesPage() {
           pagination={query.data?.pagination}
           onPageChange={list.setPage}
           search={{ value: list.searchInput, onChange: list.setSearchInput, placeholder: 'Chapa, chasis, marca, modelo o cliente…' }}
+          onRowClick={can('vehicle-history.view') ? (vehicle) => navigate(`/vehicles/${vehicle.id}`) : undefined}
         />
       </PageBody>
       {editing && <VehicleFormModal vehicle={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}

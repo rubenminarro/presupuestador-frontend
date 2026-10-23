@@ -60,7 +60,7 @@ local (entonces `presupuestador.test`) con origen `localhost:5173`; falta la rev
       provisoria con su permiso, que la fase correspondiente reemplaza.
 - [x] Verificación por HTTP (2026-10-21): CORS, login real, `GET /me`, `403` en `/users` para el mecánico, logout y
       `401` posterior; menú esperado: administrador 30 ítems, mecánico 11; todos los permisos del menú existen.
-- [ ] Revisión visual en el navegador (layout, menú móvil, recarga con sesión, página 403).
+- [x] Revisión visual en el navegador (layout, menú móvil, recarga con sesión, página 403; hecha por el usuario).
 
 ## F1 — Datos maestros del taller
 
@@ -76,7 +76,7 @@ listado/detalle y campos de cada 422). Falta la revisión visual.
 - [x] Ítems de checklist (`/checklists`) y categorías de servicio (filtro y select, solo lectura).
 - [x] Servicios (`/services`): filtros por categoría y estado, activar / desactivar (`services.change-status`).
 - [x] Mecánicos (`/mechanics`): filtro por estado; el usuario se elige al crear (requiere `users.index`).
-- [ ] Revisión visual en el navegador.
+- [x] Revisión visual en el navegador (hecha por el usuario).
 
 Piezas compartidas nuevas: `FormModal`, `DeleteDialog`, `IconButton`, `SwitchField`, `useApiMutation`,
 `lib/forms.ts` (`compact`, `toNumber`, `toInput`), `formatMoney`.
@@ -332,9 +332,38 @@ del usuario tras probar F3/F4):
 
 ## F9 — Historial y mantenimiento preventivo
 
-- [ ] Historial del vehículo: servicios, repuestos y kilometraje (costos solo con `work-orders.view-economics`).
-- [ ] Planes de mantenimiento (administrador).
-- [ ] Seguimiento por vehículo (`vehicles/{id}/maintenances`) y alertas (`maintenance/alerts`).
+Rama `feature/f9-mantenimiento` (2026-10-22). Lint y build en verde. Verificado con requests HTTP reales al kernel de
+Laravel dentro de una transacción revertida, con mecánico, recepcionista, jefe de taller, cajero y administrador:
+historial (resumen y línea de tiempo; `economics` solo con `work-orders.view-economics`), repuestos usados (costos solo
+con ese permiso) y kilometraje; mantenimientos del vehículo; registro manual (422 de fecha, `MAINTENANCE_DONE_OUT_OF_ORDER`,
+`MAINTENANCE_MILEAGE_BELOW_LAST`, `MAINTENANCE_PLAN_INACTIVE`); intervalos propios y vuelta a los del plan; alertas con
+contadores (filtro inválido → 422); planes (422 sin intervalos, nombre repetido o servicio eliminado,
+`MAINTENANCE_INTERVAL_REQUIRED`, `MAINTENANCE_PLAN_IN_USE`); 403 del mecánico al registrar y en alertas, de la recepcionista
+al configurar y crear planes, y del cajero en mantenimientos.
+
+- [x] Ficha del vehículo (`/vehicles/:id`, con `vehicle-history.view`; desde el listado de vehículos, la ficha del
+      cliente y la recepción): resumen (visitas, último ingreso, km, facturado y saldo; resultado sin IVA con
+      `work-orders.view-economics`) y pestañas Historial (una tarjeta por recepción con diagnósticos, presupuestos, OT
+      con trabajos, repuestos y factura, y entrega), Repuestos usados y Kilometraje (lecturas que bajan, marcadas).
+- [x] Planes de mantenimiento (`/maintenance-plans`): listado con búsqueda y estado; alta, edición y baja
+      (administrador). Al editar, el servicio se manda solo si cambió (el backend rechaza uno eliminado aunque ya fuera
+      el del plan).
+- [x] Pestaña Mantenimiento de la ficha (`vehicle-maintenances.index`): km actual (estimado con el promedio), estado por
+      plan, último y próximo vencimiento con lo que falta; registrar (`.record`) e intervalos propios (`.configure`).
+- [x] Alertas (`/maintenance/alerts`): contadores vencidos y por vencer (filtran), listado con cliente y teléfono.
+- [x] Revisión visual en el navegador (2026-10-22, Chrome headless con Playwright, administrador, escritorio y móvil),
+      sobre la BBB222: quedaron registrados la rotación de neumáticos (23/09, 85.000 km, al día) y el cambio de aceite
+      (06/04, 85.500 km, vencido por fecha), que aparece en las alertas.
+
+Notas:
+
+- `services/api.ts` suma `getWithMeta` para respuestas con `meta` además de la paginación (historial, alertas).
+- **Resuelto en `fix/mecanicos-eliminados` del backend (2026-10-22; mergear junto con esta rama):**
+  `WorkOrder::mechanic()` y `Diagnostic::mechanic()` no incluían mecánicos eliminados y la OT y el historial perdían el
+  nombre del responsable (pasaba con la OT-000001 en los datos locales); ahora usan `withTrashed()`.
+- La revisión visual encontró un request que falló como CORS: corrió sin el `.env` del backend (Apache multihilo de
+  Laragon; backend `docs/handoff.md`, sección 14, #12). Se corrigió el valor por defecto de la conexión
+  (`framework_base` → `mysql`, en `fix/conexion-por-defecto` del backend); la causa de entorno sigue abierta.
 
 ## F10 — Comisiones
 
