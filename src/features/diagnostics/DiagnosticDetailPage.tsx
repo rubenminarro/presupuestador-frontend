@@ -17,6 +17,7 @@ import {
   DIAGNOSTIC_ITEM_STATUS,
   DIAGNOSTIC_STATUS,
   diagnosticsApi,
+  isDiagnosticOpen,
   PRIORITY,
   SEVERITY,
   type Diagnostic,
@@ -24,7 +25,7 @@ import {
   type DiagnosticItemInput,
 } from '@/features/diagnostics/api'
 import { DiagnosticFormModal } from '@/features/diagnostics/DiagnosticFormModal'
-import { RECEPTION_STATUS, receptionVehicleLabel } from '@/features/receptions/api'
+import { isReceptionOpen, RECEPTION_STATUS, receptionVehicleLabel } from '@/features/receptions/api'
 import { formatDateTime, formatMoney } from '@/lib/format'
 import { nullIfEmpty, toInput, toNumber } from '@/lib/forms'
 import { useApiMutation } from '@/lib/useApiMutation'
@@ -62,6 +63,8 @@ function DiagnosticDetail({ diagnostic }: { diagnostic: Diagnostic }) {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const reception = diagnostic.reception
+  // Con la recepción entregada o cancelada el diagnóstico no se modifica (RECEPTION_CLOSED).
+  const receptionOpen = !reception || isReceptionOpen(reception.status.value)
 
   return (
     <>
@@ -81,13 +84,13 @@ function DiagnosticDetail({ diagnostic }: { diagnostic: Diagnostic }) {
                 Diagnósticos
               </Link>
             )}
-            {can('diagnostics.update') && (
+            {can('diagnostics.update') && receptionOpen && (
               <button type="button" className="btn btn-outline-primary" onClick={() => setEditing(true)}>
                 <IconPencil size={18} className="me-1" aria-hidden="true" />
                 Editar
               </button>
             )}
-            {can('diagnostics.destroy') && (
+            {can('diagnostics.destroy') && receptionOpen && (
               <button type="button" className="btn btn-outline-danger" onClick={() => setDeleting(true)}>
                 <IconTrash size={18} className="me-1" aria-hidden="true" />
                 Eliminar
@@ -151,7 +154,17 @@ function DiagnosticDetail({ diagnostic }: { diagnostic: Diagnostic }) {
             </div>
           </div>
           <div className="col-12 col-lg-7">
-            <DiagnosticItemsTable diagnostic={diagnostic} />
+            <DiagnosticItemsTable diagnostic={diagnostic} editable={receptionOpen && isDiagnosticOpen(diagnostic.status)} />
+            {!receptionOpen ? (
+              <div className="small text-secondary mt-2">La recepción está cerrada: el diagnóstico ya no se modifica.</div>
+            ) : (
+              !isDiagnosticOpen(diagnostic.status) && (
+                <div className="small text-secondary mt-2">
+                  Diagnóstico {DIAGNOSTIC_STATUS[diagnostic.status].label.toLowerCase()}: sus ítems y fotos no se modifican. Para
+                  corregirlos, edítelo y póngalo de nuevo en proceso.
+                </div>
+              )
+            )}
           </div>
         </div>
       </PageBody>
@@ -176,7 +189,8 @@ function DiagnosticDetail({ diagnostic }: { diagnostic: Diagnostic }) {
   )
 }
 
-function DiagnosticItemsTable({ diagnostic }: { diagnostic: Diagnostic }) {
+/** `editable`: diagnóstico pendiente o en proceso, con la recepción abierta (lo vuelve a validar el backend). */
+function DiagnosticItemsTable({ diagnostic, editable }: { diagnostic: Diagnostic; editable: boolean }) {
   const { can } = useAuth()
   const [editing, setEditing] = useState<DiagnosticItem | 'new' | null>(null)
   const [deleting, setDeleting] = useState<DiagnosticItem | null>(null)
@@ -218,8 +232,8 @@ function DiagnosticItemsTable({ diagnostic }: { diagnostic: Diagnostic }) {
           {can('diagnostic-item-photos.index') && (
             <IconButton label={`Fotos de ${item.title} (${item.photos?.length ?? 0})`} icon={IconPhoto} onClick={() => setPhotosItemId(item.id)} />
           )}
-          {can('diagnostic-items.update') && <IconButton label={`Editar ${item.title}`} icon={IconPencil} onClick={() => setEditing(item)} />}
-          {can('diagnostic-items.destroy') && (
+          {editable && can('diagnostic-items.update') && <IconButton label={`Editar ${item.title}`} icon={IconPencil} onClick={() => setEditing(item)} />}
+          {editable && can('diagnostic-items.destroy') && (
             <IconButton label={`Eliminar ${item.title}`} icon={IconTrash} variant="danger" onClick={() => setDeleting(item)} />
           )}
         </>
@@ -236,6 +250,7 @@ function DiagnosticItemsTable({ diagnostic }: { diagnostic: Diagnostic }) {
         rowKey={(item) => item.id}
         emptyMessage="El diagnóstico no tiene ítems."
         toolbar={
+          editable &&
           can('diagnostic-items.store') && (
             <button type="button" className="btn btn-primary btn-sm" onClick={() => setEditing('new')}>
               <IconPlus size={16} className="me-1" aria-hidden="true" />
@@ -267,16 +282,18 @@ function DiagnosticItemsTable({ diagnostic }: { diagnostic: Diagnostic }) {
             photos={photosItem.photos ?? []}
             invalidate={[['diagnostics']]}
             onUpload={
-              can('diagnostic-item-photos.store')
+              editable && can('diagnostic-item-photos.store')
                 ? (files, description) => diagnosticsApi.uploadItemPhotos(photosItem.id, files, description)
                 : undefined
             }
             onUpdate={
-              can('diagnostic-item-photos.update')
+              editable && can('diagnostic-item-photos.update')
                 ? (photo, description) => diagnosticsApi.updateItemPhoto(photosItem.id, photo.id, description)
                 : undefined
             }
-            onDelete={can('diagnostic-item-photos.destroy') ? (photo) => diagnosticsApi.removeItemPhoto(photosItem.id, photo.id) : undefined}
+            onDelete={
+              editable && can('diagnostic-item-photos.destroy') ? (photo) => diagnosticsApi.removeItemPhoto(photosItem.id, photo.id) : undefined
+            }
             descriptionRequired
           />
         </Modal>

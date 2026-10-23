@@ -316,6 +316,20 @@ Notas:
 - El cajero y el jefe de taller no listan proveedores (`suppliers.index`): el filtro por proveedor del listado de
   compras solo aparece para quien puede.
 
+## Ajustes de reglas: recepción, diagnóstico y presupuestos (2026-10-22)
+
+Rama `fix/reglas-cierre-recepcion` (junto con `fix/reglas-recepcion-diagnostico-presupuesto` del backend; decisiones
+del usuario tras probar F3/F4):
+
+- [x] Recepción entregada o cancelada: sin "Editar" ni acciones sobre fotos (`RECEPTION_CLOSED`); sus diagnósticos y
+      presupuestos tampoco se modifican (el presupuesto solo se puede cancelar).
+- [x] Diagnóstico terminado o cancelado: sin agregar, editar ni eliminar ítems ni fotos (`DIAGNOSTIC_NOT_EDITABLE`); se
+      edita el diagnóstico y, vuelto a "en proceso", se corrigen.
+- [x] Enviar un presupuesto exige los diagnósticos de la recepción terminados o cancelados
+      (`BUDGET_DIAGNOSTICS_PENDING`; la confirmación lo avisa). Cancelar la recepción cancela sus presupuestos en borrador
+      o enviados.
+- [x] Listado de diagnósticos ordenado por fecha de diagnóstico (backend).
+
 ## F9 — Historial y mantenimiento preventivo
 
 - [ ] Historial del vehículo: servicios, repuestos y kilometraje (costos solo con `work-orders.view-economics`).

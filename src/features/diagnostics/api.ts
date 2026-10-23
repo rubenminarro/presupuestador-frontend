@@ -96,6 +96,11 @@ export const DIAGNOSTIC_STATUS: StatusMap = {
   cancelled: { label: 'Cancelado', color: 'secondary' },
 }
 
+/** Pendiente o en proceso: admite ítems y fotos (terminado o cancelado no; se puede volver a "en proceso"). */
+export function isDiagnosticOpen(status: DiagnosticStatus): boolean {
+  return status === 'pending' || status === 'in_progress'
+}
+
 export const PRIORITY: StatusMap = {
   low: { label: 'Baja', color: 'secondary' },
   medium: { label: 'Media', color: 'azure' },

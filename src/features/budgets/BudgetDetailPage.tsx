@@ -25,7 +25,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
 import { BUDGET_ITEM_TYPES, BUDGET_STATUS, budgetsApi, type Budget, type BudgetAction, type BudgetItem } from '@/features/budgets/api'
 import { BudgetItemFormModal } from '@/features/budgets/BudgetItemFormModal'
-import { receptionVehicleLabel } from '@/features/receptions/api'
+import { isReceptionOpen, receptionVehicleLabel } from '@/features/receptions/api'
 import { BudgetWorkOrder } from '@/features/work-orders/BudgetWorkOrder'
 import { formatDate, formatDateTime, formatDecimal, formatMoney } from '@/lib/format'
 import { nullIfEmpty } from '@/lib/forms'
@@ -69,7 +69,7 @@ const ACTIONS: { action: BudgetAction; from: Budget['status'][]; label: string; 
 ]
 
 const CONFIRM: Partial<Record<BudgetAction, string>> = {
-  send: 'Se avisa al cliente por email (si tiene los avisos activos) y ya no se puede editar.',
+  send: 'Se avisa al cliente por email (si tiene los avisos activos) y ya no se puede editar. Exige los diagnósticos de la recepción terminados o cancelados.',
   approve: 'El cliente aceptó el presupuesto: queda listo para generar la orden de trabajo.',
   reject: 'El cliente no aceptó el presupuesto. Se puede reabrir como borrador.',
   cancel: 'Es definitivo: el presupuesto deja de usarse.',
@@ -82,8 +82,10 @@ function BudgetDetail({ budget }: { budget: Budget }) {
   const [editingNotes, setEditingNotes] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [downloading, setDownloading] = useState(false)
-  const draft = budget.status === 'draft'
   const reception = budget.reception
+  // Recepción entregada o cancelada: el presupuesto solo se puede cancelar (RECEPTION_CLOSED).
+  const receptionOpen = !reception || isReceptionOpen(reception.status.value)
+  const draft = budget.status === 'draft' && receptionOpen
 
   const action = useApiMutation((value: BudgetAction) => budgetsApi.action(budget.id, value), {
     invalidate: [['budgets'], ['receptions']],
@@ -104,7 +106,9 @@ function BudgetDetail({ budget }: { budget: Budget }) {
     }
   }
 
-  const available = ACTIONS.filter((item) => item.from.includes(budget.status) && can(`budgets.${item.action}`))
+  const available = ACTIONS.filter(
+    (item) => item.from.includes(budget.status) && (receptionOpen || item.action === 'cancel') && can(`budgets.${item.action}`),
+  )
 
   return (
     <>
@@ -205,7 +209,10 @@ function BudgetDetail({ budget }: { budget: Budget }) {
             <BudgetWorkOrder budget={budget} />
           </div>
           <div className="col-12 col-lg-8">
-            <BudgetItemsTable budget={budget} />
+            <BudgetItemsTable budget={budget} editable={draft} />
+            {!receptionOpen && (budget.status === 'draft' || budget.status === 'sent') && (
+              <div className="small text-secondary mt-2">La recepción está cerrada: este presupuesto ya no se modifica; solo se puede cancelar.</div>
+            )}
           </div>
         </div>
       </PageBody>
@@ -246,11 +253,11 @@ function BudgetDetail({ budget }: { budget: Budget }) {
   )
 }
 
-function BudgetItemsTable({ budget }: { budget: Budget }) {
+/** `editable`: borrador de una recepción abierta. */
+function BudgetItemsTable({ budget, editable }: { budget: Budget; editable: boolean }) {
   const { can } = useAuth()
   const [editing, setEditing] = useState<BudgetItem | 'new' | null>(null)
   const [deleting, setDeleting] = useState<BudgetItem | null>(null)
-  const editable = budget.status === 'draft'
 
   const columns: Column<BudgetItem>[] = [
     {
@@ -311,7 +318,9 @@ function BudgetItemsTable({ budget }: { budget: Budget }) {
           )
         }
       />
-      {!editable && <div className="small text-secondary mt-2">Solo los borradores se editan; un presupuesto rechazado se puede reabrir.</div>}
+      {!editable && budget.status !== 'draft' && (
+        <div className="small text-secondary mt-2">Solo los borradores se editan; un presupuesto rechazado se puede reabrir.</div>
+      )}
       {editing && <BudgetItemFormModal budgetId={budget.id} item={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
       {deleting && (
         <DeleteDialog

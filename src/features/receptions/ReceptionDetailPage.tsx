@@ -74,7 +74,7 @@ function ReceptionDetail({ reception }: { reception: Reception }) {
               <IconArrowLeft size={18} className="me-1" aria-hidden="true" />
               Recepciones
             </Link>
-            {can('receptions.update') && (
+            {can('receptions.update') && open && (
               <button type="button" className="btn btn-outline-primary" onClick={() => setEditing(true)}>
                 <IconPencil size={18} className="me-1" aria-hidden="true" />
                 Editar
@@ -313,8 +313,10 @@ function ReceptionDiagnostics({ reception }: { reception: Reception }) {
   )
 }
 
+/** Con la recepción entregada o cancelada las fotos solo se ven (RECEPTION_CLOSED). */
 function ReceptionPhotos({ reception }: { reception: Reception }) {
   const { can } = useAuth()
+  const open = isReceptionOpen(reception.status.value)
   const queryKey = ['receptions', 'photos', reception.id]
   const query = useQuery({ queryKey, queryFn: () => receptionsApi.photos(reception.id) })
 
@@ -328,11 +330,13 @@ function ReceptionPhotos({ reception }: { reception: Reception }) {
           <PhotoGallery
             photos={query.data}
             invalidate={[queryKey]}
-            onUpload={can('receptions-photos.store') ? (files, description) => receptionsApi.uploadPhotos(reception.id, files, description) : undefined}
+            onUpload={open && can('receptions-photos.store') ? (files, description) => receptionsApi.uploadPhotos(reception.id, files, description) : undefined}
             onUpdate={
-              can('receptions-photos.update') ? (photo, description) => receptionsApi.updatePhoto(reception.id, photo.id, description) : undefined
+              open && can('receptions-photos.update')
+                ? (photo, description) => receptionsApi.updatePhoto(reception.id, photo.id, description)
+                : undefined
             }
-            onDelete={can('receptions-photos.destroy') ? (photo) => receptionsApi.removePhoto(reception.id, photo.id) : undefined}
+            onDelete={open && can('receptions-photos.destroy') ? (photo) => receptionsApi.removePhoto(reception.id, photo.id) : undefined}
             emptyMessage="No se cargaron fotos del vehículo."
           />
         ) : query.error ? (
