@@ -18,10 +18,12 @@ export function ChecklistsPage() {
   const list = useListParams()
   const [editing, setEditing] = useState<CheckListItem | 'new' | null>(null)
   const [deleting, setDeleting] = useState<CheckListItem | null>(null)
+  const [active, setActive] = useState('')
 
+  const params = { ...list.params, is_active: active }
   const query = useQuery({
-    queryKey: ['checklists', list.params],
-    queryFn: () => checklistsApi.list(list.params),
+    queryKey: ['checklists', params],
+    queryFn: () => checklistsApi.list(params),
     placeholderData: keepPreviousData,
   })
 
@@ -33,6 +35,11 @@ export function ChecklistsPage() {
       header: 'Obligatorio',
       render: (item) =>
         item.required ? <span className="badge bg-blue-lt">Obligatorio</span> : <span className="text-secondary">Opcional</span>,
+    },
+    {
+      key: 'status',
+      header: 'Estado',
+      render: (item) => <span className={`badge ${item.is_active ? 'bg-green-lt' : 'bg-secondary-lt'}`}>{item.is_active ? 'Activo' : 'Inactivo'}</span>,
     },
     {
       key: 'actions',
@@ -74,7 +81,25 @@ export function ChecklistsPage() {
           pagination={query.data?.pagination}
           onPageChange={list.setPage}
           search={{ value: list.searchInput, onChange: list.setSearchInput, placeholder: 'Buscar ítem…' }}
+          toolbar={
+            <select
+              className="form-select form-select-sm w-auto"
+              aria-label="Filtrar por estado"
+              value={active}
+              onChange={(event) => {
+                setActive(event.target.value)
+                list.setPage(1)
+              }}
+            >
+              <option value="">Todos</option>
+              <option value="1">Activos</option>
+              <option value="0">Inactivos</option>
+            </select>
+          }
         />
+        <div className="small text-secondary mt-2">
+          Un ítem que ya se usó en recepciones no se elimina: desactívelo y deja de pedirse en las recepciones nuevas.
+        </div>
       </PageBody>
       {editing && <ChecklistFormModal item={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
       {deleting && (
@@ -82,7 +107,7 @@ export function ChecklistsPage() {
           title="Eliminar ítem de checklist"
           message={
             <>
-              ¿Eliminar <strong>{deleting.name}</strong>?
+              ¿Eliminar <strong>{deleting.name}</strong>? Si ya se usó en recepciones no se puede eliminar: desactívelo.
             </>
           }
           onDelete={() => checklistsApi.remove(deleting.id)}
@@ -99,10 +124,11 @@ function ChecklistFormModal({ item, onClose }: { item: CheckListItem | null; onC
   const [name, setName] = useState(item?.name ?? '')
   const [type, setType] = useState<CheckListType | ''>(item?.type ?? '')
   const [required, setRequired] = useState(Boolean(item?.required))
+  const [isActive, setIsActive] = useState(item?.is_active ?? true)
 
   const mutation = useApiMutation(
     () => {
-      const body = { name, type: type as CheckListType, required }
+      const body = { name, type: type as CheckListType, required, is_active: isActive }
       return item ? checklistsApi.update(item.id, body) : checklistsApi.create(body)
     },
     {
@@ -147,6 +173,14 @@ function ChecklistFormModal({ item, onClose }: { item: CheckListItem | null; onC
         ))}
       </SelectField>
       <SwitchField label="Obligatorio en la recepción" name="required" checked={required} onChange={setRequired} errors={errors} />
+      <SwitchField
+        label="Activo"
+        name="is_active"
+        checked={isActive}
+        onChange={setIsActive}
+        errors={errors}
+        hint="Inactivo: no se pide en las recepciones nuevas (las anteriores lo conservan)."
+      />
     </FormModal>
   )
 }

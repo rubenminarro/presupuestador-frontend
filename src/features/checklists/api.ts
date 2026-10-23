@@ -9,6 +9,8 @@ export interface CheckListItem {
   type: CheckListType
   /** El backend lo devuelve como 1/0 (columna sin cast). */
   required: boolean | number
+  /** Inactivo: no entra en los checklists de las recepciones nuevas. Un ítem ya usado se desactiva, no se elimina. */
+  is_active: boolean
   created_at: string
   updated_at: string
 }
@@ -17,6 +19,7 @@ export interface CheckListInput {
   name: string
   type: CheckListType
   required: boolean
+  is_active: boolean
 }
 
 /** `CheckListType`: en la recepción, `text` se carga como bien / mal / no aplica. */

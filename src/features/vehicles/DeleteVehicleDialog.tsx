@@ -8,7 +8,8 @@ export function DeleteVehicleDialog({ vehicle, onClose }: { vehicle: Vehicle; on
       message={
         <>
           ¿Eliminar el vehículo <strong>{vehicleIdentifier(vehicle)}</strong> ({vehicleDescription(vehicle) || 'sin datos'})? Su chapa y
-          chasis quedan libres para otro registro.
+          chasis quedan libres para otro registro. Si ya tiene recepciones no se puede eliminar; si cambió de dueño, edite su
+          cliente.
         </>
       }
       onDelete={() => vehiclesApi.remove(vehicle.id)}

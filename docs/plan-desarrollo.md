@@ -330,6 +330,17 @@ del usuario tras probar F3/F4):
       o enviados.
 - [x] Listado de diagnósticos ordenado por fecha de diagnóstico (backend).
 
+## Ajustes de reglas: datos maestros en uso (2026-10-22)
+
+Rama `fix/bajas-en-uso` (junto con `fix/bajas-en-uso` del backend; decisiones del usuario):
+
+- [x] Mecánico con trabajos, vehículo con recepciones e ítem de checklist usado no se eliminan (`MECHANIC_IN_USE`,
+      `VEHICLE_IN_USE`, `CHECKLIST_ITEM_IN_USE`): los diálogos de baja lo avisan y el backend responde con el mensaje.
+- [x] Ítems de checklist con estado activo / inactivo (columna, filtro y switch en el formulario); los inactivos no se
+      piden en las recepciones nuevas.
+- [x] Servicio usado en presupuestos: el nombre queda fijo (`SERVICE_NAME_NOT_EDITABLE`, aviso en el formulario); no se
+      elimina si lo usa un plan de mantenimiento.
+
 ## F9 — Historial y mantenimiento preventivo
 
 Rama `feature/f9-mantenimiento` (2026-10-22). Lint y build en verde. Verificado con requests HTTP reales al kernel de

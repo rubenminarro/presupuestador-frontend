@@ -148,7 +148,8 @@ export function ServicesPage() {
           title="Eliminar servicio"
           message={
             <>
-              ¿Eliminar <strong>{deleting.name}</strong>? Si ya se usó en presupuestos no se puede eliminar: desactívelo.
+              ¿Eliminar <strong>{deleting.name}</strong>? Si ya se usó en presupuestos o lo usa un plan de mantenimiento no se
+              puede eliminar: desactívelo.
             </>
           }
           onDelete={() => servicesApi.remove(deleting.id)}
@@ -243,6 +244,7 @@ function ServiceForm({ service, onClose }: { service: Service | null; onClose: (
             value={name}
             onChange={(event) => setName(event.target.value)}
             errors={errors}
+            hint={service ? 'Si ya se usó en presupuestos, el nombre no se puede cambiar.' : undefined}
           />
         </div>
         <div className="col-md-6">

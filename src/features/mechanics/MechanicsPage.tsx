@@ -122,8 +122,8 @@ export function MechanicsPage() {
           title="Eliminar mecánico"
           message={
             <>
-              ¿Eliminar al mecánico <strong>{deleting.user?.full_name ?? deleting.employee_code}</strong>? Para dejar de
-              asignarle trabajos sin borrarlo, márquelo como inactivo.
+              ¿Eliminar al mecánico <strong>{deleting.user?.full_name ?? deleting.employee_code}</strong>? Solo se puede si
+              no tiene trabajos registrados; si los tiene, márquelo como inactivo para dejar de asignarle trabajos.
             </>
           }
           onDelete={() => mechanicsApi.remove(deleting.id)}
