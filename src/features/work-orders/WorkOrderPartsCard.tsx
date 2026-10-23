@@ -1,16 +1,23 @@
 import { useState } from 'react'
-import { IconArrowBackUp, IconBan, IconLock, IconPencil, IconPlus, IconTool } from '@tabler/icons-react'
+import { IconArrowBackUp, IconBan, IconCheck, IconLock, IconPencil, IconPlus, IconTool, IconX } from '@tabler/icons-react'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { DataTable, type Column } from '@/components/ui/DataTable'
 import { FormModal } from '@/components/ui/FormModal'
 import { IconButton } from '@/components/ui/IconButton'
 import { SearchPicker } from '@/components/ui/SearchPicker'
-import { TextareaField, TextField } from '@/components/ui/FormField'
+import { SelectField, TextareaField, TextField } from '@/components/ui/FormField'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
 import { allowsFractions, partsApi, type Part } from '@/features/parts/api'
-import { WORK_ORDER_PART_STATUS, workOrdersApi, type WorkOrder, type WorkOrderPart } from '@/features/work-orders/api'
-import { formatMoney, formatQuantity } from '@/lib/format'
+import {
+  CLIENT_DECISION_CHANNELS,
+  WORK_ORDER_PART_STATUS,
+  workOrdersApi,
+  type ClientDecisionChannel,
+  type WorkOrder,
+  type WorkOrderPart,
+} from '@/features/work-orders/api'
+import { formatDateTime, formatMoney, formatQuantity } from '@/lib/format'
 import { nullIfEmpty, toInput, toNumber } from '@/lib/forms'
 import { useApiMutation } from '@/lib/useApiMutation'
 import { validationErrors } from '@/services/api'
@@ -21,12 +28,18 @@ type Dialog =
   | { kind: 'consume'; line: WorkOrderPart }
   | { kind: 'return'; line: WorkOrderPart }
   | { kind: 'cancel'; line: WorkOrderPart }
+  | { kind: 'approve' | 'reject'; line: WorkOrderPart }
 
 const INVALIDATE = [['work-orders'], ['inventory'], ['parts']]
 
+/** Estados sin resolver (la OT no se completa con ellos). */
+const OPEN_STATUSES = ['awaiting_approval', 'pending', 'reserved']
+
 /**
- * Repuestos de la OT: `pending → reserved → consumed → returned`, `pending|reserved → cancelled`. Agregar, editar,
- * reservar y cancelar con la OT abierta; consumir y devolver solo en reparación. Precios sin IVA.
+ * Repuestos de la OT: `pending → reserved → consumed → returned`, abiertos → `cancelled`. Los extras (fuera del
+ * presupuesto) nacen `awaiting_approval` y esperan la respuesta del cliente: aprobados pasan a `pending` (y se
+ * intenta reservar), rechazados quedan `cancelled`. Agregar, editar, responder, reservar y cancelar con la OT abierta;
+ * consumir y devolver solo en reparación. Precios sin IVA.
  */
 export function WorkOrderPartsCard({ workOrder }: { workOrder: WorkOrder }) {
   const { can } = useAuth()
@@ -35,6 +48,7 @@ export function WorkOrderPartsCard({ workOrder }: { workOrder: WorkOrder }) {
   const editable = status === 'pending' || status === 'in_progress' || status === 'paused'
   const inProgress = status === 'in_progress'
   const showCost = can('work-orders.view-economics')
+  const awaitingCount = (workOrder.parts ?? []).filter((line) => line.status.value === 'awaiting_approval').length
 
   const reserve = useApiMutation((line: WorkOrderPart) => workOrdersApi.reservePart(workOrder.id, line.id), {
     invalidate: INVALIDATE,
@@ -54,8 +68,21 @@ export function WorkOrderPartsCard({ workOrder }: { workOrder: WorkOrder }) {
         <>
           <div>{line.part?.name ?? `#${line.part_id}`}</div>
           <div className="small text-secondary">
-            {[line.part?.code, line.is_budgeted ? null : 'Agregado en la OT', line.notes].filter(Boolean).join(' · ')}
+            {[line.part?.code, line.is_budgeted ? null : 'Extra, fuera del presupuesto', line.notes].filter(Boolean).join(' · ')}
           </div>
+          {line.client_decision && (
+            <div className={`small ${line.client_decision.value === 'approved' ? 'text-success' : 'text-danger'}`}>
+              {[
+                line.client_decision.label,
+                line.client_decision.channel.label,
+                line.client_decision.contact,
+                formatDateTime(line.client_decision.decided_at),
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+              {line.client_decision.notes && <div className="text-secondary">{line.client_decision.notes}</div>}
+            </div>
+          )}
         </>
       ),
     },
@@ -86,14 +113,21 @@ export function WorkOrderPartsCard({ workOrder }: { workOrder: WorkOrder }) {
       header: <span className="visually-hidden">Acciones</span>,
       className: 'w-1 text-nowrap',
       render: (line) => {
-        const open = line.status.value === 'pending' || line.status.value === 'reserved'
+        const awaiting = line.status.value === 'awaiting_approval'
+        const open = OPEN_STATUSES.includes(line.status.value)
         const name = line.part?.name ?? 'repuesto'
         return (
           <>
+            {editable && awaiting && can('work-order-parts.approve') && (
+              <>
+                <IconButton label={`Registrar aprobación del cliente: ${name}`} icon={IconCheck} variant="success" onClick={() => setDialog({ kind: 'approve', line })} />
+                <IconButton label={`Registrar rechazo del cliente: ${name}`} icon={IconX} variant="danger" onClick={() => setDialog({ kind: 'reject', line })} />
+              </>
+            )}
             {editable && line.status.value === 'pending' && can('work-order-parts.reserve') && (
               <IconButton label={`Reservar ${name}`} icon={IconLock} disabled={reserve.isPending} onClick={() => reserve.mutate(line)} />
             )}
-            {inProgress && open && can('work-order-parts.consume') && (
+            {inProgress && open && !awaiting && can('work-order-parts.consume') && (
               <IconButton label={`Consumir ${name}`} icon={IconTool} variant="success" onClick={() => setDialog({ kind: 'consume', line })} />
             )}
             {inProgress && line.status.value === 'consumed' && can('work-order-parts.return') && (
@@ -132,10 +166,14 @@ export function WorkOrderPartsCard({ workOrder }: { workOrder: WorkOrder }) {
       {workOrder.parts_summary && workOrder.parts_summary.unresolved_count > 0 && (
         <div className="small text-secondary mt-2">
           {workOrder.parts_summary.unresolved_count} repuesto(s) sin consumir ni cancelar: hay que resolverlos antes de completar la OT.
+          {awaitingCount > 0 && ` ${awaitingCount} extra(s) esperan la respuesta del cliente.`}
         </div>
       )}
 
       {dialog?.kind === 'add' && <PartLineModal workOrder={workOrder} line={null} onClose={() => setDialog(null)} />}
+      {(dialog?.kind === 'approve' || dialog?.kind === 'reject') && (
+        <DecisionModal workOrder={workOrder} line={dialog.line} decision={dialog.kind} onClose={() => setDialog(null)} />
+      )}
       {dialog?.kind === 'edit' && <PartLineModal workOrder={workOrder} line={dialog.line} onClose={() => setDialog(null)} />}
       {dialog?.kind === 'consume' && <ConsumeModal workOrder={workOrder} line={dialog.line} onClose={() => setDialog(null)} />}
       {dialog?.kind === 'return' && <ReturnModal workOrder={workOrder} line={dialog.line} onClose={() => setDialog(null)} />}
@@ -167,15 +205,22 @@ function PartLineModal({ workOrder, line, onClose }: { workOrder: WorkOrder; lin
   const [unitPrice, setUnitPrice] = useState(line ? toInput(line.unit_price) : '')
   const [notes, setNotes] = useState(line?.notes ?? '')
   const unit = line?.part?.unit.value ?? part?.unit.value
+  // Lo que aprobó el cliente (cantidad y precio) no cambia: solo se editan las notas.
+  const approved = line?.client_decision?.value === 'approved'
 
   const mutation = useApiMutation(
     () => {
+      if (line && approved) return workOrdersApi.updatePart(workOrder.id, line.id, { notes: nullIfEmpty(notes) })
       const body = { quantity: toNumber(quantity), notes: nullIfEmpty(notes) }
       return line
         ? workOrdersApi.updatePart(workOrder.id, line.id, { ...body, unit_price: toNumber(unitPrice) })
         : workOrdersApi.addPart(workOrder.id, { ...body, part_id: part?.id ?? null, unit_price: toNumber(unitPrice) })
     },
-    { invalidate: INVALIDATE, successMessage: line ? 'Repuesto actualizado.' : 'Repuesto agregado.', onSuccess: onClose },
+    {
+      invalidate: INVALIDATE,
+      successMessage: line ? 'Repuesto actualizado.' : 'Repuesto agregado: queda pendiente de la aprobación del cliente.',
+      onSuccess: onClose,
+    },
   )
   const errors = validationErrors(mutation.error)
 
@@ -187,6 +232,16 @@ function PartLineModal({ workOrder, line, onClose }: { workOrder: WorkOrder; lin
       isSubmitting={mutation.isPending}
       size="lg"
     >
+      {!line && (
+        <p className="text-secondary">
+          Es un extra, fuera del presupuesto aprobado: no reserva stock ni se consume hasta registrar la respuesta del cliente.
+        </p>
+      )}
+      {approved && (
+        <p className="text-secondary">
+          El cliente aprobó esta cantidad y este precio: solo pueden cambiarse las notas. Para otro número, cancelá el repuesto y agregá uno nuevo.
+        </p>
+      )}
       {!line && (
         <SearchPicker<Part>
           label="Repuesto"
@@ -220,10 +275,11 @@ function PartLineModal({ workOrder, line, onClose }: { workOrder: WorkOrder; lin
             inputMode="decimal"
             min={0}
             step={quantityStep(unit)}
+            disabled={approved}
             value={quantity}
             onChange={(event) => setQuantity(event.target.value)}
             errors={errors}
-            hint={line?.status.value === 'reserved' ? 'Cambiar la cantidad ajusta la reserva.' : undefined}
+            hint={line?.status.value === 'reserved' && !approved ? 'Cambiar la cantidad ajusta la reserva.' : undefined}
           />
         </div>
         <div className="col-md-6">
@@ -234,6 +290,7 @@ function PartLineModal({ workOrder, line, onClose }: { workOrder: WorkOrder; lin
             inputMode="decimal"
             min={0}
             step="0.01"
+            disabled={approved}
             value={unitPrice}
             onChange={(event) => setUnitPrice(event.target.value)}
             errors={errors}
@@ -259,7 +316,9 @@ function ConsumeModal({ workOrder, line, onClose }: { workOrder: WorkOrder; line
   return (
     <FormModal title={`Consumir · ${line.part?.name ?? 'repuesto'}`} onClose={onClose} onSubmit={() => mutation.mutate()} isSubmitting={mutation.isPending} submitLabel="Registrar consumo">
       <p className="text-secondary">
-        Un solo consumo por línea: descuenta del stock lo usado, que puede diferir de lo {line.status.value === 'reserved' ? 'reservado' : 'previsto'} ({formatQuantity(line.quantity)}).
+        {line.is_budgeted
+          ? `Un solo consumo por línea: descuenta del stock lo usado, que puede diferir de lo ${line.status.value === 'reserved' ? 'reservado' : 'previsto'} (${formatQuantity(line.quantity)}).`
+          : `Un solo consumo por línea: descuenta del stock lo usado, sin superar lo que aprobó el cliente (${formatQuantity(line.quantity)}).`}
       </p>
       <TextField
         label="Cantidad usada"
@@ -268,6 +327,7 @@ function ConsumeModal({ workOrder, line, onClose }: { workOrder: WorkOrder; line
         type="number"
         inputMode="decimal"
         min={0}
+        max={line.is_budgeted ? undefined : line.quantity}
         step={quantityStep(line.part?.unit.value)}
         autoFocus
         value={quantity}
@@ -275,6 +335,77 @@ function ConsumeModal({ workOrder, line, onClose }: { workOrder: WorkOrder; line
         errors={errors}
       />
       <TextareaField label="Notas" name="notes" rows={2} maxLength={500} value={notes} onChange={(event) => setNotes(event.target.value)} errors={errors} />
+    </FormModal>
+  )
+}
+
+/** Respuesta del cliente a un extra; al rechazar, el motivo es obligatorio. */
+function DecisionModal({
+  workOrder,
+  line,
+  decision,
+  onClose,
+}: {
+  workOrder: WorkOrder
+  line: WorkOrderPart
+  decision: 'approve' | 'reject'
+  onClose: () => void
+}) {
+  const [channel, setChannel] = useState<ClientDecisionChannel | ''>('')
+  const [contact, setContact] = useState('')
+  const [notes, setNotes] = useState('')
+  const approving = decision === 'approve'
+  const mutation = useApiMutation(
+    () => workOrdersApi.decidePart(workOrder.id, line.id, decision, { channel, contact: nullIfEmpty(contact), notes: nullIfEmpty(notes) }),
+    {
+      invalidate: INVALIDATE,
+      successMessage: approving ? 'Aprobación del cliente registrada.' : 'Rechazo del cliente registrado.',
+      onSuccess: onClose,
+    },
+  )
+  const errors = validationErrors(mutation.error)
+
+  return (
+    <FormModal
+      title={`${approving ? 'Aprobación' : 'Rechazo'} del cliente · ${line.part?.name ?? 'repuesto'}`}
+      onClose={onClose}
+      onSubmit={() => mutation.mutate()}
+      isSubmitting={mutation.isPending}
+      submitLabel={approving ? 'Registrar aprobación' : 'Registrar rechazo'}
+    >
+      <p className="text-secondary">
+        {formatQuantity(line.quantity)} {line.part?.unit.label.toLowerCase()} a {formatMoney(line.unit_price)} c/u (sin IVA).{' '}
+        {approving
+          ? 'Aprobado, no podrán cambiarse la cantidad ni el precio, y se intenta reservar el stock.'
+          : 'Rechazado, el repuesto queda cancelado.'}
+      </p>
+      <SelectField label="Medio de la respuesta" name="channel" required value={channel} onChange={(event) => setChannel(event.target.value as ClientDecisionChannel | '')} errors={errors}>
+        <option value="">Seleccionar…</option>
+        {Object.entries(CLIENT_DECISION_CHANNELS).map(([value, label]) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </SelectField>
+      <TextField
+        label="Contacto"
+        name="contact"
+        maxLength={150}
+        value={contact}
+        onChange={(event) => setContact(event.target.value)}
+        errors={errors}
+        hint="Quién respondió o por dónde (opcional)."
+      />
+      <TextareaField
+        label={approving ? 'Notas' : 'Motivo del rechazo'}
+        name="notes"
+        required={!approving}
+        rows={2}
+        maxLength={500}
+        value={notes}
+        onChange={(event) => setNotes(event.target.value)}
+        errors={errors}
+      />
     </FormModal>
   )
 }

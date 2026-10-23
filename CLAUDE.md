@@ -21,8 +21,9 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
 
 * **Backend/API:** Laravel 12.70, roadmap completo (FASES 10–25: hasta compras, pagos a proveedores,
   notificaciones, exportación/comprobantes PDF y auditoría), más `GET /api/me` (con el mecánico vinculado), CORS con
-  `Content-Disposition`, la protección de roles y usuarios (`ROLE_PROTECTED`, `ROLE_IN_USE`, `USER_SELF_ACTION`) y los
-  ajustes de contrato pedidos por cada fase del frontend. 222 rutas API, 335 tests. Se sirve en
+  `Content-Disposition`, la protección de roles y usuarios (`ROLE_PROTECTED`, `ROLE_IN_USE`, `USER_SELF_ACTION`), la
+  aprobación del cliente para los repuestos extra en la OT y los ajustes de contrato pedidos por cada fase del
+  frontend. 224 rutas API, 347 tests. Se sirve en
   `http://synctaller-backend.test` (Laragon). Los avisos a clientes salen por cola: en desarrollo hace falta
   `php artisan queue:work` (con `MAIL_MAILER=log` van al log).
   CORS y Sanctum configurados para `http://localhost:5173`. Antes de comparar contra el backend, actualizar su
@@ -179,8 +180,8 @@ El rol `administrador` tiene todos los permisos. Los permisos por endpoint tiene
 |---|---|---|
 | `administrador` | Todo | Exclusivo: usuarios/roles/permisos, auditoría (`audit-logs.*`), costos y margen (`work-orders.view-economics`), liquidar comisiones, anular entregas, timbrados, ABM de planes de mantenimiento, reporte de rentabilidad |
 | `mechanic` | Ejecuta la OT | Diagnóstico, iniciar/pausar/completar OT e ítems, consumir/devolver repuestos, sus horas y comisiones, historial, estado de mantenimiento, dashboard (bloque taller) |
-| `recepcionista` | Atiende al cliente | Clientes, vehículos, recepciones, checklist, presupuestos completos, registrar entregas, alertas de mantenimiento, reporte de presupuestos |
-| `jefe-taller` | Organiza el trabajo | OT completas, ítems, repuestos en OT, asignación y horas de todos, diagnóstico, intervalos de mantenimiento por vehículo, reporte de productividad, consulta de compras, pagos a proveedores y cuentas por pagar |
+| `recepcionista` | Atiende al cliente | Clientes, vehículos, recepciones, checklist, presupuestos completos, registrar entregas, alertas de mantenimiento, reporte de presupuestos, ver repuestos de la OT y registrar la respuesta del cliente a los extras |
+| `jefe-taller` | Organiza el trabajo | OT completas, ítems, repuestos en OT (incluida la respuesta del cliente a los extras), asignación y horas de todos, diagnóstico, intervalos de mantenimiento por vehículo, reporte de productividad, consulta de compras, pagos a proveedores y cuentas por pagar |
 | `cajero` | Cobra y paga | Facturas, pagos, resumen de caja, reportes de ventas y clientes, consulta de compras, pagos a proveedores completos y cuentas por pagar |
 | `deposito` | Stock | Repuestos, proveedores, inventario, compras completas, repuestos en OT, reporte de inventario, consulta de pagos a proveedores y cuentas por pagar |
 
@@ -203,7 +204,10 @@ Detalle de reglas y `error_code`: backend `CLAUDE.md`, sección 6.
   Solo `draft` es editable. Ítems `labor | service | part`. Precios sin IVA; el total suma el IVA.
 * **Órdenes de trabajo (`OT-000001`):** nacen de un presupuesto aprobado. `pending → in_progress ⇄ paused →
   completed`, `pending → cancelled`. Ítems, repuestos en OT (`pending → reserved → consumed → returned`),
-  asignación de mecánicos y horas.
+  asignación de mecánicos y horas. Los repuestos extra (fuera del presupuesto) nacen `awaiting_approval`: no se
+  reservan ni consumen hasta registrar la respuesta del cliente (`approve` → `pending`, `reject` → `cancelled`, permiso
+  `work-order-parts.approve`); aprobados, cantidad y precio no cambian y no se consume más de lo aprobado. Un extra
+  sin respuesta impide completar la OT.
 * **Servicios, mecánicos y comisiones:** catálogo de servicios; comisiones congeladas al completar la OT;
   liquidación por período (solo administrador).
 * **Cierre económico:** venta, costo y margen de la OT completada (sin IVA), visible solo con

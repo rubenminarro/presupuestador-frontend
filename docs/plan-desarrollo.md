@@ -211,6 +211,14 @@ Notas:
   asignación trae `mechanic.user_id` (el frontend ofrece al mecánico cargar solo sus horas) y la recepción trae marca y
   modelo del vehículo.
 - Los datos locales no tienen ninguna OT: el presupuesto aprobado B2 (recepción 2) sirve para generar la primera.
+- **Aprobación del cliente para los extras** (`feature/aprobacion-repuestos-extra`, 2026-10-23; backend `725ce60`,
+  deuda #11). El repuesto agregado en la OT nace `awaiting_approval` ("Pendiente de aprobación") y no reserva ni se
+  consume. Con `work-order-parts.approve` la tarjeta de repuestos ofrece registrar la aprobación o el rechazo (medio
+  obligatorio, contacto opcional, motivo obligatorio al rechazar). La línea muestra la respuesta, medio, contacto,
+  fecha y notas. Aprobado, el modal de edición deja cambiar solo las notas y el consumo no supera lo aprobado. Se
+  agregaron el aviso interno `extra_part_awaiting_approval` y la entidad `work_order_part` en la auditoría.
+  Verificado en el navegador (OT-000003): aprobar (reserva), rechazar (cancela), `422` del motivo faltante, edición
+  bloqueada, móvil sin desborde.
 
 ## F6 — Facturación y cobros
 

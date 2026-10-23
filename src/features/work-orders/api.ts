@@ -9,7 +9,19 @@ import type { ListParams } from '@/types/api'
 
 export type WorkOrderStatus = 'pending' | 'in_progress' | 'paused' | 'completed' | 'cancelled'
 export type WorkOrderItemStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
-export type WorkOrderPartStatus = 'pending' | 'reserved' | 'consumed' | 'returned' | 'cancelled'
+export type WorkOrderPartStatus = 'awaiting_approval' | 'pending' | 'reserved' | 'consumed' | 'returned' | 'cancelled'
+export type ClientDecisionChannel = 'phone' | 'whatsapp' | 'in_person' | 'email' | 'other'
+
+/** Respuesta del cliente a un repuesto extra. `decided_by` es el id del usuario que la registró. */
+export interface ClientDecision {
+  value: 'approved' | 'rejected'
+  label: string
+  decided_at: string
+  decided_by: number
+  channel: { value: ClientDecisionChannel; label: string }
+  contact: string | null
+  notes: string | null
+}
 
 export interface ItemMechanic {
   id: number
@@ -58,6 +70,8 @@ export interface WorkOrderPart {
   unit_price: string
   total_cost: string | null
   total_price: string
+  /** Solo en extras, una vez registrada la respuesta del cliente. */
+  client_decision: ClientDecision | null
   notes: string | null
 }
 
@@ -116,7 +130,8 @@ export interface WorkOrder {
 
 export interface WorkOrderPartInput {
   part_id?: number | null
-  quantity: number | null
+  /** Obligatoria en el alta; en un extra aprobado no se envía (no cambia). */
+  quantity?: number | null
   /** Vacío en el alta: precio de venta del repuesto. */
   unit_price?: number | null
   notes: string | null
@@ -137,8 +152,24 @@ export const WORK_ORDER_ITEM_STATUS: StatusMap = {
   cancelled: { label: 'Cancelado', color: 'secondary' },
 }
 
+export interface ClientDecisionInput {
+  channel: ClientDecisionChannel | ''
+  contact: string | null
+  /** Obligatorio al rechazar (motivo). */
+  notes: string | null
+}
+
+export const CLIENT_DECISION_CHANNELS: Record<ClientDecisionChannel, string> = {
+  phone: 'Teléfono',
+  whatsapp: 'WhatsApp',
+  in_person: 'Presencial',
+  email: 'Email',
+  other: 'Otro',
+}
+
 export const WORK_ORDER_PART_STATUS: StatusMap = {
-  pending: { label: 'Sin stock reservado', color: 'yellow' },
+  awaiting_approval: { label: 'Pendiente de aprobación', color: 'orange' },
+  pending:{ label: 'Sin stock reservado', color: 'yellow' },
   reserved: { label: 'Reservado', color: 'blue' },
   consumed: { label: 'Consumido', color: 'green' },
   returned: { label: 'Devuelto', color: 'secondary' },
@@ -163,6 +194,9 @@ export const workOrdersApi = {
     patchData<ItemMechanic>(`/work-orders/${id}/items/${itemId}/mechanics/${mechanicId}/hours`, { hours }),
   addPart: (id: number, body: WorkOrderPartInput) => postData<WorkOrderPart>(`/work-orders/${id}/parts`, body),
   updatePart: (id: number, lineId: number, body: WorkOrderPartInput) => patchData<WorkOrderPart>(`/work-orders/${id}/parts/${lineId}`, body),
+  /** Extra `awaiting_approval`: aprobar lo pasa a `pending` e intenta reservar; rechazar lo cancela. */
+  decidePart: (id: number, lineId: number, decision: 'approve' | 'reject', body: ClientDecisionInput) =>
+    postData<WorkOrderPart>(`/work-orders/${id}/parts/${lineId}/${decision}`, body),
   reservePart: (id: number, lineId: number) => postData<WorkOrderPart>(`/work-orders/${id}/parts/${lineId}/reserve`),
   consumePart: (id: number, lineId: number, quantityUsed: number | null, notes: string | null) =>
     postData<WorkOrderPart>(`/work-orders/${id}/parts/${lineId}/consume`, { quantity_used: quantityUsed, notes }),

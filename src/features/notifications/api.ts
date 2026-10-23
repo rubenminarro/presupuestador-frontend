@@ -7,6 +7,7 @@ export type InternalNotificationType =
   | 'budget_rejected'
   | 'work_order_completed'
   | 'part_out_of_stock'
+  | 'extra_part_awaiting_approval'
   | 'accounts_payable_overdue'
 
 /** `UserNotificationResource`: aviso interno de la bandeja del usuario. */
@@ -31,6 +32,7 @@ export const INTERNAL_NOTIFICATION_TYPES: Record<InternalNotificationType, strin
   budget_rejected: 'Presupuesto rechazado',
   work_order_completed: 'Orden de trabajo completada',
   part_out_of_stock: 'Repuesto sin stock',
+  extra_part_awaiting_approval: 'Repuesto extra pendiente de aprobación',
   accounts_payable_overdue: 'Cuentas por pagar vencidas',
 }
 
