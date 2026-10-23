@@ -17,27 +17,31 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
 
 ---
 
-## 1. Estado actual (verificado el 2026-10-22)
+## 1. Estado actual (verificado el 2026-10-23)
 
 * **Backend/API:** Laravel 12.70, roadmap completo (FASES 10–25: hasta compras, pagos a proveedores,
-  notificaciones, exportación/comprobantes PDF y auditoría), más `GET /api/me`, CORS con `Content-Disposition` y los
-  ajustes de contrato pedidos por cada fase del frontend. 222 rutas API, 327 tests. Se sirve en
-  `http://synctaller-backend.test` (Laragon).
+  notificaciones, exportación/comprobantes PDF y auditoría), más `GET /api/me` (con el mecánico vinculado), CORS con
+  `Content-Disposition`, la protección de roles y usuarios (`ROLE_PROTECTED`, `ROLE_IN_USE`, `USER_SELF_ACTION`) y los
+  ajustes de contrato pedidos por cada fase del frontend. 222 rutas API, 335 tests. Se sirve en
+  `http://synctaller-backend.test` (Laragon). Los avisos a clientes salen por cola: en desarrollo hace falta
+  `php artisan queue:work` (con `MAIL_MAILER=log` van al log).
   CORS y Sanctum configurados para `http://localhost:5173`. Antes de comparar contra el backend, actualizar su
   `main` (`git pull`): la copia local puede estar atrasada.
 * **Frontend:** F0 (base: cliente Axios, sesión con `GET /me`, layout Tabler, menú por permisos, componentes
   compartidos), F1 (datos maestros), F2 (repuestos e inventario), F3 (recepción y diagnóstico), F4 (presupuestos),
-  F5 (órdenes de trabajo), F6 (facturación y cobros), F7 (entrega del vehículo), F8 (compras y proveedores) y F9
+  F5 (órdenes de trabajo), F6 (facturación y cobros), F7 (entrega del vehículo), F8 (compras y proveedores), F9
   (historial y mantenimiento preventivo), F10 (comisiones), F11 (reportes y dashboard), F12 (administración: usuarios
-  y roles) y F13 (notificaciones) en `main`; F14 (auditoría) en `feature/f14-auditoria`, la última fase del plan: todos los ítems del menú tienen su pantalla (`ComingSoonPage`
-  queda para uno nuevo sin construir). Avance y estructura de carpetas en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un
-  componente, revisar `src/components/ui` y `src/lib`.
+  y roles), F13 (notificaciones) y F14 (auditoría) en `main`: el plan está completo y todos los ítems del menú tienen
+  su pantalla (`ComingSoonPage` queda para un módulo nuevo sin construir). Avance, decisiones y estructura de carpetas
+  en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un componente, revisar `src/components/ui`
+  y `src/lib`.
 * **Estructura de un módulo** (seguir F1): `src/features/<módulo>/api.ts` (tipos según el Resource, etiquetas de
   enums, `xxxApi` con `getPage`/`postData`/…), páginas `XxxPage.tsx` con `DataTable` + `useListParams`, formularios
   en `FormModal` con `useApiMutation` (`invalidate` por prefijo de query key, `successMessage`) y errores de
   `validationErrors(mutation.error)`; bajas con `DeleteDialog`; la ruta se registra en `src/app/router.tsx`
   (`guarded(path, permiso, página)`).
-* **Pendiente en el backend (sin diseño ni fase):** notificaciones por WhatsApp.
+* **Pendientes fuera del plan:** notificaciones por WhatsApp en el backend (sin diseño ni fase) y runner de tests en
+  el frontend (decisión a consultar, sección 3).
 
 ---
 
