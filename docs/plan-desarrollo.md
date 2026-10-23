@@ -11,8 +11,9 @@ Creado el 2026-10-21. Marcar `[x]` al cerrar cada punto (con lint, build y verif
 | Almacenamiento del token | `localStorage` | La sesión sobrevive a recargas. Los tokens de Sanctum no expiran; `POST /logout` los revoca |
 | Datos remotos | TanStack Query | Caché, invalidación tras mutaciones y estados de carga/error uniformes en ~40 pantallas |
 | Formularios | Estado de React + `FormField` con errores `422` | Sin librería extra hasta que haga falta |
+| Gráficos (F11) | ApexCharts (`apexcharts` + `react-apexcharts`) vía `components/ui/Chart.tsx`, con carga diferida | Es la que usa Tabler en sus demos; los colores salen de sus variables CSS. ~155 kB gzip en un chunk aparte que solo baja al mostrar un gráfico |
 
-Pendientes de decidir cuando se llegue: librería de gráficos (F11), runner de tests (Vitest + Testing Library).
+Pendiente de decidir cuando se llegue: runner de tests (Vitest + Testing Library).
 
 ## Criterios de cierre de cada fase
 
@@ -399,9 +400,26 @@ Notas:
 
 ## F11 — Reportes y dashboard
 
-- [ ] Dashboard por bloques según permisos (pantalla de inicio).
-- [ ] Reportes `sales`, `budgets`, `profitability`, `productivity`, `inventory`, `clients` con filtro de período.
-- [ ] Exportar cada reporte a CSV y PDF (`?format=csv|pdf`).
+- [x] Dashboard en el inicio (`dashboard.view`): indicadores del mes en curso agrupados en Taller, Ventas del mes y Stock y
+      mantenimiento; cada bloque llega solo si el usuario tiene el permiso de su reporte y enlaza al reporte o la
+      pantalla de detalle cuando puede abrirlos. Debajo siguen los accesos directos.
+- [x] Reportes (`/reports?report=<clave>`, una pestaña por permiso `reports.<clave>`) con período (sin fechas, el mes en
+      curso): ventas (por día o mes; gráfico de barras y dona de cobros por medio), presupuestos (barras por estado),
+      rentabilidad (composición y OT de menor/mayor margen, aviso de costo incompleto), productividad (barras por
+      mecánico), inventario y clientes. Cada pantalla rotula si los importes llevan IVA.
+- [x] Exportar el reporte activo a CSV y PDF (`?format=csv|pdf`, `downloadFile`; nombre del archivo del backend).
+- [x] Revisión visual en el navegador (2026-10-23, Chrome headless con Playwright, escritorio y móvil): se emitió la
+      factura de la OT-000001 (Gs. 1.045.000) con dos cobros (Gs. 200.000 en efectivo y Gs. 100.000 por
+      transferencia); se recorrieron las seis pestañas y las dos descargas como administrador, y el dashboard del
+      mecánico muestra solo el bloque Taller. Sin errores de consola.
+
+Notas:
+
+- `react-apexcharts` es CommonJS: en desarrollo `import()` devuelve el componente envuelto en otro `default`, y
+  `Chart.tsx` lo desenvuelve (sin eso, `lazy` falla con "Element type is invalid").
+- `lib/format.ts` suma `formatPercent` y `formatPeriod`.
+- El resumen de cobros trae los cuatro medios aunque no tengan pagos: la dona muestra solo los usados y la tabla los
+  cuatro.
 
 ## F12 — Administración
 

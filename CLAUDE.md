@@ -28,7 +28,8 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
 * **Frontend:** F0 (base: cliente Axios, sesión con `GET /me`, layout Tabler, menú por permisos, componentes
   compartidos), F1 (datos maestros), F2 (repuestos e inventario), F3 (recepción y diagnóstico), F4 (presupuestos),
   F5 (órdenes de trabajo), F6 (facturación y cobros), F7 (entrega del vehículo), F8 (compras y proveedores) y F9
-  (historial y mantenimiento preventivo) en `main`; F10 (comisiones) en `feature/f10-comisiones`. Los módulos siguientes muestran una pantalla provisoria hasta su
+  (historial y mantenimiento preventivo) y F10 (comisiones) en `main`; F11 (reportes y dashboard) en
+  `feature/f11-reportes-dashboard`. Los módulos siguientes muestran una pantalla provisoria hasta su
   fase. Avance y estructura de carpetas en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un
   componente, revisar `src/components/ui` y `src/lib`.
 * **Estructura de un módulo** (seguir F1): `src/features/<módulo>/api.ts` (tipos según el Resource, etiquetas de
@@ -83,6 +84,7 @@ Antes de implementar cualquier cambio:
 | HTTP | Axios |
 | Datos remotos | TanStack Query (caché, invalidación tras mutaciones, estados de carga) |
 | Formularios | Estado de React + `FormField` con errores `422` (sin librería extra) |
+| Gráficos | ApexCharts (`react-apexcharts`), siempre a través de `src/components/ui/Chart.tsx` (carga diferida) |
 | Calidad | ESLint (`typescript-eslint`, `react-hooks`) |
 
 Plan de desarrollo por fases y decisiones tomadas: [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md).

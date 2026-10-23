@@ -2,17 +2,20 @@ import { Link } from 'react-router-dom'
 import { visibleNavigation } from '@/app/navigation'
 import { PageBody, PageHeader } from '@/components/ui/Page'
 import { useAuth } from '@/features/auth/useAuth'
+import { Dashboard } from '@/features/reports/Dashboard'
 
 export function HomePage() {
   const { user, can } = useAuth()
-  // Accesos directos a los módulos permitidos (el dashboard con indicadores llega en la F11).
+  // Indicadores del mes (con `dashboard.view`) y accesos directos a los módulos permitidos.
   const sections = visibleNavigation(can).filter((section) => section.title)
 
   return (
     <>
       <PageHeader pretitle="SyncTaller" title={`Hola, ${user?.first_name ?? ''}`} />
       <PageBody>
-        <div className="row row-cards">
+        {can('dashboard.view') && <Dashboard />}
+        {can('dashboard.view') && <h3 className="mt-2 mb-0 text-secondary text-uppercase small fw-bold">Accesos directos</h3>}
+        <div className="row row-cards mt-0">
           {sections.map((section) => (
             <div key={section.title} className="col-12 col-md-6 col-xl-4">
               <div className="card h-100">

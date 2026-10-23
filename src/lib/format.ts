@@ -37,6 +37,12 @@ export function formatDecimal(value: Numeric, digits = 2): string {
   return new Intl.NumberFormat('es-PY', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(number)
 }
 
+/** Porcentaje calculado por el backend (`"42.50"`): hasta 2 decimales, `42,5 %`. */
+export function formatPercent(value: Numeric): string {
+  const number = toNumber(value)
+  return number === null ? '—' : `${new Intl.NumberFormat('es-PY', { maximumFractionDigits: 2 }).format(number)} %`
+}
+
 /** Cantidades de inventario: hasta 3 decimales, sin ceros de relleno. */
 export function formatQuantity(value: Numeric): string {
   const number = toNumber(value)
@@ -65,4 +71,11 @@ export function formatDate(value: string | null | undefined): string {
 export function formatDateTime(value: string | null | undefined): string {
   const date = toDate(value)
   return date ? dateTimeFormat.format(date) : '—'
+}
+
+/** Período de un reporte: `Día 23/10/2026` o `Del 01/10/2026 al 31/10/2026`. */
+export function formatPeriod(period: { date_from: string; date_to: string }): string {
+  return period.date_from === period.date_to
+    ? `Día ${formatDate(period.date_from)}`
+    : `Del ${formatDate(period.date_from)} al ${formatDate(period.date_to)}`
 }

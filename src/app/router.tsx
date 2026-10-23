@@ -34,6 +34,7 @@ import { SupplierPaymentsPage } from '@/features/supplier-payments/SupplierPayme
 import { SupplierPaymentsSummaryPage } from '@/features/supplier-payments/SupplierPaymentsSummaryPage'
 import { ReceptionDetailPage } from '@/features/receptions/ReceptionDetailPage'
 import { ReceptionsPage } from '@/features/receptions/ReceptionsPage'
+import { ReportsPage } from '@/features/reports/ReportsPage'
 import { ServicesPage } from '@/features/services/ServicesPage'
 import { SuppliersPage } from '@/features/suppliers/SuppliersPage'
 import { VehicleDetailPage } from '@/features/vehicle-history/VehicleDetailPage'
@@ -80,6 +81,11 @@ const moduleRoutes: RouteObject[] = [
   guarded('brands', ['brands.index', 'vehicle_models.index'], <BrandsPage />),
   guarded('checklists', 'checklists.index', <ChecklistsPage />),
   guarded('commissions', 'mechanic-commissions.index', <CommissionsPage />),
+  guarded(
+    'reports',
+    ['reports.sales', 'reports.budgets', 'reports.profitability', 'reports.productivity', 'reports.inventory', 'reports.clients'],
+    <ReportsPage />,
+  ),
   guarded('services', 'services.index', <ServicesPage />),
   guarded('mechanics', 'mechanics.index', <MechanicsPage />),
   guarded('part-categories', 'part-categories.index', <PartCategoriesPage />),
