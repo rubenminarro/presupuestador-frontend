@@ -477,5 +477,18 @@ Notas:
 
 ## F14 — Auditoría
 
-- [ ] Listado de `audit-logs` con filtros (entidad, id, usuario, evento, fechas) y detalle con valores antes/después
-      (solo administrador).
+- [x] Listado de `audit-logs` (`/audit-logs`, `audit-logs.index`, solo administrador) con filtros por entidad (y su id),
+      evento, usuario y fechas; columnas con la entidad enlazada a su pantalla cuando tiene detalle propio (repuesto,
+      factura, compra, cliente, vehículo) y los campos que cambiaron. Admite `?auditable_type=…&auditable_id=…` para
+      enlazar el historial de una entidad.
+- [x] Detalle en un modal con usuario, IP, navegador y la tabla de campos antes/después (contraseñas y tokens llegan
+      como `********` desde el backend).
+- [x] Revisión visual en el navegador (2026-10-23, Chrome headless con Playwright, escritorio y móvil) sobre los 31
+      registros locales: filtro de facturas modificadas (2), detalle de la emisión de la factura #1 (8 campos) y enlace
+      directo al usuario #5. Sin errores de consola.
+
+Notas:
+
+- `auditable_type` es el nombre del modelo en snake_case (`AuditLogger`); las etiquetas están en `audit-logs/api.ts`
+  según los modelos con el trait `Auditable`. Los eventos de sesión (login, logout) no tienen entidad.
+- Los nombres de campo se muestran tal como los guarda el backend (columnas de la tabla).

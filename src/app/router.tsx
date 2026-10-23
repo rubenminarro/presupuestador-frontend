@@ -4,6 +4,7 @@ import { navigation } from '@/app/navigation'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute, RequirePermission } from '@/features/auth/guards'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { AuditLogsPage } from '@/features/audit-logs/AuditLogsPage'
 import { BrandsPage } from '@/features/brands/BrandsPage'
 import { BudgetDetailPage } from '@/features/budgets/BudgetDetailPage'
 import { BudgetsPage } from '@/features/budgets/BudgetsPage'
@@ -97,6 +98,7 @@ const moduleRoutes: RouteObject[] = [
   guarded('mechanics', 'mechanics.index', <MechanicsPage />),
   guarded('users', 'users.index', <UsersPage />),
   guarded('roles', 'roles.index', <RolesPage />),
+  guarded('audit-logs', 'audit-logs.index', <AuditLogsPage />),
   guarded('part-categories', 'part-categories.index', <PartCategoriesPage />),
   guarded('suppliers', 'suppliers.index', <SuppliersPage />),
   guarded('parts', 'parts.index', <PartsPage />),

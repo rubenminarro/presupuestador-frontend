@@ -28,9 +28,9 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
 * **Frontend:** F0 (base: cliente Axios, sesión con `GET /me`, layout Tabler, menú por permisos, componentes
   compartidos), F1 (datos maestros), F2 (repuestos e inventario), F3 (recepción y diagnóstico), F4 (presupuestos),
   F5 (órdenes de trabajo), F6 (facturación y cobros), F7 (entrega del vehículo), F8 (compras y proveedores) y F9
-  (historial y mantenimiento preventivo), F10 (comisiones), F11 (reportes y dashboard) y F12 (administración: usuarios
-  y roles) en `main`; F13 (notificaciones) en `feature/f13-notificaciones`. Los módulos siguientes muestran una pantalla provisoria hasta su
-  fase. Avance y estructura de carpetas en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un
+  (historial y mantenimiento preventivo), F10 (comisiones), F11 (reportes y dashboard), F12 (administración: usuarios
+  y roles) y F13 (notificaciones) en `main`; F14 (auditoría) en `feature/f14-auditoria`, la última fase del plan: todos los ítems del menú tienen su pantalla (`ComingSoonPage`
+  queda para uno nuevo sin construir). Avance y estructura de carpetas en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un
   componente, revisar `src/components/ui` y `src/lib`.
 * **Estructura de un módulo** (seguir F1): `src/features/<módulo>/api.ts` (tipos según el Resource, etiquetas de
   enums, `xxxApi` con `getPage`/`postData`/…), páginas `XxxPage.tsx` con `DataTable` + `useListParams`, formularios
