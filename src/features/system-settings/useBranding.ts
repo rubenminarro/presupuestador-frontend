@@ -2,7 +2,7 @@ import { useEffect, useSyncExternalStore } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { BRANDING_KEY, systemSettingsApi, type Branding } from '@/features/system-settings/api'
 
-const EMPTY: Branding = { logo_url: null, logo_black_url: null }
+const EMPTY: Branding = { logo_url: null, logo_black_url: null, favicon_url: null }
 
 /** Logo del sistema y su versión negra. Cambia poco: se pide una vez y se refresca al subirlo o quitarlo. */
 export function useBranding(): Branding {
@@ -37,25 +37,14 @@ export function useLogo(on: 'page' | 'navbar'): string | null {
 
 const DEFAULT_FAVICON = '/favicon.svg'
 
-/**
- * Usa el logo como ícono de la pestaña; sin logo, el ícono original. La pestaña sigue el tema del sistema operativo,
- * así que en oscuro va el logo subido y en claro la versión negra.
- */
+/** Ícono de la pestaña: el favicon cargado en Configuración del sistema o, sin él, el original de la app. */
 export function BrandingSync() {
-  const { logo_url, logo_black_url } = useBranding()
-  const systemDark = useSyncExternalStore(
-    (onChange) => {
-      const query = window.matchMedia('(prefers-color-scheme: dark)')
-      query.addEventListener('change', onChange)
-      return () => query.removeEventListener('change', onChange)
-    },
-    () => window.matchMedia('(prefers-color-scheme: dark)').matches,
-  )
-  const favicon = systemDark ? logo_url : logo_black_url
+  const { favicon_url: favicon } = useBranding()
 
   useEffect(() => {
     const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
     if (!link) return
+    // Sin `type`, el navegador toma el formato del archivo (PNG, ICO o SVG).
     link.type = favicon ? '' : 'image/svg+xml'
     link.href = favicon ?? DEFAULT_FAVICON
   }, [favicon])
