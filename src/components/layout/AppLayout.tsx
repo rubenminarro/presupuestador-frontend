@@ -310,7 +310,8 @@ function UserMenu() {
         </span>
         <IconChevronDown size={16} className="ms-1 align-self-center" aria-hidden="true" />
       </button>
-      <div className={cx('dropdown-menu dropdown-menu-end dropdown-menu-arrow', open && 'show')} role="menu" style={{ right: 0 }}>
+      {/* data-bs-popper="static": sin el JS de Bootstrap (Popper), ubica el menú debajo del botón y alineado a la derecha. */}
+      <div className={cx('dropdown-menu dropdown-menu-end dropdown-menu-arrow', open && 'show')} role="menu" data-bs-popper="static">
         <span className="dropdown-header">{user.email}</span>
         <Link to="/preferences" className="dropdown-item" role="menuitem" onClick={close}>
           <IconAdjustments size={16} className="me-2" aria-hidden="true" />
