@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import { IconBell } from '@tabler/icons-react'
-import { internalNotificationLink, notificationsApi, type UserNotification } from '@/features/notifications/api'
-import { useMarkAllAsRead, useMarkAsRead } from '@/features/notifications/useInbox'
+import { internalNotificationLink, type UserNotification } from '@/features/notifications/api'
+import { useInboxPreview, useMarkAllAsRead, useMarkAsRead } from '@/features/notifications/useInbox'
 import { cx } from '@/lib/cx'
 import { formatDateTime } from '@/lib/format'
 
@@ -15,11 +14,7 @@ export function NotificationBell() {
   const markAsRead = useMarkAsRead()
   const markAll = useMarkAllAsRead()
 
-  const query = useQuery({
-    queryKey: ['me-notifications', 'bell'],
-    queryFn: () => notificationsApi.inbox({ per_page: 6 }),
-    refetchInterval: 60_000,
-  })
+  const query = useInboxPreview()
   const unread = query.data?.meta.unread_count ?? 0
 
   useEffect(() => {

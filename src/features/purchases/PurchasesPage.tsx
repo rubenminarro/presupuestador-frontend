@@ -11,6 +11,7 @@ import { PurchaseFormModal } from '@/features/purchases/PurchaseModals'
 import { PURCHASE_STATUS, purchasesApi, type PurchaseSummary } from '@/features/purchases/api'
 import { useAllSuppliers } from '@/features/suppliers/api'
 import { formatDate, formatGuarani } from '@/lib/format'
+import { useCreateParam } from '@/lib/useCreateParam'
 import { useListParams } from '@/lib/useListParams'
 
 /** Compras a proveedores: costos con IVA incluido; al recibirlas entra el stock al costo sin IVA. */
@@ -22,7 +23,7 @@ export function PurchasesPage() {
   const [supplierId, setSupplierId] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useCreateParam(can('purchases.store'))
   const suppliers = useAllSuppliers({ enabled: can('suppliers.index') })
 
   const params = { ...list.params, status, supplier_id: supplierId, date_from: dateFrom, date_to: dateTo }
