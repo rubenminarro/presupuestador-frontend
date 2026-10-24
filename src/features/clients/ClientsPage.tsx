@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { IconPlus } from '@tabler/icons-react'
@@ -7,13 +6,14 @@ import { PageBody, PageHeader } from '@/components/ui/Page'
 import { useAuth } from '@/features/auth/useAuth'
 import { clientName, clientsApi, type ClientSummary } from '@/features/clients/api'
 import { ClientFormModal } from '@/features/clients/ClientFormModal'
+import { useCreateParam } from '@/lib/useCreateParam'
 import { useListParams } from '@/lib/useListParams'
 
 export function ClientsPage() {
   const { can } = useAuth()
   const navigate = useNavigate()
   const list = useListParams()
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useCreateParam(can('clients.store'))
 
   const query = useQuery({
     queryKey: ['clients', list.params],

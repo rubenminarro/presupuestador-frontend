@@ -73,6 +73,22 @@ export function formatDateTime(value: string | null | undefined): string {
   return date ? dateTimeFormat.format(date) : '—'
 }
 
+const relativeFormat = new Intl.RelativeTimeFormat('es', { numeric: 'auto' })
+
+/** Tiempo transcurrido para avisos: `hace 5 minutos`, `ayer`; desde una semana, la fecha. */
+export function formatRelative(value: string | null | undefined, now: Date = new Date()): string {
+  const date = toDate(value)
+  if (!date) return '—'
+
+  const minutes = Math.round((date.getTime() - now.getTime()) / 60_000)
+  if (Math.abs(minutes) < 1) return 'recién'
+  if (Math.abs(minutes) < 60) return relativeFormat.format(minutes, 'minute')
+  const hours = Math.round(minutes / 60)
+  if (Math.abs(hours) < 24) return relativeFormat.format(hours, 'hour')
+  const days = Math.round(hours / 24)
+  return Math.abs(days) < 7 ? relativeFormat.format(days, 'day') : formatDate(value)
+}
+
 /** Período de un reporte: `Día 23/10/2026` o `Del 01/10/2026 al 31/10/2026`. */
 export function formatPeriod(period: { date_from: string; date_to: string }): string {
   return period.date_from === period.date_to

@@ -1,39 +1,43 @@
-import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { visibleNavigation } from '@/app/navigation'
-import { PageBody, PageHeader } from '@/components/ui/Page'
+import { PageBody } from '@/components/ui/Page'
+import { ErrorState, LoadingState } from '@/components/ui/States'
 import { useAuth } from '@/features/auth/useAuth'
-import { Dashboard } from '@/features/reports/Dashboard'
+import { AttentionCard, HomeIndicators, RecentNotifications, Shortcuts, WelcomeHeader } from '@/features/home/HomeSections'
+import { reportsApi } from '@/features/reports/api'
 
+/**
+ * Inicio: bienvenida con acciones rápidas, indicadores del mes, lo que requiere atención, los últimos avisos y los
+ * accesos directos. Los indicadores y los pendientes salen de `GET /dashboard` (con `dashboard.view`); cada bloque
+ * llega solo si el usuario tiene el permiso de su reporte. Los detalles quedan en Reportes.
+ */
 export function HomePage() {
-  const { user, can } = useAuth()
-  // Indicadores del mes (con `dashboard.view`) y accesos directos a los módulos permitidos.
+  const { can } = useAuth()
+  const canDashboard = can('dashboard.view')
+  const dashboard = useQuery({ queryKey: ['dashboard'], queryFn: reportsApi.dashboard, enabled: canDashboard })
   const sections = visibleNavigation(can).filter((section) => section.title)
 
   return (
     <>
-      <PageHeader pretitle="SyncTaller" title={`Hola, ${user?.first_name ?? ''}`} />
+      <WelcomeHeader />
       <PageBody>
-        {can('dashboard.view') && <Dashboard />}
-        {can('dashboard.view') && <h3 className="mt-2 mb-0 text-secondary text-uppercase small fw-bold">Accesos directos</h3>}
-        <div className="row row-cards mt-0">
-          {sections.map((section) => (
-            <div key={section.title} className="col-12 col-md-6 col-xl-4">
-              <div className="card h-100">
-                <div className="card-header">
-                  <h3 className="card-title">{section.title}</h3>
-                </div>
-                <div className="list-group list-group-flush">
-                  {section.items.map((item) => (
-                    <Link key={item.to} to={item.to} className="list-group-item list-group-item-action d-flex align-items-center gap-2">
-                      <item.icon size={18} stroke={1.75} className="text-secondary" aria-hidden="true" />
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
+        {canDashboard &&
+          (dashboard.data ? (
+            <HomeIndicators data={dashboard.data} />
+          ) : (
+            <div className="card mb-3">
+              {dashboard.error ? <ErrorState error={dashboard.error} onRetry={() => void dashboard.refetch()} /> : <LoadingState />}
             </div>
           ))}
+        <div className="row row-cards mb-3">
+          <div className="col-lg-6">
+            <AttentionCard data={dashboard.data} />
+          </div>
+          <div className="col-lg-6">
+            <RecentNotifications />
+          </div>
         </div>
+        {sections.length > 0 && <Shortcuts sections={sections} />}
       </PageBody>
     </>
   )

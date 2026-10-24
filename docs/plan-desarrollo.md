@@ -410,7 +410,8 @@ Notas:
 
 - [x] Dashboard en el inicio (`dashboard.view`): indicadores del mes en curso agrupados en Taller, Ventas del mes y Stock y
       mantenimiento; cada bloque llega solo si el usuario tiene el permiso de su reporte y enlaza al reporte o la
-      pantalla de detalle cuando puede abrirlos. Debajo siguen los accesos directos.
+      pantalla de detalle cuando puede abrirlos. Debajo siguen los accesos directos. (Rediseñado el 2026-10-24: ver
+      "Inicio modernizado" al final.)
 - [x] Reportes (`/reports?report=<clave>`, una pestaña por permiso `reports.<clave>`) con período (sin fechas, el mes en
       curso): ventas (por día o mes; gráfico de barras y dona de cobros por medio), presupuestos (barras por estado),
       rentabilidad (composición y OT de menor/mayor margen, aviso de costo incompleto), productividad (barras por
@@ -552,3 +553,22 @@ Notas y decisiones:
   "como la página" en claro y oscuro, superior de acento, plegada y plegada con hover, login claro y oscuro, y la
   vista HTML del encabezado del PDF. Opciones no incluidas: el estilo flotante de los paneles laterales (`offcanvas-style`), porque la app no
   usa paneles de ese tipo.
+
+## Inicio modernizado (2026-10-24, fuera del plan original)
+
+- [x] Bienvenida con saludo según la hora, fecha y rol, y acciones rápidas según permisos: nueva recepción, nuevo
+      cliente y nueva compra (abren el formulario del listado con `?new=1`, `lib/useCreateParam`) y cobrar una factura
+      (lleva a Facturas: el cobro se registra desde la factura).
+- [x] Indicadores del mes (`GET /dashboard`, `dashboard.view`) en tarjetas con ícono: vehículos en taller, OT abiertas
+      con barra apilada por estado, OT completadas, facturado (con IVA, cobrado y por cobrar) y margen bruto (sin IVA);
+      los dos últimos solo con sus reportes. El valor del stock queda en el reporte de inventario.
+- [x] "Requiere atención": presupuestos sin respuesta, repuestos bajo el mínimo, mantenimientos vencidos y por vencer y
+      avisos sin leer, solo los que tienen pendientes y el usuario puede ver; sin pendientes, "Todo al día".
+- [x] "Últimos avisos": los 5 más recientes con tiempo relativo (`formatRelative`), compartiendo la consulta de la
+      campana (`useInboxPreview`); abrir uno lo marca leído.
+- [x] Accesos directos en una grilla compacta de mosaicos por sección (antes, tres columnas largas que repetían el menú).
+- [x] Revisión visual (Chrome headless, escritorio claro y oscuro, móvil): administrador y mecánico (sin acciones
+      rápidas ni datos de ventas, "Todo al día"); "Nueva recepción" abre el formulario y limpia la URL. Sin errores.
+
+Pendiente, con backend: "Mis trabajos" del mecánico (el listado de OT no filtra por mecánico) y una curva de ventas
+de la semana (serie por día: terreno de Reportes).

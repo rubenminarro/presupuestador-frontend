@@ -9,6 +9,7 @@ import { useAuth } from '@/features/auth/useAuth'
 import { RECEPTION_STATUS, receptionsApi, receptionVehicleLabel, type ReceptionSummary } from '@/features/receptions/api'
 import { ReceptionFormModal } from '@/features/receptions/ReceptionFormModal'
 import { formatDate } from '@/lib/format'
+import { useCreateParam } from '@/lib/useCreateParam'
 import { useListParams } from '@/lib/useListParams'
 
 export function ReceptionsPage() {
@@ -18,7 +19,7 @@ export function ReceptionsPage() {
   const [status, setStatus] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useCreateParam(can('receptions.store'))
 
   const params = { ...list.params, status, reception_start_date: dateFrom, reception_end_date: dateTo }
   const query = useQuery({
