@@ -23,7 +23,7 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   notificaciones, exportación/comprobantes PDF y auditoría), más `GET /api/me` (con el mecánico vinculado), CORS con
   `Content-Disposition`, la protección de roles y usuarios (`ROLE_PROTECTED`, `ROLE_IN_USE`, `USER_SELF_ACTION`), la
   aprobación del cliente para los repuestos extra en la OT y los ajustes de contrato pedidos por cada fase del
-  frontend, más las preferencias visuales por usuario y el logo del sistema. 230 rutas API, 361 tests. Se sirve en
+  frontend, más las preferencias visuales por usuario y el logo del sistema. 230 rutas API, 364 tests. Se sirve en
   `http://synctaller-backend.test` (Laragon). Los avisos a clientes salen por cola: en desarrollo hace falta
   `php artisan queue:work` (con `MAIL_MAILER=log` van al log).
   CORS y Sanctum configurados para `http://localhost:5173`. Antes de comparar contra el backend, actualizar su

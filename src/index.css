@@ -3,3 +3,16 @@
 .cursor-pointer {
   cursor: pointer;
 }
+
+/*
+ * Barra lateral plegada (desde lg, donde Tabler la pliega): del logo horizontal se ve solo el comienzo, un cuadrado
+ * del alto del logo, que en un logo con isotipo a la izquierda es la marca. Al expandirse por hover, el logo entero.
+ */
+@media (min-width: 992px) {
+  html[data-bs-sidebar='folded'] .navbar-vertical .navbar-brand-image,
+  html[data-bs-sidebar='folded-hover'] .navbar-vertical:not(:hover):not(:has(:focus-visible)) .navbar-brand-image {
+    width: 2rem;
+    object-fit: cover;
+    object-position: left center;
+  }
+}

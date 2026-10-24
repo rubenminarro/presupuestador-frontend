@@ -539,5 +539,13 @@ Notas y decisiones:
 - Los desplegables del menú superior llevan `data-bs-popper="static"`: sin el JS de Bootstrap es lo que los ubica
   debajo del botón.
 - El logo se pide a `GET /branding` (público) una vez (`useBranding`, `staleTime: Infinity`) y se refresca al
-  cambiarlo. Opciones no incluidas: el estilo flotante de los paneles laterales (`offcanvas-style`), porque la app no
+  cambiarlo.
+- Logo sin nombre (2026-10-24): el logo ya lleva el nombre, así que la marca y el login muestran solo el logo (el
+  `<h1>` del login queda `visually-hidden`); sin logo, el nombre como antes. `useLogo('navbar' | 'page')` elige la
+  versión según el fondo leyendo `data-bs-theme` y `data-bs-navbar-theme` de `<html>`: la negra (`logo_black_url`,
+  la genera el backend) sobre fondo claro, la subida sobre fondo oscuro. El ícono de la pestaña sigue el tema del
+  sistema operativo. Con la barra lateral plegada se ve solo el comienzo del logo (un cuadrado del alto del logo,
+  regla en `index.css`): en un logo con isotipo a la izquierda, la marca. Revisado en Chrome headless: barra oscura,
+  "como la página" en claro y oscuro, superior de acento, plegada y plegada con hover, login claro y oscuro, y la
+  vista HTML del encabezado del PDF. Opciones no incluidas: el estilo flotante de los paneles laterales (`offcanvas-style`), porque la app no
   usa paneles de ese tipo.

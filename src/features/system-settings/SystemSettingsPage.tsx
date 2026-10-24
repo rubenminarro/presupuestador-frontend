@@ -24,7 +24,7 @@ export function SystemSettingsPage() {
 }
 
 function LogoCard() {
-  const logoUrl = useBranding()
+  const { logo_url: logoUrl, logo_black_url: logoBlackUrl } = useBranding()
   const inputRef = useRef<HTMLInputElement>(null)
   const [localError, setLocalError] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -66,14 +66,14 @@ function LogoCard() {
       </div>
       <div className="card-body">
         <p className="text-secondary">
-          Se muestra en el inicio de sesión, en la barra de menú, en el ícono de la pestaña, en los PDF (presupuestos,
-          facturas, recibos, entregas y reportes) y en los emails a clientes.
+          Reemplaza al nombre en el inicio de sesión, la barra de menú y el ícono de la pestaña, y encabeza los PDF
+          (presupuestos, facturas, recibos, entregas y reportes) y los emails a clientes. Sobre fondos claros, en los PDF
+          y en los emails se usa la versión negra.
         </p>
         <div className="row g-3 align-items-center">
           <div className="col-sm-auto">
-            {/* Fondo claro y oscuro: el logo tiene que leerse en los dos temas y en la barra oscura. */}
             <div className="d-flex gap-2">
-              <LogoPreview url={logoUrl} theme="light" />
+              <LogoPreview url={logoBlackUrl} theme="light" />
               <LogoPreview url={logoUrl} theme="dark" />
             </div>
           </div>
@@ -102,8 +102,9 @@ function LogoCard() {
             <input ref={inputRef} type="file" accept={LOGO_ACCEPT} className="d-none" onChange={handleFile} aria-label="Archivo del logo" />
             {error && <div className="invalid-feedback d-block">{error}</div>}
             <small className="form-hint mt-2">
-              PNG o JPG de hasta 2 MB. Se recomienda un logo horizontal con fondo transparente (PNG), de al menos 96 px de
-              alto.
+              PNG o JPG de hasta 2 MB. Con un PNG de fondo transparente se recortan los márgenes sobrantes y se genera la
+              versión negra; un JPG o un PNG sin transparencia se usa tal cual en todos lados. Se recomienda un logo
+              horizontal claro, para la barra de menú oscura.
             </small>
           </div>
         </div>
@@ -128,7 +129,7 @@ function LogoPreview({ url, theme }: { url: string | null; theme: 'light' | 'dar
       data-bs-theme={theme}
       className="d-flex align-items-center justify-content-center border rounded bg-body text-secondary"
       style={{ width: 160, height: 80 }}
-      title={theme === 'light' ? 'Sobre fondo claro' : 'Sobre fondo oscuro'}
+      title={theme === 'light' ? 'Sobre fondo claro, PDF y emails' : 'Sobre fondo oscuro'}
     >
       {url ? (
         <img src={url} alt="Logo del sistema" style={{ maxWidth: 140, maxHeight: 60 }} />

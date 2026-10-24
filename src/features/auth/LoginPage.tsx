@@ -3,7 +3,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { TextField } from '@/components/ui/FormField'
 import { useAuth } from '@/features/auth/useAuth'
-import { useBranding } from '@/features/system-settings/useBranding'
+import { useLogo } from '@/features/system-settings/useBranding'
 import { isApiError, validationErrors } from '@/services/api'
 
 interface LocationState {
@@ -12,7 +12,7 @@ interface LocationState {
 
 export function LoginPage() {
   const { status, login } = useAuth()
-  const logoUrl = useBranding()
+  const logoUrl = useLogo('page')
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as LocationState | null)?.from ?? '/'
@@ -44,9 +44,18 @@ export function LoginPage() {
     <div className="page page-center">
       <div className="container container-tight py-4">
         <div className="text-center mb-4">
-          {logoUrl && <img src={logoUrl} alt="" className="mb-3" style={{ maxHeight: 72, maxWidth: '100%' }} />}
-          <h1 className="h2 mb-0">SyncTaller</h1>
-          <div className="text-secondary">Gestión del taller</div>
+          {/* El logo ya lleva el nombre: con logo, el título queda solo para lectores de pantalla. */}
+          {logoUrl ? (
+            <>
+              <img src={logoUrl} alt="" style={{ maxHeight: 96, maxWidth: '100%' }} />
+              <h1 className="visually-hidden">SyncTaller</h1>
+            </>
+          ) : (
+            <>
+              <h1 className="h2 mb-0">SyncTaller</h1>
+              <div className="text-secondary">Gestión del taller</div>
+            </>
+          )}
         </div>
         <form className="card card-md" onSubmit={handleSubmit} noValidate>
           <div className="card-body">
