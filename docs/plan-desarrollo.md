@@ -540,11 +540,14 @@ Notas y decisiones:
   debajo del botón.
 - El logo se pide a `GET /branding` (público) una vez (`useBranding`, `staleTime: Infinity`) y se refresca al
   cambiarlo.
+- Favicon propio (2026-10-24): tarjeta "Ícono de la pestaña (favicon)" en Configuración del sistema (PNG o ICO
+  cuadrado, o SVG; vista previa a 16 y 32 px sobre pestaña clara y oscura). `BrandingSync` usa `favicon_url` y, sin él,
+  `/favicon.svg`; el favicon ya no sale del logo. Las dos tarjetas comparten `ImageCard`. Revisado en Chrome headless:
+  rechazo de un PNG no cuadrado, subida (la pestaña cambia y el logo no), quitarlo (vuelve el original).
 - Logo sin nombre (2026-10-24): el logo ya lleva el nombre, así que la marca y el login muestran solo el logo (el
   `<h1>` del login queda `visually-hidden`); sin logo, el nombre como antes. `useLogo('navbar' | 'page')` elige la
   versión según el fondo leyendo `data-bs-theme` y `data-bs-navbar-theme` de `<html>`: la negra (`logo_black_url`,
-  la genera el backend) sobre fondo claro, la subida sobre fondo oscuro. El ícono de la pestaña sigue el tema del
-  sistema operativo. Con la barra lateral plegada se ve solo el comienzo del logo (un cuadrado del alto del logo,
+  la genera el backend) sobre fondo claro, la subida sobre fondo oscuro. Con la barra lateral plegada se ve solo el comienzo del logo (un cuadrado del alto del logo,
   regla en `index.css`): en un logo con isotipo a la izquierda, la marca. Revisado en Chrome headless: barra oscura,
   "como la página" en claro y oscuro, superior de acento, plegada y plegada con hover, login claro y oscuro, y la
   vista HTML del encabezado del PDF. Opciones no incluidas: el estilo flotante de los paneles laterales (`offcanvas-style`), porque la app no
