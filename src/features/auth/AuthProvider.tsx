@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AuthContext, type AuthContextValue, type AuthStatus } from '@/features/auth/AuthContext'
+import { DEFAULT_PREFERENCES } from '@/features/preferences/api'
 import { tokenStorage } from '@/lib/tokenStorage'
 import { setUnauthorizedHandler } from '@/services/api'
 import { authService } from '@/services/auth'
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: session.data?.user ?? null,
       permissions,
       mechanic: session.data?.mechanic ?? null,
+      preferences: session.data?.preferences ?? DEFAULT_PREFERENCES,
       error: session.error,
       retry: () => void session.refetch(),
       login,

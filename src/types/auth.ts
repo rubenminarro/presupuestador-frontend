@@ -1,3 +1,5 @@
+import type { Preferences } from '@/features/preferences/api'
+
 export interface Role {
   id: number
   name: string
@@ -31,6 +33,8 @@ export interface Session {
   user: User
   permissions: string[]
   mechanic: LinkedMechanic | null
+  /** Preferencias visuales completas (con los predeterminados). */
+  preferences: Preferences
 }
 
 /** Respuesta de `POST /api/login`. */

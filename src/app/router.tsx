@@ -30,6 +30,7 @@ import { PartDetailPage } from '@/features/parts/PartDetailPage'
 import { PartsPage } from '@/features/parts/PartsPage'
 import { CashSummaryPage } from '@/features/payments/CashSummaryPage'
 import { PaymentsPage } from '@/features/payments/PaymentsPage'
+import { PreferencesPage } from '@/features/preferences/PreferencesPage'
 import { AccountsPayablePage } from '@/features/purchases/AccountsPayablePage'
 import { PurchaseDetailPage } from '@/features/purchases/PurchaseDetailPage'
 import { PurchasesPage } from '@/features/purchases/PurchasesPage'
@@ -41,6 +42,7 @@ import { ReportsPage } from '@/features/reports/ReportsPage'
 import { RolesPage } from '@/features/roles/RolesPage'
 import { ServicesPage } from '@/features/services/ServicesPage'
 import { SuppliersPage } from '@/features/suppliers/SuppliersPage'
+import { SystemSettingsPage } from '@/features/system-settings/SystemSettingsPage'
 import { UsersPage } from '@/features/users/UsersPage'
 import { VehicleDetailPage } from '@/features/vehicle-history/VehicleDetailPage'
 import { VehiclesPage } from '@/features/vehicles/VehiclesPage'
@@ -81,6 +83,9 @@ const moduleRoutes: RouteObject[] = [
   guarded('client-notifications', 'client-notifications.index', <ClientNotificationsPage />),
   // Bandeja interna: sin permiso, cada usuario ve solo sus avisos.
   { path: 'notifications', element: <NotificationsPage /> },
+  // Preferencias visuales: sin permiso, cada usuario cambia solo las suyas.
+  { path: 'preferences', element: <PreferencesPage /> },
+  guarded('system-settings', 'system-settings.update', <SystemSettingsPage />),
   guarded('clients/:id', 'clients.show', <ClientDetailPage />),
   guarded('vehicles', 'vehicles.index', <VehiclesPage />),
   guarded('vehicles/:id', 'vehicle-history.view', <VehicleDetailPage />),
