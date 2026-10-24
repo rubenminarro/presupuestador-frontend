@@ -23,11 +23,14 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   notificaciones, exportación/comprobantes PDF y auditoría), más `GET /api/me` (con el mecánico vinculado), CORS con
   `Content-Disposition`, la protección de roles y usuarios (`ROLE_PROTECTED`, `ROLE_IN_USE`, `USER_SELF_ACTION`), la
   aprobación del cliente para los repuestos extra en la OT y los ajustes de contrato pedidos por cada fase del
-  frontend, más las preferencias visuales por usuario y el logo del sistema. 232 rutas API, 369 tests. Se sirve en
+  frontend, más las preferencias visuales por usuario y el logo del sistema. 232 rutas API, 368 tests. Se sirve en
   `http://synctaller-backend.test` (Laragon). Los avisos a clientes salen por cola: en desarrollo hace falta
   `php artisan queue:work` (con `MAIL_MAILER=log` van al log).
   CORS y Sanctum configurados para `http://localhost:5173`. Antes de comparar contra el backend, actualizar su
   `main` (`git pull`): la copia local puede estar atrasada.
+* **Datos de prueba:** `php artisan migrate:fresh --seed` en el backend deja usuarios de cada rol (contraseña
+  `TEST_PASSWORD`; el administrador, `ADMIN_PASSWORD`) y cada módulo en cada uno de sus estados, con fechas en los
+  últimos tres meses. Qué vehículo o documento está en cada estado: README del backend, sección "Datos de prueba".
 * **Frontend:** F0 (base: cliente Axios, sesión con `GET /me`, layout Tabler, menú por permisos, componentes
   compartidos), F1 (datos maestros), F2 (repuestos e inventario), F3 (recepción y diagnóstico), F4 (presupuestos),
   F5 (órdenes de trabajo), F6 (facturación y cobros), F7 (entrega del vehículo), F8 (compras y proveedores), F9
