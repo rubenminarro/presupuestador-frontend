@@ -1,8 +1,12 @@
 import { deleteData, getData, postData } from '@/services/api'
 
-/** `GET /branding` (público): el logo del sistema, o `null` si no se cargó ninguno. */
+/**
+ * `GET /branding` (público): el logo del sistema tal como se subió (para fondos oscuros) y su versión negra (para
+ * fondos claros), o `null` si no hay logo. Sin versión negra (JPG o PNG sin transparencia) las dos URL son iguales.
+ */
 export interface Branding {
   logo_url: string | null
+  logo_black_url: string | null
 }
 
 export const BRANDING_KEY = ['branding'] as const

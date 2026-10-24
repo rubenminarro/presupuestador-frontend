@@ -11,7 +11,7 @@ import { visibleNavigation, type NavSection } from '@/app/navigation'
 import { useAuth } from '@/features/auth/useAuth'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { usePreferences } from '@/features/preferences/usePreferences'
-import { useBranding } from '@/features/system-settings/useBranding'
+import { useLogo } from '@/features/system-settings/useBranding'
 import { cx } from '@/lib/cx'
 import { roleLabel } from '@/lib/roles'
 import { useDismiss } from '@/lib/useDismiss'
@@ -52,14 +52,21 @@ export function AppLayout() {
   )
 }
 
-/** Logo del sistema (si hay) y nombre. En la barra plegada, el nombre se colapsa como los títulos del menú. */
+/**
+ * Marca: el logo del sistema (que ya lleva el nombre) en la versión que se lee sobre la navegación, o el nombre si no
+ * hay logo. En la barra plegada, Tabler recorta el logo y el nombre se colapsa como los títulos del menú.
+ */
 function Brand({ onNavigate, collapsibleName }: { onNavigate?: () => void; collapsibleName?: boolean }) {
-  const logoUrl = useBranding()
+  const logoUrl = useLogo('navbar')
 
   return (
-    <Link to="/" className="d-inline-flex align-items-center gap-2 text-reset text-decoration-none" onClick={onNavigate}>
-      {logoUrl && <img src={logoUrl} alt="" className="navbar-brand-image" />}
-      <span className={cx(collapsibleName && 'nav-link-title')}>SyncTaller</span>
+    // flex-shrink-0: en la barra plegada el enlace no se achica a 0 (Tabler recorta la marca, no la encoge).
+    <Link to="/" className="d-inline-flex flex-shrink-0 align-items-center text-reset text-decoration-none" onClick={onNavigate}>
+      {logoUrl ? (
+        <img src={logoUrl} alt="SyncTaller" className="navbar-brand-image" />
+      ) : (
+        <span className={cx(collapsibleName && 'nav-link-title')}>SyncTaller</span>
+      )}
     </Link>
   )
 }
