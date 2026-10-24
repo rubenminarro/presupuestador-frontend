@@ -500,3 +500,44 @@ Notas:
 - `auditable_type` es el nombre del modelo en snake_case (`AuditLogger`); las etiquetas están en `audit-logs/api.ts`
   según los modelos con el trait `Auditable`. Los eventos de sesión (login, logout) no tienen entidad.
 - Los nombres de campo se muestran tal como los guarda el backend (columnas de la tabla).
+
+## Preferencias del usuario y logo del sistema (2026-10-24, fuera del plan original)
+
+- [x] Preferencias (`/preferences`, sin permiso, en el menú del usuario): los ajustes de tema de Tabler 1.7, aplicados
+      al instante y guardados en la cuenta (`PATCH me/preferences`, optimista; si falla se vuelve a pedir `/me`).
+      - Apariencia: modo claro, oscuro o automático (sigue al sistema operativo, también en vivo).
+      - Colores: 13 colores de acento, 6 paletas de grises y color de la navegación (oscuro, como la página, acento).
+      - Tipografía: sans serif, serif, monoespaciada y cómica; redondeo de bordes (0 a 2).
+      - Distribución: contenedor estándar, fluido o enmarcado.
+      - Navegación: barra lateral, superior (menú con desplegables por sección) o combinada; adosada o flotante;
+        barra superior fija; barra lateral expandida, plegada o plegada que se expande al pasar el mouse, con botón
+        para plegarla junto a la marca y otro en la barra superior para expandirla.
+      - Restaurar valores predeterminados (`DELETE me/preferences`, con confirmación).
+- [x] Configuración del sistema (`/system-settings`, `system-settings.update`, solo administrador): subir, cambiar o
+      quitar el logo (PNG o JPG hasta 2 MB), con vista previa sobre fondo claro y oscuro. Se ve en el login, la marca
+      de la barra de menú y el ícono de la pestaña; el backend lo agrega a los PDF y a los emails a clientes.
+- [x] Revisión visual en el navegador (2026-10-24, Chrome headless con Playwright, escritorio y móvil, como
+      administrador): oscuro + verde + serif + redondeo amplio, que se mantienen al recargar; barra superior con
+      desplegable (debajo del botón, se cierra con clic fuera, sección activa marcada); combinada con navegación del
+      color de acento y flotante; lateral plegada y enmarcado, y el botón que la expande; subir el logo (marca, pestaña
+      y login); restaurar; móvil sin scroll horizontal y menú superior que se cierra al navegar. Sin errores de
+      consola ni HTTP.
+
+Notas y decisiones:
+
+- Las preferencias se aplican como atributos `data-bs-*` en `<html>` (`features/preferences/theme.ts`): la clave con
+  `_` → `-` (`theme_primary` → `data-bs-theme-primary`). Requiere `tabler-themes.min.css` (importado en `main.tsx`).
+  No se usan `tabler-theme.js` ni `sidebar.ts` de Tabler: guardan en localStorage y manipulan el DOM por su cuenta.
+- La fuente es el backend (`GET /me` trae `preferences`). `localStorage` (`synctaller.preferences`) guarda una copia
+  solo para el primer pintado: un script en `index.html` la aplica antes de que cargue React, sin parpadeo. Al cerrar
+  sesión no se borra, así que el login muestra la última apariencia usada en ese navegador.
+- Los predeterminados reproducen el aspecto original (barra lateral oscura). Tabler usa por defecto la barra superior,
+  así que la app escribe siempre todos los atributos.
+- `AppLayout` arma la estructura según la posición. Los atributos de Tabler (color, flotante, fija) actúan sobre los
+  `.navbar` hijos directos de `.page`: con la barra lateral sola, la barra del usuario sigue dentro de
+  `.page-wrapper` (como antes) y "fija" se resuelve con `sticky-top`.
+- Los desplegables del menú superior llevan `data-bs-popper="static"`: sin el JS de Bootstrap es lo que los ubica
+  debajo del botón.
+- El logo se pide a `GET /branding` (público) una vez (`useBranding`, `staleTime: Infinity`) y se refresca al
+  cambiarlo. Opciones no incluidas: el estilo flotante de los paneles laterales (`offcanvas-style`), porque la app no
+  usa paneles de ese tipo.

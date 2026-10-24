@@ -96,6 +96,7 @@ export const PERMISSION_MODULES: Record<string, string> = {
   dashboard: 'Dashboard',
   reports: 'Reportes',
   'audit-logs': 'Auditoría',
+  'system-settings': 'Configuración del sistema',
 }
 
 /** Acciones de los permisos; otra se muestra tal cual (el nombre completo va en el `title`). */

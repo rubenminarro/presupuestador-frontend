@@ -19,6 +19,7 @@ import {
   IconReceipt,
   IconReportAnalytics,
   IconReportMoney,
+  IconSettings,
   IconShieldLock,
   IconShoppingCart,
   IconStethoscope,
@@ -115,6 +116,7 @@ export const navigation: NavSection[] = [
       { label: 'Usuarios', to: '/users', icon: IconUsers, permission: 'users.index', phase: 'F12' },
       { label: 'Roles', to: '/roles', icon: IconShieldLock, permission: 'roles.index', phase: 'F12' },
       { label: 'Auditoría', to: '/audit-logs', icon: IconHistory, permission: 'audit-logs.index', phase: 'F14' },
+      { label: 'Configuración del sistema', to: '/system-settings', icon: IconSettings, permission: 'system-settings.update' },
     ],
   },
 ]

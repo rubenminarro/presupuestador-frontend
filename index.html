@@ -5,6 +5,25 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SyncTaller</title>
+    <script>
+      // Preferencias visuales guardadas en este navegador (src/features/preferences/theme.ts), aplicadas antes de
+      // pintar para que no parpadee el tema. Después la app aplica las del usuario, que vienen de GET /me.
+      ;(function () {
+        var preferences = {}
+        try {
+          preferences = JSON.parse(localStorage.getItem('synctaller.preferences') || '{}') || {}
+        } catch (error) {
+          preferences = {}
+        }
+        var root = document.documentElement
+        for (var key in preferences) {
+          root.setAttribute('data-bs-' + key.replace(/_/g, '-'), String(preferences[key]))
+        }
+        var theme = preferences.theme || 'auto'
+        if (theme === 'auto') theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        root.setAttribute('data-bs-theme', theme)
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

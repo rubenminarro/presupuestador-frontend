@@ -23,7 +23,7 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   notificaciones, exportación/comprobantes PDF y auditoría), más `GET /api/me` (con el mecánico vinculado), CORS con
   `Content-Disposition`, la protección de roles y usuarios (`ROLE_PROTECTED`, `ROLE_IN_USE`, `USER_SELF_ACTION`), la
   aprobación del cliente para los repuestos extra en la OT y los ajustes de contrato pedidos por cada fase del
-  frontend. 224 rutas API, 347 tests. Se sirve en
+  frontend, más las preferencias visuales por usuario y el logo del sistema. 230 rutas API, 361 tests. Se sirve en
   `http://synctaller-backend.test` (Laragon). Los avisos a clientes salen por cola: en desarrollo hace falta
   `php artisan queue:work` (con `MAIL_MAILER=log` van al log).
   CORS y Sanctum configurados para `http://localhost:5173`. Antes de comparar contra el backend, actualizar su
@@ -33,7 +33,8 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   F5 (órdenes de trabajo), F6 (facturación y cobros), F7 (entrega del vehículo), F8 (compras y proveedores), F9
   (historial y mantenimiento preventivo), F10 (comisiones), F11 (reportes y dashboard), F12 (administración: usuarios
   y roles), F13 (notificaciones) y F14 (auditoría) en `main`: el plan está completo y todos los ítems del menú tienen
-  su pantalla (`ComingSoonPage` queda para un módulo nuevo sin construir). Avance, decisiones y estructura de carpetas
+  su pantalla (`ComingSoonPage` queda para un módulo nuevo sin construir). Además: preferencias visuales por usuario
+  (`/preferences`) y logo del sistema (`/system-settings`, solo administrador). Avance, decisiones y estructura de carpetas
   en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un componente, revisar `src/components/ui`
   y `src/lib`.
 * **Estructura de un módulo** (seguir F1): `src/features/<módulo>/api.ts` (tipos según el Resource, etiquetas de
@@ -108,6 +109,10 @@ No hay runner de tests instalado. Agregar uno (p. ej. Vitest + Testing Library) 
    Bootstrap/Tabler se controlan desde React).
 7. Componentes accesibles y responsive (escritorio y móvil).
 8. Textos de la interfaz en español; código, nombres de archivos, tipos y variables en inglés.
+9. **Preferencias del usuario:** tema, colores, tipografía, distribución y navegación se aplican como atributos
+   `data-bs-*` en `<html>` (`features/preferences/theme.ts`) y `AppLayout` arma la barra lateral, superior o
+   combinada. Una pantalla nueva no debe fijar colores, fuentes ni anchos que pisen esos ajustes (usar las clases y
+   variables de Tabler) y debe verse bien en claro y oscuro.
 
 ### Integración con la API
 
@@ -151,7 +156,8 @@ Base: `/api`. Todas las respuestas son JSON (el backend fuerza `Accept: applicat
   `Authorization: Bearer <token>`. `POST /api/logout` revoca el token actual.
 * El token se guarda en `localStorage`. Al iniciar la app la sesión se hidrata con `GET /api/me`: `data.user` (igual
   que el login), `data.permissions` (nombres; el administrador recibe todos) y `data.mechanic` (ficha de mecánico
-  vinculada o `null`, en `useAuth().mechanic`). `POST /login` solo trae IDs de permisos.
+  vinculada o `null`, en `useAuth().mechanic`) y `data.preferences` (preferencias visuales, en
+  `useAuth().preferences`). `POST /login` solo trae IDs de permisos. `GET /api/branding` (logo del sistema) es público.
 * Los tokens no expiran: ante un `401` se limpia la sesión local y se redirige al login.
 * Ante un `403` se informa falta de permiso; no se reintenta.
 
@@ -178,7 +184,7 @@ El rol `administrador` tiene todos los permisos. Los permisos por endpoint tiene
 
 | Rol | Función | Accesos clave |
 |---|---|---|
-| `administrador` | Todo | Exclusivo: usuarios/roles/permisos, auditoría (`audit-logs.*`), costos y margen (`work-orders.view-economics`), liquidar comisiones, anular entregas, timbrados, ABM de planes de mantenimiento, reporte de rentabilidad |
+| `administrador` | Todo | Exclusivo: usuarios/roles/permisos, auditoría (`audit-logs.*`), logo del sistema (`system-settings.update`), costos y margen (`work-orders.view-economics`), liquidar comisiones, anular entregas, timbrados, ABM de planes de mantenimiento, reporte de rentabilidad |
 | `mechanic` | Ejecuta la OT | Diagnóstico, iniciar/pausar/completar OT e ítems, consumir/devolver repuestos, sus horas y comisiones, historial, estado de mantenimiento, dashboard (bloque taller) |
 | `recepcionista` | Atiende al cliente | Clientes, vehículos, recepciones, checklist, presupuestos completos, registrar entregas, alertas de mantenimiento, reporte de presupuestos, ver repuestos de la OT y registrar la respuesta del cliente a los extras |
 | `jefe-taller` | Organiza el trabajo | OT completas, ítems, repuestos en OT (incluida la respuesta del cliente a los extras), asignación y horas de todos, diagnóstico, intervalos de mantenimiento por vehículo, reporte de productividad, consulta de compras, pagos a proveedores y cuentas por pagar |
@@ -186,8 +192,8 @@ El rol `administrador` tiene todos los permisos. Los permisos por endpoint tiene
 | `deposito` | Stock | Repuestos, proveedores, inventario, compras completas, repuestos en OT, reporte de inventario, consulta de pagos a proveedores y cuentas por pagar |
 
 El rol del mecánico se llama `mechanic` (no `mecanico`). Recepcionista y cajero gestionan además los avisos a
-clientes (`client-notifications.*`). La bandeja interna (`me/notifications`) no requiere permiso: cada usuario ve
-solo sus avisos.
+clientes (`client-notifications.*`). La bandeja interna (`me/notifications`) y las preferencias (`me/preferences`)
+no requieren permiso: cada usuario ve solo lo suyo.
 
 ---
 
@@ -228,3 +234,6 @@ Detalle de reglas y `error_code`: backend `CLAUDE.md`, sección 6.
   (`me/notifications`, `meta.unread_count`, marcar leído / todo leído).
 * **Auditoría:** registro inmutable de cambios (`audit-logs`, filtros por entidad, usuario, evento y fechas), solo
   administrador.
+* **Preferencias y logo:** `me/preferences` (`GET|PATCH|DELETE`, 11 claves con valores cerrados y predeterminados en el
+  backend); logo en `branding` (público) y `system-settings/logo` (`POST` multipart PNG/JPG hasta 2 MB, `DELETE`). El
+  backend lo pone en los PDF y en los emails a clientes.
