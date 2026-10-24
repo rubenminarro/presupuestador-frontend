@@ -19,7 +19,7 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
 
 ## 1. Estado actual (verificado el 2026-10-23)
 
-* **Backend/API:** Laravel 12.70, roadmap completo (FASES 10–25: hasta compras, pagos a proveedores,
+* **Backend/API:** Laravel 13.38, roadmap completo (FASES 10–25: hasta compras, pagos a proveedores,
   notificaciones, exportación/comprobantes PDF y auditoría), más `GET /api/me` (con el mecánico vinculado), CORS con
   `Content-Disposition`, la protección de roles y usuarios (`ROLE_PROTECTED`, `ROLE_IN_USE`, `USER_SELF_ACTION`), la
   aprobación del cliente para los repuestos extra en la OT y los ajustes de contrato pedidos por cada fase del
