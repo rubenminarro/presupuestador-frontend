@@ -14,6 +14,7 @@ import { ClientsPage } from '@/features/clients/ClientsPage'
 import { CommissionsPage } from '@/features/commissions/CommissionsPage'
 import { DeliveriesPage } from '@/features/deliveries/DeliveriesPage'
 import { DeliveryDetailPage } from '@/features/deliveries/DeliveryDetailPage'
+import { DiagnosticItemTemplatesPage } from '@/features/diagnostic-item-templates/DiagnosticItemTemplatesPage'
 import { DiagnosticDetailPage } from '@/features/diagnostics/DiagnosticDetailPage'
 import { DiagnosticsPage } from '@/features/diagnostics/DiagnosticsPage'
 import { InventoryPage } from '@/features/inventory/InventoryPage'
@@ -93,6 +94,7 @@ const moduleRoutes: RouteObject[] = [
   guarded('maintenance/alerts', 'maintenance-alerts.index', <MaintenanceAlertsPage />),
   guarded('brands', ['brands.index', 'vehicle_models.index'], <BrandsPage />),
   guarded('checklists', 'checklists.index', <ChecklistsPage />),
+  guarded('diagnostic-item-templates', 'diagnostic-item-templates.index', <DiagnosticItemTemplatesPage />),
   guarded('commissions', 'mechanic-commissions.index', <CommissionsPage />),
   guarded(
     'reports',

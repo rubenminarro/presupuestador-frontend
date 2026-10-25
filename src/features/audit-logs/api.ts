@@ -53,6 +53,7 @@ export const AUDITABLE_TYPES: Record<string, string> = {
   part: 'Repuesto',
   part_supplier: 'Proveedor del repuesto',
   service: 'Servicio',
+  diagnostic_item_template: 'Ítem del catálogo de diagnóstico',
   budget_item: 'Ítem de presupuesto',
   work_order_part: 'Repuesto de la OT',
   invoice: 'Factura',

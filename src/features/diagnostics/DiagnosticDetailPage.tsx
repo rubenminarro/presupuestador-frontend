@@ -9,10 +9,12 @@ import { IconButton } from '@/components/ui/IconButton'
 import { Modal } from '@/components/ui/Modal'
 import { PageBody, PageHeader } from '@/components/ui/Page'
 import { PhotoGallery } from '@/components/ui/PhotoGallery'
+import { SearchPicker } from '@/components/ui/SearchPicker'
 import { SelectField, SwitchField, TextareaField, TextField } from '@/components/ui/FormField'
 import { ErrorState, LoadingState } from '@/components/ui/States'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
+import { diagnosticItemTemplatesApi, type DiagnosticItemTemplate } from '@/features/diagnostic-item-templates/api'
 import {
   DIAGNOSTIC_ITEM_STATUS,
   DIAGNOSTIC_STATUS,
@@ -205,7 +207,14 @@ function DiagnosticItemsTable({ diagnostic, editable }: { diagnostic: Diagnostic
       header: 'Ítem',
       render: (item) => (
         <>
-          <div>{item.title}</div>
+          <div>
+            {item.title}
+            {item.template && (
+              <span className="badge bg-azure-lt ms-2" title={`Del catálogo: ${item.template.code} · ${item.template.title}`}>
+                Catálogo
+              </span>
+            )}
+          </div>
           {item.description && <div className="small text-secondary">{item.description}</div>}
         </>
       ),
@@ -302,7 +311,14 @@ function DiagnosticItemsTable({ diagnostic, editable }: { diagnostic: Diagnostic
   )
 }
 
+/**
+ * En el alta se puede elegir un ítem del catálogo: sugiere sus valores (editables) y el ítem queda vinculado. Un
+ * ítem libre puede guardarse también en el catálogo. Al editar, el vínculo se muestra y no se cambia.
+ */
 function DiagnosticItemFormModal({ diagnosticId, item, onClose }: { diagnosticId: number; item: DiagnosticItem | null; onClose: () => void }) {
+  const { can } = useAuth()
+  const [template, setTemplate] = useState<DiagnosticItemTemplate | null>(null)
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false)
   const [title, setTitle] = useState(item?.title ?? '')
   const [description, setDescription] = useState(item?.description ?? '')
   const [severity, setSeverity] = useState<string>(item?.severity ?? 'medium')
@@ -312,6 +328,19 @@ function DiagnosticItemFormModal({ diagnosticId, item, onClose }: { diagnosticId
   const [cost, setCost] = useState(toInput(item?.estimated_cost))
   const [time, setTime] = useState(toInput(item?.estimated_time))
   const [recommendation, setRecommendation] = useState(item?.recommendation ?? '')
+
+  const pick = (option: DiagnosticItemTemplate | null) => {
+    setTemplate(option)
+    if (!option) return
+    setSaveAsTemplate(false)
+    setTitle(option.title)
+    setDescription(option.description ?? '')
+    setSeverity(option.severity)
+    setRequiresRepair(option.requires_repair)
+    setRequiresReplacement(option.requires_replacement)
+    setTime(toInput(option.estimated_time))
+    setRecommendation(option.recommendation ?? '')
+  }
 
   const mutation = useApiMutation(
     () => {
@@ -326,28 +355,66 @@ function DiagnosticItemFormModal({ diagnosticId, item, onClose }: { diagnosticId
         estimated_time: toNumber(time),
         recommendation: nullIfEmpty(recommendation),
       }
-      return item ? diagnosticsApi.updateItem(item.id, body) : diagnosticsApi.createItem({ ...body, diagnostic_id: diagnosticId })
+      if (item) return diagnosticsApi.updateItem(item.id, body)
+      return diagnosticsApi.createItem({
+        ...body,
+        diagnostic_id: diagnosticId,
+        diagnostic_item_template_id: template?.id ?? null,
+        ...(saveAsTemplate && !template && { save_as_template: true }),
+      })
     },
     {
-      invalidate: [['diagnostics']],
-      successMessage: item ? 'Ítem actualizado.' : 'Ítem agregado.',
+      invalidate: saveAsTemplate ? [['diagnostics'], ['diagnostic-item-templates']] : [['diagnostics']],
+      successMessage: item ? 'Ítem actualizado.' : saveAsTemplate ? 'Ítem agregado y guardado en el catálogo.' : 'Ítem agregado.',
       onSuccess: onClose,
     },
   )
   const errors = validationErrors(mutation.error)
+  const canPick = !item && can('diagnostic-item-templates.index')
 
   return (
     <FormModal title={item ? 'Editar ítem' : 'Nuevo ítem'} onClose={onClose} onSubmit={() => mutation.mutate()} isSubmitting={mutation.isPending} size="lg">
+      {canPick && (
+        <SearchPicker<DiagnosticItemTemplate>
+          label="Del catálogo"
+          queryKey={['diagnostic-item-templates', 'picker']}
+          search={async (text) => (await diagnosticItemTemplatesApi.list({ search: text, status: 'active', per_page: 8 })).items}
+          value={template}
+          onChange={pick}
+          getKey={(option) => option.id}
+          renderItem={(option) => (
+            <>
+              <span className="text-secondary me-1">{option.code}</span>
+              {option.title}
+              {option.category && <span className="text-secondary ms-2 small">{option.category.name}</span>}
+            </>
+          )}
+          placeholder="Buscar en el catálogo (opcional)…"
+          emptyMessage="No hay ítems activos en el catálogo con ese texto."
+          error={errors.diagnostic_item_template_id}
+        />
+      )}
+      {item?.template && (
+        <p className="text-secondary small">
+          Del catálogo: <span className="me-1">{item.template.code}</span>
+          {item.template.title}
+          {item.template.deleted && ' (eliminado del catálogo)'}
+        </p>
+      )}
       <TextField
         label="Ítem"
         name="title"
         required
-        autoFocus
+        autoFocus={!canPick}
         maxLength={255}
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         errors={errors}
-        hint="Solo letras, números y espacios (p. ej. Pastillas delanteras)."
+        hint={
+          template
+            ? 'Valores sugeridos por el catálogo: se pueden ajustar para este vehículo.'
+            : 'Solo letras, números y espacios (p. ej. Pastillas delanteras).'
+        }
       />
       <TextareaField label="Descripción" name="description" rows={2} value={description} onChange={(event) => setDescription(event.target.value)} errors={errors} />
       <div className="row">
@@ -411,6 +478,16 @@ function DiagnosticItemFormModal({ diagnosticId, item, onClose }: { diagnosticId
         onChange={(event) => setRecommendation(event.target.value)}
         errors={errors}
       />
+      {!item && !template && can('diagnostic-item-templates.store') && (
+        <SwitchField
+          label="Guardar también en el catálogo"
+          name="save_as_template"
+          checked={saveAsTemplate}
+          onChange={setSaveAsTemplate}
+          errors={errors}
+          hint="Para elegirlo en próximos diagnósticos. Se guardan título, descripción, severidad, tiempo y recomendación."
+        />
+      )}
     </FormModal>
   )
 }

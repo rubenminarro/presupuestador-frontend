@@ -17,13 +17,14 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
 
 ---
 
-## 1. Estado actual (verificado el 2026-10-23)
+## 1. Estado actual (verificado el 2026-10-24)
 
 * **Backend/API:** Laravel 13.38, roadmap completo (FASES 10–25: hasta compras, pagos a proveedores,
   notificaciones, exportación/comprobantes PDF y auditoría), más `GET /api/me` (con el mecánico vinculado), CORS con
   `Content-Disposition`, la protección de roles y usuarios (`ROLE_PROTECTED`, `ROLE_IN_USE`, `USER_SELF_ACTION`), la
   aprobación del cliente para los repuestos extra en la OT y los ajustes de contrato pedidos por cada fase del
-  frontend, más las preferencias visuales por usuario y el logo del sistema. 232 rutas API, 368 tests. Se sirve en
+  frontend, más las preferencias visuales por usuario, el logo del sistema y el catálogo de ítems de diagnóstico. 239
+  rutas API, 374 tests. Se sirve en
   `http://synctaller-backend.test` (Laragon). Los avisos a clientes salen por cola: en desarrollo hace falta
   `php artisan queue:work` (con `MAIL_MAILER=log` van al log).
   CORS y Sanctum configurados para `http://localhost:5173`. Antes de comparar contra el backend, actualizar su
@@ -37,7 +38,8 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   (historial y mantenimiento preventivo), F10 (comisiones), F11 (reportes y dashboard), F12 (administración: usuarios
   y roles), F13 (notificaciones) y F14 (auditoría) en `main`: el plan está completo y todos los ítems del menú tienen
   su pantalla (`ComingSoonPage` queda para un módulo nuevo sin construir). Además: preferencias visuales por usuario
-  (`/preferences`) y logo del sistema (`/system-settings`, solo administrador). Avance, decisiones y estructura de carpetas
+  (`/preferences`), logo del sistema (`/system-settings`, solo administrador) y catálogo de ítems de diagnóstico
+  (`/diagnostic-item-templates`, elegidos al cargar un diagnóstico). Avance, decisiones y estructura de carpetas
   en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un componente, revisar `src/components/ui`
   y `src/lib`.
 * **Estructura de un módulo** (seguir F1): `src/features/<módulo>/api.ts` (tipos según el Resource, etiquetas de
@@ -46,9 +48,8 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   `validationErrors(mutation.error)`; bajas con `DeleteDialog`; la ruta se registra en `src/app/router.tsx`
   (`guarded(path, permiso, página)`).
 * **Pendientes fuera del plan:** notificaciones por WhatsApp en el backend (sin diseño ni fase), runner de tests en
-  el frontend (decisión a consultar, sección 3), catálogo de ítems de diagnóstico (planificado en
-  `docs/plan-desarrollo.md`, con decisiones a confirmar) y clientes aseguradoras (deuda #13 del handoff del backend, a
-  la espera de los clientes del usuario).
+  el frontend (decisión a consultar, sección 3) y clientes aseguradoras (deuda #13 del handoff del backend, a la espera
+  de los clientes del usuario).
 
 ---
 
@@ -190,9 +191,9 @@ El rol `administrador` tiene todos los permisos. Los permisos por endpoint tiene
 | Rol | Función | Accesos clave |
 |---|---|---|
 | `administrador` | Todo | Exclusivo: usuarios/roles/permisos, auditoría (`audit-logs.*`), logo del sistema (`system-settings.update`), costos y margen (`work-orders.view-economics`), liquidar comisiones, anular entregas, timbrados, ABM de planes de mantenimiento, reporte de rentabilidad |
-| `mechanic` | Ejecuta la OT | Diagnóstico, iniciar/pausar/completar OT e ítems, consumir/devolver repuestos, sus horas y comisiones, historial, estado de mantenimiento, dashboard (bloque taller) |
+| `mechanic` | Ejecuta la OT | Diagnóstico (consulta y usa el catálogo de ítems), iniciar/pausar/completar OT e ítems, consumir/devolver repuestos, sus horas y comisiones, historial, estado de mantenimiento, dashboard (bloque taller) |
 | `recepcionista` | Atiende al cliente | Clientes, vehículos, recepciones, checklist, presupuestos completos, registrar entregas, alertas de mantenimiento, reporte de presupuestos, ver repuestos de la OT y registrar la respuesta del cliente a los extras |
-| `jefe-taller` | Organiza el trabajo | OT completas, ítems, repuestos en OT (incluida la respuesta del cliente a los extras), asignación y horas de todos, diagnóstico, intervalos de mantenimiento por vehículo, reporte de productividad, consulta de compras, pagos a proveedores y cuentas por pagar |
+| `jefe-taller` | Organiza el trabajo | OT completas, ítems, repuestos en OT (incluida la respuesta del cliente a los extras), asignación y horas de todos, diagnóstico y su catálogo de ítems, intervalos de mantenimiento por vehículo, reporte de productividad, consulta de compras, pagos a proveedores y cuentas por pagar |
 | `cajero` | Cobra y paga | Facturas, pagos, resumen de caja, reportes de ventas y clientes, consulta de compras, pagos a proveedores completos y cuentas por pagar |
 | `deposito` | Stock | Repuestos, proveedores, inventario, compras completas, repuestos en OT, reporte de inventario, consulta de pagos a proveedores y cuentas por pagar |
 
@@ -210,7 +211,9 @@ Detalle de reglas y `error_code`: backend `CLAUDE.md`, sección 6.
   anidados en `clients/{client}/vehicles` (listar, crear, ver); editar y eliminar en `vehicles/{vehicle}`.
 * **Recepción y checklist:** estado derivado por el backend (`pending → in_progress → repair → completed`, más
   `delivered` / `cancelled`); nunca se asigna desde la UI salvo cancelar (con motivo). Fotos de recepción.
-* **Diagnóstico:** ítems con severidad, estado y fotos.
+* **Diagnóstico:** ítems con severidad, estado y fotos. Catálogo de ítems reutilizables (`diagnostic-item-templates`,
+  `DIA-…`): al elegir uno, el ítem copia sus valores (editables) y guarda el vínculo (`template`); cambiar o eliminar la
+  entrada no altera los diagnósticos hechos. Un ítem libre se puede guardar en el catálogo (`save_as_template`).
 * **Presupuestos (`BUD-…`):** `draft → sent → approved`; `sent → rejected → draft`; cancelar desde `draft|sent`.
   Solo `draft` es editable. Ítems `labor | service | part`. Precios sin IVA; el total suma el IVA.
 * **Órdenes de trabajo (`OT-000001`):** nacen de un presupuesto aprobado. `pending → in_progress ⇄ paused →
