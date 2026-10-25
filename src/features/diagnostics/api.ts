@@ -51,9 +51,10 @@ export interface DiagnosticItem {
   /** Minutos. */
   estimated_time: number | null
   recommendation: string | null
-  diagnostic_item_template_id: number | null
-  /** Entrada del catálogo de la que se copió (`null`: ítem libre); `deleted`: se eliminó del catálogo después. */
-  template?: { id: number; code: string; title: string; deleted: boolean } | null
+  /** Ítem del catálogo del que sale (obligatorio; el título es el suyo y no se edita). */
+  diagnostic_item_template_id: number
+  /** `deleted`: se eliminó del catálogo después (el ítem conserva sus datos). */
+  template?: { id: number; code: string; title: string; deleted: boolean }
   photos?: DiagnosticItemPhoto[]
 }
 
@@ -81,11 +82,8 @@ export interface DiagnosticInput {
 
 export interface DiagnosticItemInput {
   diagnostic_id?: number
-  /** Solo en el alta: ítem elegido del catálogo (el backend completa lo que no se envía). */
+  /** Solo en el alta, obligatorio: el ítem del catálogo (el título sale de él; no se cambia al editar). */
   diagnostic_item_template_id?: number | null
-  /** Solo en el alta de un ítem libre: lo agrega también al catálogo (`diagnostic-item-templates.store`). */
-  save_as_template?: boolean
-  title: string
   description: string | null
   severity: string
   status: string

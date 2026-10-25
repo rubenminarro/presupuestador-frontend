@@ -208,12 +208,8 @@ function DiagnosticItemsTable({ diagnostic, editable }: { diagnostic: Diagnostic
       render: (item) => (
         <>
           <div>
+            {item.template && <span className="text-secondary">{item.template.code} </span>}
             {item.title}
-            {item.template && (
-              <span className="badge bg-azure-lt ms-2" title={`Del catálogo: ${item.template.code} · ${item.template.title}`}>
-                Catálogo
-              </span>
-            )}
           </div>
           {item.description && <div className="small text-secondary">{item.description}</div>}
         </>
@@ -260,7 +256,8 @@ function DiagnosticItemsTable({ diagnostic, editable }: { diagnostic: Diagnostic
         emptyMessage="El diagnóstico no tiene ítems."
         toolbar={
           editable &&
-          can('diagnostic-items.store') && (
+          can('diagnostic-items.store') &&
+          can('diagnostic-item-templates.index') && (
             <button type="button" className="btn btn-primary btn-sm" onClick={() => setEditing('new')}>
               <IconPlus size={16} className="me-1" aria-hidden="true" />
               Agregar ítem
@@ -312,14 +309,12 @@ function DiagnosticItemsTable({ diagnostic, editable }: { diagnostic: Diagnostic
 }
 
 /**
- * En el alta se puede elegir un ítem del catálogo: sugiere sus valores (editables) y el ítem queda vinculado. Un
- * ítem libre puede guardarse también en el catálogo. Al editar, el vínculo se muestra y no se cambia.
+ * El ítem se elige siempre del catálogo, como el repuesto de una línea de compra: el título es el del catálogo y no se
+ * edita; severidad, banderas, tiempo, descripción y recomendación llegan como sugerencia y se ajustan para este
+ * vehículo. Al editar, el ítem del catálogo queda fijo (para cambiarlo se elimina y se agrega otro).
  */
 function DiagnosticItemFormModal({ diagnosticId, item, onClose }: { diagnosticId: number; item: DiagnosticItem | null; onClose: () => void }) {
-  const { can } = useAuth()
   const [template, setTemplate] = useState<DiagnosticItemTemplate | null>(null)
-  const [saveAsTemplate, setSaveAsTemplate] = useState(false)
-  const [title, setTitle] = useState(item?.title ?? '')
   const [description, setDescription] = useState(item?.description ?? '')
   const [severity, setSeverity] = useState<string>(item?.severity ?? 'medium')
   const [status, setStatus] = useState<string>(item?.status ?? 'pending')
@@ -332,8 +327,6 @@ function DiagnosticItemFormModal({ diagnosticId, item, onClose }: { diagnosticId
   const pick = (option: DiagnosticItemTemplate | null) => {
     setTemplate(option)
     if (!option) return
-    setSaveAsTemplate(false)
-    setTitle(option.title)
     setDescription(option.description ?? '')
     setSeverity(option.severity)
     setRequiresRepair(option.requires_repair)
@@ -345,7 +338,6 @@ function DiagnosticItemFormModal({ diagnosticId, item, onClose }: { diagnosticId
   const mutation = useApiMutation(
     () => {
       const body: DiagnosticItemInput = {
-        title: title.trim(),
         description: nullIfEmpty(description),
         severity,
         status,
@@ -356,27 +348,34 @@ function DiagnosticItemFormModal({ diagnosticId, item, onClose }: { diagnosticId
         recommendation: nullIfEmpty(recommendation),
       }
       if (item) return diagnosticsApi.updateItem(item.id, body)
-      return diagnosticsApi.createItem({
-        ...body,
-        diagnostic_id: diagnosticId,
-        diagnostic_item_template_id: template?.id ?? null,
-        ...(saveAsTemplate && !template && { save_as_template: true }),
-      })
+      return diagnosticsApi.createItem({ ...body, diagnostic_id: diagnosticId, diagnostic_item_template_id: template?.id ?? null })
     },
     {
-      invalidate: saveAsTemplate ? [['diagnostics'], ['diagnostic-item-templates']] : [['diagnostics']],
-      successMessage: item ? 'Ítem actualizado.' : saveAsTemplate ? 'Ítem agregado y guardado en el catálogo.' : 'Ítem agregado.',
+      invalidate: [['diagnostics']],
+      successMessage: item ? 'Ítem actualizado.' : 'Ítem agregado.',
       onSuccess: onClose,
     },
   )
   const errors = validationErrors(mutation.error)
-  const canPick = !item && can('diagnostic-item-templates.index')
 
   return (
-    <FormModal title={item ? 'Editar ítem' : 'Nuevo ítem'} onClose={onClose} onSubmit={() => mutation.mutate()} isSubmitting={mutation.isPending} size="lg">
-      {canPick && (
+    <FormModal
+      title={item ? `Editar · ${item.title}` : 'Nuevo ítem'}
+      onClose={onClose}
+      onSubmit={() => mutation.mutate()}
+      isSubmitting={mutation.isPending}
+      size="lg"
+    >
+      {item ? (
+        <p className="text-secondary">
+          {item.template && <span>{item.template.code} </span>}
+          <strong className="text-body">{item.title}</strong>
+          {item.template?.deleted && ' (eliminado del catálogo)'}
+        </p>
+      ) : (
         <SearchPicker<DiagnosticItemTemplate>
-          label="Del catálogo"
+          label="Ítem"
+          required
           queryKey={['diagnostic-item-templates', 'picker']}
           search={async (text) => (await diagnosticItemTemplatesApi.list({ search: text, status: 'active', per_page: 8 })).items}
           value={template}
@@ -389,34 +388,21 @@ function DiagnosticItemFormModal({ diagnosticId, item, onClose }: { diagnosticId
               {option.category && <span className="text-secondary ms-2 small">{option.category.name}</span>}
             </>
           )}
-          placeholder="Buscar en el catálogo (opcional)…"
-          emptyMessage="No hay ítems activos en el catálogo con ese texto."
-          error={errors.diagnostic_item_template_id}
+          placeholder="Código o nombre del ítem…"
+          emptyMessage="No hay ítems activos en el catálogo con ese texto. Se agregan en Configuración › Ítems de diagnóstico."
+          error={template ? undefined : errors.diagnostic_item_template_id}
         />
       )}
-      {item?.template && (
-        <p className="text-secondary small">
-          Del catálogo: <span className="me-1">{item.template.code}</span>
-          {item.template.title}
-          {item.template.deleted && ' (eliminado del catálogo)'}
-        </p>
-      )}
-      <TextField
-        label="Ítem"
-        name="title"
-        required
-        autoFocus={!canPick}
-        maxLength={255}
-        value={title}
-        onChange={(event) => setTitle(event.target.value)}
+      {template && <p className="small text-secondary mt-n2">Valores sugeridos por el catálogo: ajústelos según lo revisado.</p>}
+      <TextareaField
+        label="Descripción"
+        name="description"
+        rows={2}
+        value={description}
+        onChange={(event) => setDescription(event.target.value)}
         errors={errors}
-        hint={
-          template
-            ? 'Valores sugeridos por el catálogo: se pueden ajustar para este vehículo.'
-            : 'Solo letras, números y espacios (p. ej. Pastillas delanteras).'
-        }
+        hint="Lo observado en este vehículo."
       />
-      <TextareaField label="Descripción" name="description" rows={2} value={description} onChange={(event) => setDescription(event.target.value)} errors={errors} />
       <div className="row">
         <div className="col-md-6">
           <SelectField label="Severidad" name="severity" required value={severity} onChange={(event) => setSeverity(event.target.value)} errors={errors}>
@@ -478,16 +464,6 @@ function DiagnosticItemFormModal({ diagnosticId, item, onClose }: { diagnosticId
         onChange={(event) => setRecommendation(event.target.value)}
         errors={errors}
       />
-      {!item && !template && can('diagnostic-item-templates.store') && (
-        <SwitchField
-          label="Guardar también en el catálogo"
-          name="save_as_template"
-          checked={saveAsTemplate}
-          onChange={setSaveAsTemplate}
-          errors={errors}
-          hint="Para elegirlo en próximos diagnósticos. Se guardan título, descripción, severidad, tiempo y recomendación."
-        />
-      )}
     </FormModal>
   )
 }

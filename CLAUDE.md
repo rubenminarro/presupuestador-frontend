@@ -39,7 +39,7 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   y roles), F13 (notificaciones) y F14 (auditoría) en `main`: el plan está completo y todos los ítems del menú tienen
   su pantalla (`ComingSoonPage` queda para un módulo nuevo sin construir). Además: preferencias visuales por usuario
   (`/preferences`), logo del sistema (`/system-settings`, solo administrador) y catálogo de ítems de diagnóstico
-  (`/diagnostic-item-templates`, elegidos al cargar un diagnóstico). Avance, decisiones y estructura de carpetas
+  (`/diagnostic-item-templates`: cada ítem del diagnóstico se elige de ahí). Avance, decisiones y estructura de carpetas
   en [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md). Antes de crear un componente, revisar `src/components/ui`
   y `src/lib`.
 * **Estructura de un módulo** (seguir F1): `src/features/<módulo>/api.ts` (tipos según el Resource, etiquetas de
@@ -211,9 +211,10 @@ Detalle de reglas y `error_code`: backend `CLAUDE.md`, sección 6.
   anidados en `clients/{client}/vehicles` (listar, crear, ver); editar y eliminar en `vehicles/{vehicle}`.
 * **Recepción y checklist:** estado derivado por el backend (`pending → in_progress → repair → completed`, más
   `delivered` / `cancelled`); nunca se asigna desde la UI salvo cancelar (con motivo). Fotos de recepción.
-* **Diagnóstico:** ítems con severidad, estado y fotos. Catálogo de ítems reutilizables (`diagnostic-item-templates`,
-  `DIA-…`): al elegir uno, el ítem copia sus valores (editables) y guarda el vínculo (`template`); cambiar o eliminar la
-  entrada no altera los diagnósticos hechos. Un ítem libre se puede guardar en el catálogo (`save_as_template`).
+* **Diagnóstico:** ítems con severidad, estado y fotos. Cada ítem se elige **siempre** del catálogo
+  (`diagnostic-item-templates`, `DIA-…`), como el repuesto de una línea de compra: el título es el del catálogo y no se
+  edita; severidad, banderas, tiempo, descripción y recomendación llegan como sugerencia. Al editar, el ítem del
+  catálogo queda fijo (se elimina y se agrega otro). Cambiar o eliminar la entrada no altera los diagnósticos hechos.
 * **Presupuestos (`BUD-…`):** `draft → sent → approved`; `sent → rejected → draft`; cancelar desde `draft|sent`.
   Solo `draft` es editable. Ítems `labor | service | part`. Precios sin IVA; el total suma el IVA.
 * **Órdenes de trabajo (`OT-000001`):** nacen de un presupuesto aprobado. `pending → in_progress ⇄ paused →

@@ -605,3 +605,19 @@ Decisiones del usuario (2026-10-24, las propuestas del plan):
       catálogo y alta libre guardada en el catálogo, móvil sin scroll horizontal), jefe de taller (administra) y
       mecánico (solo consulta; usa el buscador, sin el switch ni acciones en la pantalla). Sin errores de consola ni
       HTTP. Los datos creados por la revisión se borraron de la base local.
+
+### Ajuste: el ítem se elige siempre del catálogo (2026-10-24)
+
+Rama `fix/items-diagnostico-desde-catalogo` (con la del mismo nombre en el backend). El usuario aclaró que quería
+elegir el ítem del diagnóstico del catálogo **como se elige el repuesto en la línea de compra**, no un catálogo
+opcional. Reemplaza el switch "Guardar también en el catálogo" y el título editable de la versión anterior.
+
+- [x] Backend: `diagnostic_item_template_id` obligatorio en el alta; `title` no se envía (sale del catálogo); al
+      editar no se cambian ni el título ni el ítem del catálogo. Migración `000055`: los ítems libres existentes pasan
+      al catálogo y la columna queda `NOT NULL`. Sin `save_as_template`. 374 tests en verde.
+- [x] Formulario: buscador "Ítem" obligatorio (como "Repuesto" en `PurchaseItemModal`), sin campo de título; al
+      elegir, sugiere descripción, severidad, banderas, tiempo y recomendación. Al editar muestra código y título
+      fijos. "Agregar ítem" requiere también `diagnostic-item-templates.index`.
+- [x] Tabla: el código del catálogo antes del título (en lugar del badge "Catálogo").
+- [x] Revisión visual (Chrome headless, modo claro): administrador (guardar sin elegir → error en el campo; elegir,
+      guardar y editar) y mecánico (mismo formulario). Sin errores salvo el 422 esperado. Base local resembrada.
