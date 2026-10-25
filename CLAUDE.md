@@ -45,8 +45,10 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   en `FormModal` con `useApiMutation` (`invalidate` por prefijo de query key, `successMessage`) y errores de
   `validationErrors(mutation.error)`; bajas con `DeleteDialog`; la ruta se registra en `src/app/router.tsx`
   (`guarded(path, permiso, página)`).
-* **Pendientes fuera del plan:** notificaciones por WhatsApp en el backend (sin diseño ni fase) y runner de tests en
-  el frontend (decisión a consultar, sección 3).
+* **Pendientes fuera del plan:** notificaciones por WhatsApp en el backend (sin diseño ni fase), runner de tests en
+  el frontend (decisión a consultar, sección 3), catálogo de ítems de diagnóstico (planificado en
+  `docs/plan-desarrollo.md`, con decisiones a confirmar) y clientes aseguradoras (deuda #13 del handoff del backend, a
+  la espera de los clientes del usuario).
 
 ---
 

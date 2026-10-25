@@ -572,3 +572,56 @@ Notas y decisiones:
 
 Pendiente, con backend: "Mis trabajos" del mecánico (el listado de OT no filtra por mecánico) y una curva de ventas
 de la semana (serie por día: terreno de Reportes).
+
+## Catálogo de ítems de diagnóstico (planificado 2026-10-24, fuera del plan original)
+
+Objetivo: que el mecánico arme un diagnóstico eligiendo ítems de un catálogo reutilizable ("Pastillas de freno
+delanteras", "Nivel de aceite", "Batería"…), como se eligen repuestos y servicios en el ítem de presupuesto
+(`BudgetItemFormModal` + `SearchPicker`), en lugar de escribir cada ítem a mano. El ítem elegido **copia** los valores
+del catálogo y se puede ajustar: cambiar el catálogo después no altera los diagnósticos ya hechos.
+
+Hoy: `diagnostic_items` (backend, migración `000015`) solo tiene campos libres (`title`, `description`, `severity`,
+`status`, `requires_repair`, `requires_replacement`, `estimated_cost`, `estimated_time`, `recommendation`); no hay
+catálogo. Requiere cambios en el backend (rama propia, a aprobar).
+
+### Decisiones a confirmar (propuesta recomendada)
+
+| Tema | Propuesta | Alternativa |
+|---|---|---|
+| Campos del catálogo | Título (único), descripción, severidad sugerida, requiere reparación / reemplazo, tiempo estimado y recomendación | Sumar costo estimado (se desactualiza: el precio real va en el presupuesto) |
+| Agrupación | Categoría de servicio existente (`service_categories`, opcional) para filtrar el buscador | Sin categoría, o categorías propias del diagnóstico |
+| Quién lo administra | Administrador y `jefe-taller` (`diagnostic-item-templates.store/update/destroy/change-status`); consultan quienes cargan diagnósticos (`.index`/`.show`: mecánico, jefe de taller) | Solo administrador |
+| Ítem usado y luego borrado | Baja lógica permitida (el ítem del diagnóstico guarda su copia); el catálogo usado se puede desactivar | Bloquear la baja con `DIAGNOSTIC_ITEM_TEMPLATE_IN_USE`, como checklist |
+| Alta desde el diagnóstico | Casilla "Guardar en el catálogo" al crear un ítem libre | Solo se carga desde la pantalla del catálogo |
+| Carga de varios a la vez | Fase 2: elegir varios ítems del catálogo y agregarlos en un paso (rutina de inspección) | Uno por vez |
+
+### Backend (rama `feature/catalogo-items-diagnostico`)
+
+- [ ] Migración `diagnostic_item_templates` (`code` `DIA-…`, `title` único, `service_category_id` nullable,
+      `description`, `severity`, `requires_repair`, `requires_replacement`, `estimated_time`, `recommendation`,
+      `is_active`, soft deletes) y `diagnostic_items.diagnostic_item_template_id` nullable (`nullOnDelete`).
+- [ ] Modelo, `Resource`, Requests (mismas reglas de texto que `StoreDiagnosticItemRequest`) y
+      `DiagnosticItemTemplateController`: listado paginado con `search`, `status`, `service_category_id`; alta,
+      detalle, edición, baja y `PATCH …/status`. Rutas en `routes/api.php` y permisos en `RolesAndPermissionsSeeder`.
+- [ ] `POST diagnostic-items` acepta `diagnostic_item_template_id`: si viene, el servicio completa los campos no
+      enviados con los del catálogo (como `BudgetService::prepareCatalogItem`). Catálogo inactivo →
+      `422 DIAGNOSTIC_ITEM_TEMPLATE_INACTIVE`. `DiagnosticItemResource` expone `template` (`id`, `code`, `title`).
+- [ ] Seeder con ~30 ítems habituales por categoría y algunos escenarios de `ExampleScenarios` que los usan.
+- [ ] Tests de feature (CRUD, permisos por rol, copia de valores, inactivo, baja usada) y suite completa en verde.
+- [ ] Documentación: `CLAUDE.md` (sección 6, reglas y `error_code`), guía Postman y handoff.
+
+### Frontend (rama `feature/catalogo-items-diagnostico`)
+
+- [ ] `src/features/diagnostic-item-templates/api.ts` y `DiagnosticItemTemplatesPage.tsx` (DataTable con búsqueda,
+      filtros de estado y categoría; `FormModal` de alta/edición; switch activo; `DeleteDialog`), ruta en
+      `router.tsx` y entrada "Ítems de diagnóstico" en Datos maestros (`navigation.ts`).
+- [ ] `DiagnosticItemFormModal` (en `DiagnosticDetailPage.tsx`): `SearchPicker` "Del catálogo" opcional arriba del
+      título; al elegir, sugiere título, descripción, severidad, requiere reparación/reemplazo, tiempo y
+      recomendación (editables). Solo catálogos activos. En edición, el vínculo se muestra y no se cambia.
+- [ ] Tabla de ítems del diagnóstico: marca "Catálogo" con su código en los ítems que vienen de él.
+- [ ] (Si se aprueba) casilla "Guardar en el catálogo" en el alta de un ítem libre.
+- [ ] `npm run lint`, `npm run build` y revisión visual como administrador, jefe de taller y mecánico (escritorio y
+      móvil, claro y oscuro).
+
+Fuera de alcance por ahora: generar ítems del presupuesto a partir del diagnóstico (el catálogo podría vincularse
+después a un servicio o repuesto para sugerirlos).
