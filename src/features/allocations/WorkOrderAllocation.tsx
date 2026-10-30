@@ -11,7 +11,6 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import {
   ALLOCATION_ROLE_LABEL,
   ALLOCATION_STATUS,
-  PORTION_TYPES,
   allocationLinesInput,
   allocationsApi,
   conceptDifference,
@@ -19,13 +18,14 @@ import {
   gridFromAllocation,
   portionApplies,
   toCents,
+  visiblePortionTypes,
   type Allocation,
   type AllocationGrid,
   type AllocationPendingInvoice,
   type PortionType,
 } from '@/features/allocations/api'
 import { useAuth } from '@/features/auth/useAuth'
-import { claimsApi, type Claim } from '@/features/claims/api'
+import { claimsApi, DEDUCTIBLE_BLOCK_MESSAGES, deductibleBlock, type Claim } from '@/features/claims/api'
 import { INVOICE_PAYMENT_STATUS, INVOICE_STATUS } from '@/features/invoices/api'
 import { internalExceptionsApi, type InternalException } from '@/features/internal-exceptions/api'
 import type { WorkOrder } from '@/features/work-orders/api'
@@ -364,6 +364,9 @@ const CHECK_LABELS: Record<string, string> = {
   R6: 'Lo absorbido por el taller está autorizado.',
   R5: 'La parte del dueño no supera lo que aceptó.',
   R7: 'Los deducibles asignados no superan el del siniestro.',
+  deductible_tax: 'El siniestro indica si el deducible incluye IVA.',
+  deductible_covered: 'El deducible no supera lo que cubre la aseguradora.',
+  R11: 'Las porciones del deducible suman el deducible de esta OT sin IVA.',
 }
 
 /** Una fila por concepto y una columna por tipo de porción; sin `onChange`, solo lectura. */
@@ -372,11 +375,12 @@ export function AllocationTable({
   grid,
   onChange,
 }: {
-  allocation: Pick<Allocation, 'concepts' | 'lines'>
+  allocation: Pick<Allocation, 'concepts' | 'lines' | 'checks'>
   grid: AllocationGrid
   onChange?: (key: ReturnType<typeof conceptKey>, type: PortionType, value: string) => void
 }) {
-  const totals = PORTION_TYPES.map((type) =>
+  const columns = visiblePortionTypes(allocation)
+  const totals = columns.map((type) =>
     allocation.concepts.reduce((sum, concept) => sum + toCents(grid[conceptKey(concept)]?.[type.value] ?? ''), 0),
   )
   const saleCents = allocation.concepts.reduce((sum, concept) => sum + toCents(concept.base_total), 0)
@@ -389,7 +393,7 @@ export function AllocationTable({
           <tr>
             <th>Concepto</th>
             <th className="text-end">Total</th>
-            {PORTION_TYPES.map((type) => (
+            {columns.map((type) => (
               <th key={type.value} className="text-end" title={type.label}>
                 {type.short}
               </th>
@@ -417,7 +421,7 @@ export function AllocationTable({
                   )}
                 </td>
                 <td className="text-end text-nowrap">{formatMoney(concept.base_total)}</td>
-                {PORTION_TYPES.map((type) => {
+                {columns.map((type) => {
                   const value = row[type.value]
                   const applies = portionApplies(concept, type.value) || toCents(value) > 0
                   return (
@@ -454,7 +458,7 @@ export function AllocationTable({
             <td>Total</td>
             <td className="text-end text-nowrap">{formatMoney(saleCents / 100)}</td>
             {totals.map((cents, index) => (
-              <td key={PORTION_TYPES[index].value} className="text-end text-nowrap">
+              <td key={columns[index].value} className="text-end text-nowrap">
                 {formatMoney(cents / 100)}
               </td>
             ))}
@@ -501,13 +505,10 @@ function PendingInvoices({ invoices }: { invoices: AllocationPendingInvoice[] })
   )
 }
 
-/** Por qué no se factura todavía: el deducible del siniestro debe estar informado y ser 0 (A; mayor a 0 espera M10). */
+/** Por qué no se factura todavía: el deducible desconocido, o mayor a 0 sin la modalidad neta o sin su IVA (A, M10). */
 function billingBlock(claim: Claim | null): string | null {
-  if (!claim) return null
-  if (claim.deductible_amount === null) return 'El deducible del siniestro es desconocido: infórmelo en el siniestro para poder facturar.'
-  if (Number(claim.deductible_amount) > 0)
-    return 'El siniestro tiene deducible: su facturación todavía no está disponible (falta definir la modalidad). El reparto queda confirmado.'
-  return null
+  const block = claim ? deductibleBlock(claim) : null
+  return block ? `${DEDUCTIBLE_BLOCK_MESSAGES[block]} El reparto queda confirmado.` : null
 }
 
 function ConfirmedAllocation({ workOrder, allocation, claim }: { workOrder: WorkOrder; allocation: Allocation; claim: Claim | null }) {

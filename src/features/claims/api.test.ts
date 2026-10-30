@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { claimDocumentFormData, claimFormValues, claimUpdateInput, newClaimInput, type Claim } from '@/features/claims/api'
+import { claimDocumentFormData, claimFormValues, claimUpdateInput, deductibleBlock, newClaimInput, type Claim } from '@/features/claims/api'
 
 const claim: Claim = {
   id: 4,
@@ -52,5 +52,34 @@ describe('siniestros', () => {
     expect(form.get('file')).toBe(file)
     expect(form.get('type')).toBe('loss_report')
     expect(form.has('notes')).toBe(false)
+  })
+})
+
+describe('siniestros: deducible con la modalidad neta (M10)', () => {
+  const net = { value: 'net_of_deductible' as const, label: 'Neta del deducible' }
+
+  it('el IVA del deducible va como booleano (sin indicar, null); la modalidad, solo si cambió', () => {
+    expect(newClaimInput(9, { ...claimFormValues(), deductible_includes_tax: '' })).toMatchObject({ deductible_includes_tax: null })
+    expect(newClaimInput(9, { ...claimFormValues(), deductible_includes_tax: 'true' })).toMatchObject({ deductible_includes_tax: true })
+    expect(newClaimInput(9, claimFormValues())).not.toHaveProperty('deductible_billing_mode')
+
+    const withNet = { ...claim, deductible_billing_mode: net, deductible_includes_tax: false }
+    const values = claimFormValues(withNet)
+    expect(values).toMatchObject({ deductible_billing_mode: 'net_of_deductible', deductible_includes_tax: 'false' })
+    expect(claimUpdateInput(values, withNet)).not.toHaveProperty('deductible_billing_mode')
+    expect(claimUpdateInput({ ...values, deductible_billing_mode: '' }, withNet)).toMatchObject({ deductible_billing_mode: null })
+  })
+
+  it('el deducible bloquea según el importe, la modalidad en vigor y su IVA', () => {
+    const base = { ...claim, deductible_amount: '220000.00', deductible_net_mode_available: true }
+
+    expect(deductibleBlock({ ...claim, deductible_amount: null })).toBe('unknown')
+    expect(deductibleBlock(claim)).toBeNull()
+    expect(deductibleBlock({ ...base, deductible_billing_mode: null })).toBe('mode_undefined')
+    // Con el interruptor apagado, la modalidad cargada no cuenta (regla A).
+    expect(deductibleBlock({ ...base, deductible_billing_mode: net, deductible_includes_tax: true, deductible_net_mode_available: false })).toBe('mode_undefined')
+    expect(deductibleBlock({ ...base, deductible_billing_mode: net, deductible_includes_tax: null })).toBe('tax_undefined')
+    expect(deductibleBlock({ ...base, deductible_billing_mode: net, deductible_includes_tax: true })).toBeNull()
+    expect(deductibleBlock({ ...base, status: { value: 'closed', label: 'Cerrado' } })).toBeNull()
   })
 })

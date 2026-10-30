@@ -1,4 +1,5 @@
 import type { StatusMap } from '@/components/ui/StatusBadge'
+import type { DeductibleBillingMode } from '@/features/claims/api'
 import type { Client } from '@/features/clients/api'
 import { nullIfEmpty } from '@/lib/forms'
 import { deleteData, getData, getPage, patchData, postData, postWithMeta } from '@/services/api'
@@ -37,6 +38,9 @@ export interface Insurer {
   status: { value: InsurerStatus; label: string }
   client: Client
   payment_term_days: number | null
+  /** M10: modalidad del deducible por defecto de sus siniestros; y si el backend permite elegirla. */
+  deductible_billing_mode?: { value: DeductibleBillingMode; label: string } | null
+  deductible_net_mode_available?: boolean
   notes: string | null
   contacts: InsurerContact[]
   created_by: number | null
@@ -110,7 +114,8 @@ export const insurersApi = {
   show: (id: number) => getData<Insurer>(`/insurers/${id}`),
   /** `meta.warnings`: avisos sobre el cliente existente (p. ej. sigue recibiendo los avisos de sus vehículos). */
   create: (body: InsurerInput) => postWithMeta<Insurer, { warnings?: string[] }>('/insurers', body),
-  update: (id: number, body: { payment_term_days: number | null; notes: string | null }) => patchData<Insurer>(`/insurers/${id}`, body),
+  update: (id: number, body: { payment_term_days: number | null; notes: string | null; deductible_billing_mode?: DeductibleBillingMode | null }) =>
+    patchData<Insurer>(`/insurers/${id}`, body),
   remove: (id: number) => deleteData(`/insurers/${id}`),
   setStatus: (id: number, active: boolean) => postData<Insurer>(`/insurers/${id}/${active ? 'activate' : 'deactivate'}`),
   createContact: (id: number, body: InsurerContactInput) => postData<InsurerContact>(`/insurers/${id}/contacts`, body),

@@ -7,6 +7,20 @@ import type { ListParams } from '@/types/api'
 export type ClaimStatus = 'open' | 'closed' | 'cancelled'
 export type ClaimType = 'own' | 'third_party'
 export type ClaimDocumentType = 'loss_report' | 'policy' | 'adjuster_report' | 'authorization' | 'photo' | 'other'
+/** Modalidad de facturación del deducible (M10). null: rige la regla A (con deducible mayor a 0 no se factura). */
+export type DeductibleBillingMode = 'net_of_deductible'
+
+export const DEDUCTIBLE_BILLING_MODES: Record<DeductibleBillingMode, string> = {
+  net_of_deductible: 'Neta del deducible',
+}
+
+/**
+ * El selector de la modalidad se muestra con el interruptor del backend encendido (`deductible_net_mode_available`) o
+ * si ya hay una cargada, para poder quitarla.
+ */
+export function showDeductibleMode(available: boolean | undefined, current: DeductibleBillingMode | null | undefined): boolean {
+  return Boolean(available) || Boolean(current)
+}
 
 /** `ClaimResource` (listado). `deductible_amount`: null = desconocido, 0 = sin deducible. */
 export interface ClaimSummary {
@@ -18,6 +32,7 @@ export interface ClaimSummary {
   loss_date: string
   insured_name: string | null
   deductible_amount: string | null
+  deductible_billing_mode?: { value: DeductibleBillingMode; label: string } | null
   reception_id: number
   plate?: string | null
   insurer?: { id: number; code: string; name: string | null }
@@ -44,6 +59,11 @@ export interface Claim {
   insured: { client_id: number | null; name: string | null; document: string | null; phone: string | null; email: string | null }
   adjuster: { name: string | null; phone: string | null; email: string | null; inspection_scheduled_at: string | null; inspected_at: string | null }
   deductible_amount: string | null
+  /** M10: modalidad del deducible (la copia de la aseguradora al abrirse) y si el importe incluye el IVA (null = sin indicar). */
+  deductible_billing_mode?: { value: DeductibleBillingMode; label: string } | null
+  deductible_includes_tax?: boolean | null
+  /** Interruptor `insurer.deductible_net_mode` del backend. */
+  deductible_net_mode_available?: boolean
   coverage_notes: string | null
   closed_at: string | null
   cancelled_at: string | null
@@ -113,6 +133,10 @@ export interface ClaimFormValues {
   inspected_at: string
   /** Vacío = desconocido; 0 = sin deducible. */
   deductible_amount: string
+  /** '' = sin indicar (V15: se elige, sin valor por defecto). */
+  deductible_includes_tax: '' | 'true' | 'false'
+  /** Solo en la edición (el alta copia la de la aseguradora). */
+  deductible_billing_mode: DeductibleBillingMode | ''
   coverage_notes: string
 }
 
@@ -132,6 +156,7 @@ function details(values: ClaimFormValues) {
     inspection_scheduled_at: nullIfEmpty(values.inspection_scheduled_at),
     inspected_at: nullIfEmpty(values.inspected_at),
     deductible_amount: values.deductible_amount.trim() === '' ? null : values.deductible_amount.trim(),
+    deductible_includes_tax: values.deductible_includes_tax === '' ? null : values.deductible_includes_tax === 'true',
     coverage_notes: nullIfEmpty(values.coverage_notes),
   }
 }
@@ -154,9 +179,12 @@ export function newClaimInput(receptionId: number, values: ClaimFormValues) {
  * Edición (`PATCH claims/{id}`): recepción, aseguradora y tipo no cambian (el backend los prohíbe). El asegurado no
  * se vacía al editar: si queda en blanco no se envía.
  */
-export function claimUpdateInput(values: ClaimFormValues) {
+export function claimUpdateInput(values: ClaimFormValues, current?: Pick<Claim, 'deductible_billing_mode'>) {
   const insuredName = nullIfEmpty(values.insured_name)
-  return { ...(insuredName ? { insured_name: insuredName } : {}), ...details(values) }
+  // La modalidad solo se envía si cambió: con el interruptor apagado, el backend rechaza reenviar una ya cargada.
+  const mode = values.deductible_billing_mode === '' ? null : values.deductible_billing_mode
+  const modeChanged = current !== undefined && mode !== (current.deductible_billing_mode?.value ?? null)
+  return { ...(insuredName ? { insured_name: insuredName } : {}), ...details(values), ...(modeChanged ? { deductible_billing_mode: mode } : {}) }
 }
 
 /** Formulario a partir de un siniestro (edición) o vacío (alta). */
@@ -179,8 +207,32 @@ export function claimFormValues(claim?: Claim): ClaimFormValues {
     inspection_scheduled_at: dateTime(claim?.adjuster.inspection_scheduled_at ?? null),
     inspected_at: dateTime(claim?.adjuster.inspected_at ?? null),
     deductible_amount: claim?.deductible_amount ?? '',
+    deductible_includes_tax: claim?.deductible_includes_tax === true ? 'true' : claim?.deductible_includes_tax === false ? 'false' : '',
+    deductible_billing_mode: claim?.deductible_billing_mode?.value ?? '',
     coverage_notes: claim?.coverage_notes ?? '',
   }
+}
+
+/**
+ * Por qué el deducible todavía bloquea la facturación y la entrega de un siniestro abierto: desconocido, mayor a 0 sin
+ * la modalidad neta en vigor (A) o, con ella, sin indicar si incluye el IVA. null: no bloquea (0, o neta con el IVA).
+ */
+export function deductibleBlock(
+  claim: Pick<Claim, 'status' | 'deductible_amount' | 'deductible_billing_mode' | 'deductible_includes_tax' | 'deductible_net_mode_available'>,
+): 'unknown' | 'mode_undefined' | 'tax_undefined' | null {
+  if (claim.status.value !== 'open') return null
+  if (claim.deductible_amount === null) return 'unknown'
+  if (Number(claim.deductible_amount) <= 0) return null
+  const netMode = Boolean(claim.deductible_net_mode_available) && claim.deductible_billing_mode?.value === 'net_of_deductible'
+  if (!netMode) return 'mode_undefined'
+  return claim.deductible_includes_tax === null || claim.deductible_includes_tax === undefined ? 'tax_undefined' : null
+}
+
+/** Mensaje de cada bloqueo del deducible (tarjeta del siniestro y facturación del reparto). */
+export const DEDUCTIBLE_BLOCK_MESSAGES: Record<NonNullable<ReturnType<typeof deductibleBlock>>, string> = {
+  unknown: 'El deducible es desconocido: el reparto no se confirma, no se factura y la recepción no se entrega hasta informarlo.',
+  mode_undefined: 'El siniestro tiene deducible y no tiene la modalidad neta: no se factura ni se entrega por el flujo habitual.',
+  tax_undefined: 'Indique si el deducible incluye IVA: sin eso no se reparte ni se factura.',
 }
 
 export function claimDocumentFormData(file: File, type: ClaimDocumentType, notes: string): FormData {

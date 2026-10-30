@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { gridFromAllocation, type Allocation, type AllocationGrid } from '@/features/allocations/api'
 import { AllocationTable } from '@/features/allocations/WorkOrderAllocation'
 
-const allocation: Pick<Allocation, 'concepts' | 'lines'> = {
+const allocation: Pick<Allocation, 'concepts' | 'lines' | 'checks'> = {
+  checks: null,
   concepts: [
     {
       source_type: 'work_order_item',

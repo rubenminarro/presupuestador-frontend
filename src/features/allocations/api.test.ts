@@ -5,6 +5,7 @@ import {
   gridFromAllocation,
   portionApplies,
   toCents,
+  visiblePortionTypes,
   type Allocation,
   type AllocationConcept,
   type AllocationLine,
@@ -58,7 +59,7 @@ describe('reparto: grilla y cuerpo del PATCH', () => {
   it('arma la grilla por concepto y tipo, vacía donde no hay porción', () => {
     const grid = gridFromAllocation(allocation)
 
-    expect(grid['work_order_item:1']).toEqual({ insurer_covered: '800000', owner_responsibility: '', owner_uncovered: '200000', workshop_absorbed: '' })
+    expect(grid['work_order_item:1']).toEqual({ insurer_covered: '800000', owner_responsibility: '', owner_uncovered: '200000', owner_deductible: '', workshop_absorbed: '' })
     expect(grid['work_order_part:3'].owner_responsibility).toBe('20000.5')
   })
 
@@ -74,7 +75,7 @@ describe('reparto: grilla y cuerpo del PATCH', () => {
 
   it('solo manda las porciones con importe mayor a 0 y la absorción con la excepción disponible', () => {
     const grid = gridFromAllocation(allocation)
-    grid['work_order_item:1'] = { insurer_covered: '800000', owner_responsibility: '0', owner_uncovered: '150000', workshop_absorbed: '50000' }
+    grid['work_order_item:1'] = { insurer_covered: '800000', owner_responsibility: '0', owner_uncovered: '150000', owner_deductible: '', workshop_absorbed: '50000' }
 
     expect(allocationLinesInput(allocation, grid, 9)).toEqual([
       { source_type: 'work_order_item', source_id: 1, portion_type: 'insurer_covered', amount: '800000.00' },
@@ -97,5 +98,35 @@ describe('reparto: grilla y cuerpo del PATCH', () => {
     expect(portionApplies(clips, 'insurer_covered')).toBe(false)
     expect(portionApplies(alineacion, 'owner_uncovered')).toBe(false)
     expect(portionApplies(clips, 'workshop_absorbed')).toBe(true)
+    expect(portionApplies(chapa, 'owner_deductible')).toBe(true)
+    expect(portionApplies(clips, 'owner_deductible')).toBe(false)
+  })
+})
+
+describe('reparto: deducible de la modalidad neta (M10)', () => {
+  const withDeductible = { ...allocation, lines: [...allocation.lines, line(chapa, 'owner_deductible', '200000.00')] }
+
+  it('la columna del deducible aparece solo si el reparto la usa o si R11 falla', () => {
+    const columns = (value: Pick<Allocation, 'lines' | 'checks'>) => visiblePortionTypes(value).map((type) => type.value)
+
+    expect(columns({ lines: allocation.lines, checks: null })).not.toContain('owner_deductible')
+    expect(columns({ lines: withDeductible.lines, checks: null })).toContain('owner_deductible')
+    expect(
+      columns({ lines: allocation.lines, checks: [{ rule: 'R11', ok: false, message: '', error_code: 'ALLOCATION_DEDUCTIBLE_MISMATCH', status: 422 }] }),
+    ).toContain('owner_deductible')
+  })
+
+  it('el deducible entra en la grilla, la diferencia y el cuerpo del PATCH', () => {
+    const grid = gridFromAllocation(withDeductible)
+
+    expect(grid['work_order_item:1'].owner_deductible).toBe('200000')
+    // 800.000 cubiertos + 200.000 no cubiertos + 200.000 de deducible sobre un concepto de 1.000.000: sobran 200.000.
+    expect(conceptDifference(chapa, grid['work_order_item:1'])).toBe(-20000000)
+    expect(allocationLinesInput(withDeductible, grid, null)).toContainEqual({
+      source_type: 'work_order_item',
+      source_id: 1,
+      portion_type: 'owner_deductible',
+      amount: '200000.00',
+    })
   })
 })

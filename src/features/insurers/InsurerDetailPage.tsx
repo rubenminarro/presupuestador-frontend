@@ -11,6 +11,7 @@ import { PageBody, PageHeader } from '@/components/ui/Page'
 import { ErrorState, LoadingState } from '@/components/ui/States'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
+import { showDeductibleMode } from '@/features/claims/api'
 import {
   INSURER_CONTACT_ROLES,
   INSURER_STATUS,
@@ -120,6 +121,12 @@ function InsurerDetail({ insurer }: { insurer: Insurer }) {
                   <dd className="col-7 text-break">{insurer.client.email}</dd>
                   <dt className="col-5">Plazo de pago</dt>
                   <dd className="col-7">{insurer.payment_term_days === null ? '30 días (predeterminado)' : `${insurer.payment_term_days} días`}</dd>
+                  {showDeductibleMode(insurer.deductible_net_mode_available, insurer.deductible_billing_mode?.value) && (
+                    <>
+                      <dt className="col-5">Deducible</dt>
+                      <dd className="col-7">{insurer.deductible_billing_mode?.label ?? 'Sin modalidad (con deducible no se factura)'}</dd>
+                    </>
+                  )}
                   <dt className="col-12">Notas</dt>
                   <dd className="col-12 mb-0" style={{ whiteSpace: 'pre-line' }}>
                     {insurer.notes ?? <span className="text-secondary">Sin notas.</span>}
