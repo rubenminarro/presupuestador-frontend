@@ -3,7 +3,8 @@ import type { Invoice } from '@/features/invoices/api'
 import { deleteData, getData, patchData, postData } from '@/services/api'
 
 export type AllocationStatus = 'draft' | 'confirmed' | 'superseded'
-export type PortionType = 'insurer_covered' | 'owner_responsibility' | 'owner_uncovered' | 'workshop_absorbed'
+/** `owner_deductible`: el deducible sin IVA de la modalidad neta (M10), descontado de lo cubierto y a cargo del dueño. */
+export type PortionType = 'insurer_covered' | 'owner_responsibility' | 'owner_uncovered' | 'owner_deductible' | 'workshop_absorbed'
 export type ConceptSourceType = 'work_order_item' | 'work_order_part'
 
 /** Porción del reparto: un concepto vendido, un tipo y su importe sin IVA (> 0). */
@@ -122,6 +123,7 @@ export const PORTION_TYPES: { value: PortionType; label: string; short: string }
   { value: 'insurer_covered', label: 'Cubierto por la aseguradora', short: 'Aseguradora' },
   { value: 'owner_responsibility', label: 'A cargo del dueño', short: 'Dueño' },
   { value: 'owner_uncovered', label: 'No cubierto (dueño)', short: 'No cubierto' },
+  { value: 'owner_deductible', label: 'Deducible (a cargo del dueño)', short: 'Deducible' },
   { value: 'workshop_absorbed', label: 'Absorbido por el taller', short: 'Taller' },
 ]
 
@@ -147,7 +149,7 @@ function amountInput(value: string): string {
 export function gridFromAllocation(allocation: Pick<Allocation, 'concepts' | 'lines'>): AllocationGrid {
   const grid = {} as AllocationGrid
   for (const concept of allocation.concepts) {
-    grid[conceptKey(concept)] = { insurer_covered: '', owner_responsibility: '', owner_uncovered: '', workshop_absorbed: '' }
+    grid[conceptKey(concept)] = { insurer_covered: '', owner_responsibility: '', owner_uncovered: '', owner_deductible: '', workshop_absorbed: '' }
   }
   for (const line of allocation.lines) {
     const row = grid[conceptKey({ source_type: line.source.type, source_id: line.source.id })]
@@ -168,9 +170,20 @@ export function conceptDifference(concept: Pick<AllocationConcept, 'base_total'>
   return toCents(concept.base_total) - assigned
 }
 
-/** Si la columna aplica al concepto: la aseguradora y "no cubierto" solo en los que puede cubrir (R4). */
+/** Si la columna aplica al concepto: la aseguradora, "no cubierto" y el deducible solo en los que puede cubrir (R4). */
 export function portionApplies(concept: Pick<AllocationConcept, 'coverable'>, type: PortionType): boolean {
-  return concept.coverable || (type !== 'insurer_covered' && type !== 'owner_uncovered')
+  return concept.coverable || (type !== 'insurer_covered' && type !== 'owner_uncovered' && type !== 'owner_deductible')
+}
+
+/**
+ * Columnas del editor: la del deducible (M10) solo si el reparto la usa o si R11 no se cumple (falta cargarlo). Los
+ * repartos sin deducible se ven como siempre.
+ */
+export function visiblePortionTypes(allocation: Pick<Allocation, 'lines' | 'checks'>): typeof PORTION_TYPES {
+  const usesDeductible =
+    allocation.lines.some((line) => line.portion_type.value === 'owner_deductible') ||
+    (allocation.checks ?? []).some((check) => check.rule === 'R11' && !check.ok)
+  return PORTION_TYPES.filter((type) => type.value !== 'owner_deductible' || usesDeductible)
 }
 
 /**

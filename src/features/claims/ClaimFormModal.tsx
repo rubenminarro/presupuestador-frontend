@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FormField, TextareaField, TextField } from '@/components/ui/FormField'
+import { FormField, SelectField, TextareaField, TextField } from '@/components/ui/FormField'
 import { FormModal } from '@/components/ui/FormModal'
 import { SearchPicker } from '@/components/ui/SearchPicker'
 import {
@@ -7,7 +7,9 @@ import {
   claimFormValues,
   claimsApi,
   claimUpdateInput,
+  DEDUCTIBLE_BILLING_MODES,
   newClaimInput,
+  showDeductibleMode,
   type Claim,
   type ClaimFormValues,
   type ClaimType,
@@ -41,7 +43,7 @@ export function ClaimFormModal({
   const mutation = useApiMutation(
     () =>
       claim
-        ? claimsApi.update(claim.id, claimUpdateInput(values))
+        ? claimsApi.update(claim.id, claimUpdateInput(values, claim))
         : claimsApi.create(newClaimInput(receptionId as number, { ...values, insurer_id: insurer?.id ?? null })),
     {
       invalidate: INVALIDATE,
@@ -185,13 +187,60 @@ export function ClaimFormModal({
             inputMode="decimal"
             min={0}
             step="0.01"
-            hint="Vacío = desconocido; 0 = sin deducible. Mayor a 0 o desconocido: no se factura ni se entrega por el flujo habitual."
+            hint="Vacío = desconocido; 0 = sin deducible. Mayor a 0: se factura solo con la modalidad neta del deducible."
             {...field('deductible_amount')}
           />
         </div>
         <div className="col-md-8">
           <TextareaField label="Notas de cobertura" rows={2} maxLength={2000} {...field('coverage_notes')} />
         </div>
+        {Number(values.deductible_amount) > 0 && (
+          <div className="col-md-6">
+            <FormField
+              label="¿El deducible incluye IVA?"
+              error={errors.deductible_includes_tax}
+              hint="Sin indicarlo se guarda igual, pero el reparto y la factura del deducible lo necesitan."
+            >
+              <div className="form-selectgroup" role="radiogroup" aria-label="¿El deducible incluye IVA?">
+                {(
+                  [
+                    ['true', 'Incluye IVA'],
+                    ['false', 'No incluye IVA'],
+                  ] as const
+                ).map(([value, label]) => (
+                  <label key={value} className="form-selectgroup-item">
+                    <input
+                      type="radio"
+                      name="deductible_includes_tax"
+                      value={value}
+                      className="form-selectgroup-input"
+                      checked={values.deductible_includes_tax === value}
+                      onChange={() => set('deductible_includes_tax', value)}
+                    />
+                    <span className="form-selectgroup-label">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </FormField>
+          </div>
+        )}
+        {/* La modalidad se elige al editar: el alta copia la de la aseguradora. */}
+        {claim && showDeductibleMode(claim.deductible_net_mode_available, claim.deductible_billing_mode?.value) && (
+          <div className="col-md-6">
+            <SelectField
+              label="Modalidad del deducible"
+              {...field('deductible_billing_mode')}
+              hint="Neta: la aseguradora recibe lo cubierto menos el deducible y el dueño, el deducible en su factura."
+            >
+              <option value="">Sin modalidad (con deducible no se factura)</option>
+              {Object.entries(DEDUCTIBLE_BILLING_MODES).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </SelectField>
+          </div>
+        )}
       </div>
     </FormModal>
   )

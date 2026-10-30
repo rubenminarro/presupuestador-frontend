@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { FormField, TextareaField, TextField } from '@/components/ui/FormField'
+import { FormField, SelectField, TextareaField, TextField } from '@/components/ui/FormField'
 import { FormModal } from '@/components/ui/FormModal'
+import { DEDUCTIBLE_BILLING_MODES, showDeductibleMode, type DeductibleBillingMode } from '@/features/claims/api'
 import { ClientPicker, type ClientOption } from '@/features/clients/ClientPicker'
 import { insurerInput, insurersApi, type Insurer, type InsurerFormValues } from '@/features/insurers/api'
 import { nullIfEmpty, toInput } from '@/lib/forms'
@@ -130,15 +131,23 @@ export function NewInsurerModal({ onClose, onSaved }: { onClose: () => void; onS
   )
 }
 
-/** Edición: plazo de pago y notas (los datos de la empresa se editan en su cliente). */
+/**
+ * Edición: plazo de pago, notas y la modalidad del deducible por defecto (M10, solo con el interruptor del backend
+ * encendido o si ya tiene una). Los datos de la empresa se editan en su cliente.
+ */
 export function EditInsurerModal({ insurer, onClose }: { insurer: Insurer; onClose: () => void }) {
   const [paymentTermDays, setPaymentTermDays] = useState(toInput(insurer.payment_term_days))
   const [notes, setNotes] = useState(insurer.notes ?? '')
+  const currentMode = insurer.deductible_billing_mode?.value ?? ''
+  const [mode, setMode] = useState<DeductibleBillingMode | ''>(currentMode)
+  const showMode = showDeductibleMode(insurer.deductible_net_mode_available, insurer.deductible_billing_mode?.value)
   const mutation = useApiMutation(
     () =>
       insurersApi.update(insurer.id, {
         payment_term_days: paymentTermDays.trim() === '' ? null : Number(paymentTermDays),
         notes: nullIfEmpty(notes),
+        // Solo si cambió: con el interruptor apagado, el backend rechaza reenviar una modalidad ya cargada.
+        ...(mode !== currentMode && { deductible_billing_mode: mode === '' ? null : mode }),
       }),
     { invalidate: INVALIDATE, successMessage: 'Aseguradora actualizada.', onSuccess: onClose },
   )
@@ -151,6 +160,23 @@ export function EditInsurerModal({ insurer, onClose }: { insurer: Insurer; onClo
         set={(key, value) => (key === 'payment_term_days' ? setPaymentTermDays(value) : setNotes(value))}
         errors={errors}
       />
+      {showMode && (
+        <SelectField
+          label="Modalidad del deducible por defecto"
+          name="deductible_billing_mode"
+          value={mode}
+          onChange={(event) => setMode(event.target.value as DeductibleBillingMode | '')}
+          errors={errors}
+          hint="La copian sus siniestros nuevos (se puede cambiar en cada uno según la póliza)."
+        >
+          <option value="">Sin modalidad (con deducible no se factura)</option>
+          {Object.entries(DEDUCTIBLE_BILLING_MODES).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </SelectField>
+      )}
     </FormModal>
   )
 }

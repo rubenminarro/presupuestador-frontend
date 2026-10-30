@@ -55,7 +55,8 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   FA2 (presupuesto con aseguradora: quién paga cada línea, autorización, re-aceptación, excepciones internas en
   `/internal-exceptions` y advertencias de la OT) y FA3 (reparto en la OT, facturas por responsable, absorción del
   taller y notas de crédito en la factura) en `main`; FA4 (reportes "Cuentas por cobrar" y "Siniestros", resumen
-  económico en el detalle del siniestro, notas de crédito en Ventas) en `feature/reportes-aseguradoras`.
+  económico en el detalle del siniestro, notas de crédito en Ventas) en `main`; el deducible con la modalidad neta (M10:
+  modalidad e IVA del deducible, columna del deducible en el reparto) en `feature/deducible-neto`.
 * **Revisiones que guardan datos:** en una base MySQL temporal recién sembrada (`DB_DATABASE=… php artisan serve` en
   el backend y `VITE_API_URL` apuntando a él), nunca en la base de desarrollo `synctaller`; se borra al terminar.
 * **Pendientes fuera del plan:** notificaciones por WhatsApp en el backend (sin diseño ni fase).

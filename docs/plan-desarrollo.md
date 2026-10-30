@@ -817,3 +817,31 @@ Ajuste respecto del diseño: en Clientes la marca va solo en los saldos de una a
 El backend eliminó `receptions.approved_by` (D3: nunca se asignaba) y exige en la base el documento y el email del
 cliente, con el email único (D7 y D8; la API ya los exigía). El frontend solo quita `approved_by` del tipo de la
 recepción: no se mostraba en ninguna pantalla y el formulario del cliente ya pedía documento y email.
+
+## M10 — Deducible con la modalidad neta (rama `feature/deducible-neto`, 2026-10-30)
+
+El backend agregó la modalidad neta del deducible (M10, `CLAUDE.md` 6.31 del backend), detrás del interruptor
+`INSURER_DEDUCTIBLE_NET_MODE` (apagado por defecto). Decisiones del usuario (2026-10-30): la modalidad se elige solo al
+editar (el alta del siniestro copia la de la aseguradora; sin cambios en el backend); el IVA del deducible es opcional,
+con aviso; la columna del deducible en el reparto aparece solo cuando se usa.
+
+- [x] Aseguradora: fila "Deducible" en el detalle y "Modalidad del deducible por defecto" en la edición, solo con el
+      interruptor encendido (`deductible_net_mode_available`) o con una modalidad ya cargada (para poder quitarla). Se
+      envía solo si cambió: con el interruptor apagado el backend rechaza reenviar una cargada.
+- [x] Siniestro: "¿El deducible incluye IVA?" (sin valor inicial) con deducible mayor a 0; "Modalidad del deducible" en
+      la edición, con la misma condición. La tarjeta "Cobertura" muestra el IVA y la modalidad, y el aviso según
+      `deductibleBlock` (desconocido, sin la modalidad neta o sin su IVA); con la modalidad neta e IVA indicado, sin aviso.
+- [x] Reparto: columna "Deducible" (`owner_deductible`, solo en los conceptos que puede cubrir la aseguradora) si el
+      reparto la usa o si R11 falla (`visiblePortionTypes`); etiquetas de `deductible_tax`, `deductible_covered` y `R11`;
+      el bloqueo de "Generar factura" usa `deductibleBlock`.
+- [x] Tests (38 en total): cuerpo del siniestro (IVA y modalidad solo si cambió), `deductibleBlock`, columna del deducible
+      en la grilla, la diferencia y el cuerpo del reparto.
+- [x] Revisión con datos que se guardan (2026-10-30) en una base temporal (`synctaller_m10`, borrada después), con el
+      backend en `INSURER_DEDUCTIBLE_NET_MODE=true` (y `EMAIL_DNS_CHECK=false`: el email de ejemplo del asegurado no pasa
+      la validación DNS al editar el siniestro): recepcionista carga la modalidad en la aseguradora, el deducible de
+      SIN-000002 (220.000 con IVA, modalidad neta) y la re-aceptación; cajero carga el deducible de la OT en el borrador
+      de OT-000020 (aparece la columna con R11 sin cumplir), pasa 200.000 del amortiguador al deducible, confirma y genera
+      las facturas: aseguradora 1.430.000 y dueño 275.000 con «Deducible de siniestro N.º SDS-2026-0472» 1 × 220.000.
+      Encontró que el resumen del siniestro seguía diciendo "el deducible no se factura": corregido en el backend
+      (`fix/deducible-fiscal-pendiente`). Con el interruptor apagado (base de desarrollo, solo lectura) no aparece la
+      modalidad. Sin errores de consola ni HTTP.

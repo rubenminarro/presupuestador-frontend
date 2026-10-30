@@ -7,7 +7,7 @@ import { PageBody, PageHeader } from '@/components/ui/Page'
 import { ErrorState, LoadingState } from '@/components/ui/States'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
-import { CLAIM_STATUS, claimsApi, type Claim } from '@/features/claims/api'
+import { CLAIM_STATUS, claimsApi, DEDUCTIBLE_BLOCK_MESSAGES, deductibleBlock as claimDeductibleBlock, type Claim } from '@/features/claims/api'
 import { ClaimDocumentsCard } from '@/features/claims/ClaimDocumentsCard'
 import { ClaimSummaryCard } from '@/features/claims/ClaimSummaryCard'
 import { ClaimFormModal } from '@/features/claims/ClaimFormModal'
@@ -62,7 +62,7 @@ function ClaimDetail({ claim }: { claim: Claim }) {
   })
 
   const deductible = claim.deductible_amount
-  const deductibleBlocks = claim.status.value === 'open' && (deductible === null || Number(deductible) > 0)
+  const deductibleBlock = claimDeductibleBlock(claim)
 
   return (
     <>
@@ -139,13 +139,21 @@ function ClaimDetail({ claim }: { claim: Claim }) {
               <div className="card-body">
                 <dl className="row mb-0">
                   <Row label="Deducible">{deductible === null ? <span className="text-warning">Desconocido</span> : formatMoney(deductible)}</Row>
+                  {deductible !== null && Number(deductible) > 0 && (
+                    <>
+                      <Row label="IVA">
+                        {claim.deductible_includes_tax === true
+                          ? 'Incluye IVA'
+                          : claim.deductible_includes_tax === false
+                            ? 'No incluye IVA'
+                            : <span className="text-warning">Sin indicar</span>}
+                      </Row>
+                      <Row label="Modalidad">{claim.deductible_billing_mode?.label ?? 'Sin modalidad'}</Row>
+                    </>
+                  )}
                 </dl>
-                {deductibleBlocks && (
-                  <div className="small text-secondary mt-2">
-                    {deductible === null
-                      ? 'Con el deducible desconocido el reparto no se confirma y la recepción no se entrega.'
-                      : 'Con deducible mayor a 0 la OT no se factura ni se entrega por el flujo habitual (pendiente M10).'}
-                  </div>
+                {deductibleBlock && (
+                  <div className="small text-secondary mt-2">{DEDUCTIBLE_BLOCK_MESSAGES[deductibleBlock]}</div>
                 )}
                 {claim.coverage_notes && (
                   <p className="mt-2 mb-0" style={{ whiteSpace: 'pre-line' }}>
