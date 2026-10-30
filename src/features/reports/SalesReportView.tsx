@@ -43,6 +43,22 @@ function Sales({ report, groupBy }: { report: SalesReport; groupBy: 'day' | 'mon
           hint={`${report.cancelled.invoices_count} factura(s) anulada(s)`}
         />
       </div>
+      {report.credit_notes && report.credit_notes.credit_notes_count > 0 && (
+        <div className="row row-cards mb-3">
+          <StatTile
+            className="col-12 col-sm-6"
+            label="Notas de crédito"
+            value={formatGuarani(report.credit_notes.total)}
+            hint={`${report.credit_notes.credit_notes_count} registrada(s) en el período · IVA 10% ${formatGuarani(report.credit_notes.iva_10)} · IVA 5% ${formatGuarani(report.credit_notes.iva_5)}`}
+          />
+          <StatTile
+            className="col-12 col-sm-6"
+            label="Neto (facturado − notas de crédito)"
+            value={formatGuarani(report.net_total)}
+            hint="Las notas se cuentan por su fecha; el facturado, por la emisión."
+          />
+        </div>
+      )}
       <div className="row row-cards mb-3">
         <div className="col-12 col-lg-8">
           <ChartCard title={groupBy === 'day' ? 'Facturado por día' : 'Facturado por mes'}>

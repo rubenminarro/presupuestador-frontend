@@ -213,4 +213,77 @@ export const claimsApi = {
   download: (id: number, document: Pick<ClaimDocument, 'id' | 'original_name'>) =>
     downloadFile(`/claims/${id}/documents/${document.id}/download`, document.original_name),
   removeDocument: (id: number, documentId: number, reason: string) => deleteData(`/claims/${id}/documents/${documentId}`, { reason }),
+  /** Resumen económico (M11): cada bloque llega solo con su permiso. */
+  summary: (id: number) => getData<ClaimEconomicSummary>(`/claims/${id}/summary`),
+}
+
+/**
+ * `GET claims/{id}/summary` (M11), sobre todos los presupuestos y OT de la recepción. `budgets` (con `claims.show`) y
+ * `allocations` (con `work-order-allocations.show`) sin IVA; `billing` (con `invoices.show`) con IVA. No se suman entre sí.
+ */
+export interface ClaimEconomicSummary {
+  claim: { id: number; code: string; deductible_amount: string | null }
+  budgets?: {
+    /** Solo de los presupuestos aprobados. */
+    totals: { budgeted_total: string; insurer_amount: string; owner_amount: string; authorized_total: string; accepted_owner_amount: string }
+    items: {
+      budget_id: number
+      code: string
+      status: string
+      status_label: string
+      subtotal: string
+      insurer_amount: string
+      owner_amount: string
+      authorization_version: number | null
+      authorization_result: string | null
+      authorized_total: string | null
+      accepted_owner_amount: string | null
+    }[]
+  }
+  allocations?: {
+    totals: { insurer_amount: string; owner_amount: string; workshop_amount: string; deductible_amount: string; deductible_fiscal_pending: boolean }
+    work_orders: {
+      work_order_id: number
+      work_order_code: string
+      work_order_status: string
+      requires_allocation: boolean
+      allocation_version: number | null
+      insurer_amount: string
+      owner_amount: string
+      workshop_amount: string
+      deductible_amount: string | null
+    }[]
+  }
+  billing?: {
+    /** Solo de las facturas emitidas; los borradores se cuentan aparte. */
+    totals: { net_invoiced: string; collected: string; balance: string }
+    by_recipient: {
+      recipient_type: 'insurer' | 'customer'
+      recipient_label: string
+      invoices_count: number
+      drafts_count: number
+      invoiced_total: string
+      credited_total: string
+      net_invoiced: string
+      collected: string
+      balance: string
+    }[]
+    invoices: {
+      invoice_id: number
+      number: string | null
+      status: string
+      status_label: string
+      work_order_code: string | null
+      recipient_type: 'insurer' | 'customer'
+      recipient_label: string
+      customer_name: string
+      condition: string
+      total: string
+      credited_total: string
+      paid_total: string
+      balance: string
+      payment_status: string | null
+    }[]
+  }
+  alerts: string[]
 }

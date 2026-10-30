@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
 import { CLAIM_STATUS, claimsApi, type Claim } from '@/features/claims/api'
 import { ClaimDocumentsCard } from '@/features/claims/ClaimDocumentsCard'
+import { ClaimSummaryCard } from '@/features/claims/ClaimSummaryCard'
 import { ClaimFormModal } from '@/features/claims/ClaimFormModal'
 import { isReceptionOpen } from '@/features/receptions/api'
 import { formatDate, formatDateTime, formatMoney } from '@/lib/format'
@@ -191,6 +192,9 @@ function ClaimDetail({ claim }: { claim: Claim }) {
                     </dl>
                   </div>
                 </div>
+              </div>
+              <div className="col-12">
+                <ClaimSummaryCard claim={claim} />
               </div>
               <div className="col-12">
                 <ClaimDocumentsCard claim={claim} />
