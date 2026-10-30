@@ -51,10 +51,11 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   siniestros, autorizaciones, reparto, facturas por responsable, notas de crédito externas y reportes; 282 rutas, 464
   tests). El frontend se adapta en cinco fases (`docs/plan-desarrollo.md`, "Adaptación al módulo de aseguradoras"):
   **FA0** (compatibilidad: clientes persona o empresa, respuesta del cliente al presupuesto, `credited`, varias
-  facturas por OT) y FA1 (aseguradoras y siniestros: `/insurers`, `/claims`, documentos y tarjeta en la recepción) en
-  `main`; FA2 (presupuesto con aseguradora: quién paga cada línea, autorización, re-aceptación, excepciones internas
-  en `/internal-exceptions` y advertencias de la OT) en `feature/presupuesto-aseguradora`; después FA3 (reparto y
-  facturación) y FA4 (reportes).
+  facturas por OT), FA1 (aseguradoras y siniestros: `/insurers`, `/claims`, documentos y tarjeta en la recepción) y
+  FA2 (presupuesto con aseguradora: quién paga cada línea, autorización, re-aceptación, excepciones internas en
+  `/internal-exceptions` y advertencias de la OT) en `main`; FA3 (reparto en la OT, facturas por responsable, absorción
+  del taller y notas de crédito en la factura) en `feature/reparto-facturacion`, con `concepts` del reparto (backend
+  `feature/reparto-conceptos`); después FA4 (reportes).
 * **Revisiones que guardan datos:** en una base MySQL temporal recién sembrada (`DB_DATABASE=… php artisan serve` en
   el backend y `VITE_API_URL` apuntando a él), nunca en la base de desarrollo `synctaller`; se borra al terminar.
 * **Pendientes fuera del plan:** notificaciones por WhatsApp en el backend (sin diseño ni fase).

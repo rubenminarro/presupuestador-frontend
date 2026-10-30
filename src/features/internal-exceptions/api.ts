@@ -52,4 +52,13 @@ export const internalExceptionsApi = {
       consumed: 0,
       per_page: 1,
     }).then((page) => page.items[0] ?? null),
+  /** Absorción del taller de la OT, todavía sin usar (la consume la confirmación del reparto, M8). */
+  availableAbsorption: (workOrderId: number) =>
+    getPage<InternalException>('/internal-exceptions', {
+      type: 'workshop_absorption',
+      subject_type: 'work_order',
+      subject_id: workOrderId,
+      consumed: 0,
+      per_page: 1,
+    }).then((page) => page.items[0] ?? null),
 }
