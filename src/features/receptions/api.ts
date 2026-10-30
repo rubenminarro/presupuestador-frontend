@@ -50,7 +50,6 @@ export interface Reception extends ReceptionSummary {
   cancelled_by: number | null
   cancellation_reason: string | null
   created_by: { id: number; name: string } | null
-  approved_by: { id: number | null; name: string | null } | null
   service_categories: { id: number; name: string }[]
   /** Para `reception-check-lists/{id}`. */
   check_list: { id: number; status: CheckListStatus } | null
