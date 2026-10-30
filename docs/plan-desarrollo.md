@@ -811,3 +811,9 @@ Ajuste respecto del diseño: en Clientes la marca va solo en los saldos de una a
       resumen de SIN-000002; jefe de taller sin facturación; recepcionista con presupuestos, reparto y facturación (sus
       permisos) y sin las pestañas nuevas. Sin errores de consola ni HTTP. Al elegir un cliente, mientras llegaban sus
       facturas se veía "sin facturas": ahora muestra la carga.
+
+## Ajuste por las discrepancias D3, D7 y D8 del backend (2026-10-30)
+
+El backend eliminó `receptions.approved_by` (D3: nunca se asignaba) y exige en la base el documento y el email del
+cliente, con el email único (D7 y D8; la API ya los exigía). El frontend solo quita `approved_by` del tipo de la
+recepción: no se mostraba en ninguna pantalla y el formulario del cliente ya pedía documento y email.
