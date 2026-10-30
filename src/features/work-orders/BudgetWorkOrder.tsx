@@ -3,10 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { IconTool } from '@tabler/icons-react'
 import { FormModal } from '@/components/ui/FormModal'
-import { SelectField } from '@/components/ui/FormField'
+import { SelectField, SwitchField } from '@/components/ui/FormField'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
-import type { Budget } from '@/features/budgets/api'
+import { hasInsurerItems, type Budget } from '@/features/budgets/api'
+import { internalExceptionsApi } from '@/features/internal-exceptions/api'
 import { useActiveMechanics } from '@/features/mechanics/api'
 import { WORK_ORDER_STATUS, workOrdersApi, type WorkOrder } from '@/features/work-orders/api'
 import { toNumber } from '@/lib/forms'
@@ -72,10 +73,18 @@ function CreateWorkOrderModal({ budget, onClose, onCreated }: { budget: Budget; 
   const { can } = useAuth()
   const mechanics = useActiveMechanics(can('mechanics.index'))
   const [mechanicId, setMechanicId] = useState('')
+  const [useException, setUseException] = useState(false)
+  // Presupuesto con aseguradora sin autorización vigente: la OT solo se genera con una excepción (M7).
+  const needsException = hasInsurerItems(budget) && !budget.insurer_authorization
+  const exception = useQuery({
+    queryKey: ['internal-exceptions', 'start', budget.id],
+    queryFn: () => internalExceptionsApi.availableToStart(budget.id),
+    enabled: needsException && can('internal-exceptions.index'),
+  })
 
-  const mutation = useApiMutation(() => workOrdersApi.create(budget.id, toNumber(mechanicId)), {
+  const mutation = useApiMutation(() => workOrdersApi.create(budget.id, toNumber(mechanicId), useException ? (exception.data?.id ?? null) : null), {
     // La recepción pasa a "En proceso" con la OT pendiente.
-    invalidate: [['work-orders'], ['receptions'], ['budgets']],
+    invalidate: [['work-orders'], ['receptions'], ['budgets'], ['internal-exceptions']],
     successMessage: 'Orden de trabajo generada.',
     onSuccess: (workOrder) => {
       onClose()
@@ -106,6 +115,27 @@ function CreateWorkOrderModal({ budget, onClose, onCreated }: { budget: Budget; 
           </option>
         ))}
       </SelectField>
+      {needsException &&
+        (exception.data ? (
+          <div className="alert alert-warning">
+            <div className="mb-2">
+              La aseguradora todavía no autorizó. Hay una excepción "iniciar sin autorización"
+              {exception.data.granted_by && ` otorgada por ${exception.data.granted_by.name}`}: {exception.data.reason}
+            </div>
+            <SwitchField
+              label="Usar esta excepción para generar la OT (queda consumida)"
+              name="internal_exception_id"
+              checked={useException}
+              onChange={setUseException}
+              errors={errors}
+            />
+          </div>
+        ) : (
+          <div className="alert alert-warning mb-0">
+            La aseguradora todavía no autorizó: registre su autorización o pida al jefe de taller una excepción "iniciar sin
+            autorización".
+          </div>
+        ))}
     </FormModal>
   )
 }

@@ -124,6 +124,25 @@ function WorkOrderDetail({ workOrder }: { workOrder: WorkOrder }) {
       />
       <PageBody>
         <div className="row row-cards">
+          {workOrder.owner_amount_warning && (
+            <div className="col-12">
+              <div className="alert alert-warning mb-0" role="alert">
+                <h4 className="alert-title">Parte del dueño por encima de lo aceptado</h4>
+                <div>{workOrder.owner_amount_warning.message}</div>
+                {workOrder.owner_amount_warning.amount_exceeded && (
+                  <div className="small mt-1">
+                    Aceptado {formatMoney(workOrder.owner_amount_warning.accepted_amount)} · hoy{' '}
+                    {formatMoney(workOrder.owner_amount_warning.potential_amount)} · diferencia{' '}
+                    {formatMoney(workOrder.owner_amount_warning.difference)} (sin IVA).
+                  </div>
+                )}
+                <div className="small text-secondary mt-1">
+                  Se resuelve con una re-aceptación del dueño en el presupuesto, una absorción del taller o un presupuesto
+                  complementario. No bloquea la OT: el control es al confirmar el reparto.
+                </div>
+              </div>
+            </div>
+          )}
           <div className="col-12 col-lg-4">
             <div className="card">
               <div className="card-header">

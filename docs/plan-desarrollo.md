@@ -709,3 +709,36 @@ siniestro se registra desde la recepción (el listado es de consulta).
       nuevo y existente, contacto, listado y detalle de siniestro, subida, edición, alta desde la recepción con "De
       tercero", móvil sin scroll horizontal), cajero (consulta y descarga, sin botones de administración) y mecánico
       (sin menú del módulo ni tarjeta del siniestro). Sin errores de consola ni HTTP; no se guardó nada.
+
+### FA2 — Presupuesto con aseguradora (rama `feature/presupuesto-aseguradora`)
+
+Decisiones del usuario (2026-10-30): la unidad de los importes de una autorización (con o sin IVA) no tiene valor
+inicial; la evidencia se elige y también se sube desde el mismo formulario; las excepciones internas se otorgan en
+contexto y tienen una pantalla de consulta; la OT usa la excepción con una casilla explícita. Sin cambios en el backend.
+
+Ajuste respecto del diseño: no se muestran totales por responsable en la tabla de ítems (los totales los calcula el
+backend y no los informa por responsable); se ven la marca de cada línea, lo autorizado y lo aceptado por el dueño.
+
+- [x] Ítem del presupuesto: "A cargo de: Dueño / Aseguradora" con siniestro abierto en la recepción
+      (`claimsApi.forReception`: `GET receptions/{id}/claim`, 404 = sin siniestro) o si la línea ya era de la
+      aseguradora; sin el selector no se envía `responsibility`. Marca "Aseguradora" en la tabla.
+- [x] Autorización de la aseguradora (`AuthorizationCard`): versión vigente con sus líneas y respaldo, versiones
+      anteriores con su motivo; "Registrar autorización / nueva versión" con el presupuesto enviado o aprobado, el
+      siniestro abierto y la recepción abierta. Formulario: fecha, medio, número, perito, unidad de los importes (sin
+      valor inicial), una fila por línea de la aseguradora (autorizada, parcial con importe y cantidad opcional, no
+      cubierta), documentos del siniestro sin vincular y subida en el mismo formulario.
+- [x] Re-aceptación del dueño (`ReacceptModal`, `budgets.approve`, medio obligatorio) en el presupuesto aprobado.
+- [x] Excepciones internas: tarjeta en el presupuesto (la disponible o "Otorgar excepción" para el jefe de taller, motivo
+      de 10 a 1000 caracteres), pantalla "Excepciones internas" (Taller; filtros de tipo y uso, enlaces al presupuesto
+      y a la OT que la usó) y casilla "Usar esta excepción" al generar la OT. La absorción del taller queda para FA3.
+- [x] OT: advertencia de la parte del dueño (`owner_amount_warning`, con `claims.show`) y aviso del extra con siniestro
+      abierto (`meta.warnings` del alta, ahora con `postWithMeta`).
+- [x] Tests (21 en total): `authorizationInput`, `AuthorizationFormModal` (solo líneas de la aseguradora, unidad sin
+      elegir, parcial con importe) y el selector "A cargo de" de `BudgetItemFormModal`.
+- [x] Revisión con datos que se guardan (2026-10-30), en una base MySQL temporal recién sembrada (`synctaller_fa2`,
+      backend con `php artisan serve` y frontend apuntando a él; después se borró): recepcionista agrega una línea de
+      la aseguradora y envía; jefe de taller otorga la excepción; recepcionista aprueba; jefe de taller genera la OT
+      con la excepción y agrega un extra (aviso P5); recepcionista registra la autorización (sin unidad → error en el
+      campo; con IVA: 220.000 quedaron 200.000 sin IVA, versión 2 parcial) y la re-aceptación (100.000, lo no
+      autorizado); cajero ve la excepción usada con su OT; mecánico, sin advertencias del siniestro. Datos verificados
+      en la base. Sin errores de consola ni HTTP salvo el 422 provocado.

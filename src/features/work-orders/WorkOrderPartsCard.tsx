@@ -19,6 +19,7 @@ import {
 } from '@/features/work-orders/api'
 import { formatDateTime, formatMoney, formatQuantity } from '@/lib/format'
 import { nullIfEmpty, toInput, toNumber } from '@/lib/forms'
+import { toast } from '@/lib/toast'
 import { useApiMutation } from '@/lib/useApiMutation'
 import { validationErrors } from '@/services/api'
 
@@ -209,12 +210,14 @@ function PartLineModal({ workOrder, line, onClose }: { workOrder: WorkOrder; lin
   const approved = line?.client_decision?.value === 'approved'
 
   const mutation = useApiMutation(
-    () => {
+    async () => {
       if (line && approved) return workOrdersApi.updatePart(workOrder.id, line.id, { notes: nullIfEmpty(notes) })
       const body = { quantity: toNumber(quantity), notes: nullIfEmpty(notes) }
-      return line
-        ? workOrdersApi.updatePart(workOrder.id, line.id, { ...body, unit_price: toNumber(unitPrice) })
-        : workOrdersApi.addPart(workOrder.id, { ...body, part_id: part?.id ?? null, unit_price: toNumber(unitPrice) })
+      if (line) return workOrdersApi.updatePart(workOrder.id, line.id, { ...body, unit_price: toNumber(unitPrice) })
+      // Con siniestro abierto el backend avisa que el extra queda a cargo del dueño (P5).
+      const { data, meta } = await workOrdersApi.addPart(workOrder.id, { ...body, part_id: part?.id ?? null, unit_price: toNumber(unitPrice) })
+      meta?.warnings?.forEach((warning) => toast.warning(warning))
+      return data
     },
     {
       invalidate: INVALIDATE,

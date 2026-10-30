@@ -23,6 +23,15 @@ export interface BudgetItem {
   total: string
   estimated_hours: string | null
   notes: string | null
+  /** Quién paga la línea (M5): el dueño por defecto; la aseguradora solo con un siniestro abierto. */
+  responsibility: { value: BudgetItemResponsibility; label: string }
+}
+
+export type BudgetItemResponsibility = 'owner' | 'insurer'
+
+export const BUDGET_ITEM_RESPONSIBILITY: Record<BudgetItemResponsibility, string> = {
+  owner: 'Dueño',
+  insurer: 'Aseguradora',
 }
 
 /** `BudgetResource`; el detalle (`ShowBudgetResource`) suma `items`. Totales calculados por el backend. */
@@ -44,8 +53,23 @@ export interface Budget {
   items?: BudgetItem[]
   /** Respuestas del cliente en orden (solo en el detalle). Los presupuestos anteriores a E5 no tienen. */
   client_acceptances?: BudgetClientAcceptance[]
+  /** Autorización vigente de la aseguradora (M6), resumida; solo con `insurer-authorizations.show`. */
+  insurer_authorization?: {
+    id: number
+    version: number
+    result: { value: 'full' | 'partial' | 'rejected'; label: string }
+    authorization_number: string | null
+    decided_at: string | null
+    /** Sin IVA. */
+    authorized_total: string
+  } | null
   created_at: string
   updated_at: string
+}
+
+/** El presupuesto tiene líneas a cargo de la aseguradora (solo con `items` cargados). */
+export function hasInsurerItems(budget: Pick<Budget, 'items'>): boolean {
+  return (budget.items ?? []).some((item) => item.responsibility.value === 'insurer')
 }
 
 /** Tipo de respuesta del cliente (`ClientAcceptanceKind`). */
@@ -81,6 +105,8 @@ export interface BudgetItemInput {
   /** Vacío en un servicio del catálogo: horas del catálogo × cantidad. Prohibido en repuestos. */
   estimated_hours?: number | null
   notes: string | null
+  /** Sin enviarlo la línea queda (o sigue) a cargo del dueño. `insurer` exige un siniestro abierto. */
+  responsibility?: BudgetItemResponsibility
 }
 
 export const BUDGET_STATUS: StatusMap = {
@@ -107,6 +133,9 @@ export const budgetsApi = {
   remove: (id: number) => deleteData(`/budgets/${id}`),
   action: (id: number, action: BudgetAction, decision?: BudgetDecisionInput) =>
     postData<Budget>(`/budgets/${id}/${action}`, decision),
+  /** Re-aceptación del dueño (M7): presupuesto aprobado; el importe lo calcula el backend. */
+  reaccept: (id: number, body: { channel: ClientDecisionChannel | ''; contact: string | null; notes: string | null }) =>
+    postData<BudgetClientAcceptance>(`/budgets/${id}/client-acceptances`, body),
   pdf: (budget: Pick<Budget, 'id' | 'code'>) => downloadFile(`/budgets/${budget.id}/pdf`, `presupuesto-${budget.code}.pdf`),
   createItem: (id: number, body: BudgetItemInput) => postData<BudgetItem>(`/budgets/${id}/items`, body),
   updateItem: (id: number, itemId: number, body: BudgetItemInput) => patchData<BudgetItem>(`/budgets/${id}/items/${itemId}`, body),

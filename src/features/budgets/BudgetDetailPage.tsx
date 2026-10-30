@@ -9,6 +9,7 @@ import {
   IconFileDownload,
   IconPencil,
   IconPlus,
+  IconRepeat,
   IconSend,
   IconTrash,
   IconX,
@@ -33,7 +34,10 @@ import {
   type BudgetItem,
 } from '@/features/budgets/api'
 import { BudgetItemFormModal } from '@/features/budgets/BudgetItemFormModal'
-import { ClientAcceptancesCard, ClientDecisionModal } from '@/features/budgets/ClientDecision'
+import { ClientAcceptancesCard, ClientDecisionModal, ReacceptModal } from '@/features/budgets/ClientDecision'
+import { claimsApi } from '@/features/claims/api'
+import { AuthorizationCard } from '@/features/insurer-authorizations/AuthorizationCard'
+import { StartWithoutAuthorization } from '@/features/internal-exceptions/StartWithoutAuthorization'
 import { isReceptionOpen, receptionVehicleLabel } from '@/features/receptions/api'
 import { BudgetWorkOrder } from '@/features/work-orders/BudgetWorkOrder'
 import { formatDate, formatDateTime, formatDecimal, formatMoney } from '@/lib/format'
@@ -95,6 +99,14 @@ function BudgetDetail({ budget }: { budget: Budget }) {
   // Recepción entregada o cancelada: el presupuesto solo se puede cancelar (RECEPTION_CLOSED).
   const receptionOpen = !reception || isReceptionOpen(reception.status.value)
   const draft = budget.status === 'draft' && receptionOpen
+  const [reaccepting, setReaccepting] = useState(false)
+  // Siniestro vigente de la recepción (M3–M7): habilita las líneas de la aseguradora y su autorización.
+  const claimQuery = useQuery({
+    queryKey: ['claims', 'reception', budget.reception_id],
+    queryFn: () => claimsApi.forReception(budget.reception_id),
+    enabled: can('claims.show'),
+  })
+  const claim = claimQuery.data ?? null
 
   const action = useApiMutation(
     ({ value, decision }: { value: BudgetAction; decision?: BudgetDecisionInput }) => budgetsApi.action(budget.id, value, decision),
@@ -154,6 +166,12 @@ function BudgetDetail({ budget }: { budget: Budget }) {
                 {item.label}
               </button>
             ))}
+            {budget.status === 'approved' && receptionOpen && can('budgets.approve') && (
+              <button type="button" className="btn btn-outline-success" onClick={() => setReaccepting(true)}>
+                <IconRepeat size={18} className="me-1" aria-hidden="true" />
+                Re-aceptación
+              </button>
+            )}
             {can('budgets.destroy') && draft && (
               <button type="button" className="btn btn-outline-danger" onClick={() => setDeleting(true)}>
                 <IconTrash size={18} className="me-1" aria-hidden="true" />
@@ -218,10 +236,21 @@ function BudgetDetail({ budget }: { budget: Budget }) {
                 </dl>
               </div>
             </div>
+            {claim && (
+              <div className="card mt-3">
+                <div className="card-body small">
+                  Siniestro{' '}
+                  {can('claims.show') ? <Link to={`/claims/${claim.id}`}>{claim.code}</Link> : claim.code} · {claim.insurer?.name} ·{' '}
+                  {claim.status.label}
+                </div>
+              </div>
+            )}
+            <StartWithoutAuthorization budget={budget} claim={claim} />
             <BudgetWorkOrder budget={budget} />
           </div>
           <div className="col-12 col-lg-8">
-            <BudgetItemsTable budget={budget} editable={draft} />
+            <BudgetItemsTable budget={budget} editable={draft} hasOpenClaim={claim?.status.value === 'open'} />
+            <AuthorizationCard budget={budget} claim={claim} receptionOpen={receptionOpen} />
             {budget.client_acceptances && budget.client_acceptances.length > 0 && (
               <ClientAcceptancesCard acceptances={budget.client_acceptances} />
             )}
@@ -232,6 +261,7 @@ function BudgetDetail({ budget }: { budget: Budget }) {
         </div>
       </PageBody>
 
+      {reaccepting && <ReacceptModal budget={budget} onClose={() => setReaccepting(false)} />}
       {confirming && (confirming.action === 'approve' || confirming.action === 'reject') && (
         <ClientDecisionModal
           budget={budget}
@@ -279,7 +309,7 @@ function BudgetDetail({ budget }: { budget: Budget }) {
 }
 
 /** `editable`: borrador de una recepción abierta. */
-function BudgetItemsTable({ budget, editable }: { budget: Budget; editable: boolean }) {
+function BudgetItemsTable({ budget, editable, hasOpenClaim }: { budget: Budget; editable: boolean; hasOpenClaim: boolean }) {
   const { can } = useAuth()
   const [editing, setEditing] = useState<BudgetItem | 'new' | null>(null)
   const [deleting, setDeleting] = useState<BudgetItem | null>(null)
@@ -290,7 +320,10 @@ function BudgetItemsTable({ budget, editable }: { budget: Budget; editable: bool
       header: 'Ítem',
       render: (item) => (
         <>
-          <div>{item.description}</div>
+          <div>
+            {item.description}
+            {item.responsibility.value === 'insurer' && <span className="badge bg-azure-lt ms-2">Aseguradora</span>}
+          </div>
           <div className="small text-secondary">
             {[BUDGET_ITEM_TYPES[item.type], (item.part ?? item.service)?.code, item.notes].filter(Boolean).join(' · ')}
           </div>
@@ -346,7 +379,14 @@ function BudgetItemsTable({ budget, editable }: { budget: Budget; editable: bool
       {!editable && budget.status !== 'draft' && (
         <div className="small text-secondary mt-2">Solo los borradores se editan; un presupuesto rechazado se puede reabrir.</div>
       )}
-      {editing && <BudgetItemFormModal budgetId={budget.id} item={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
+      {editing && (
+        <BudgetItemFormModal
+          budgetId={budget.id}
+          item={editing === 'new' ? null : editing}
+          hasOpenClaim={hasOpenClaim}
+          onClose={() => setEditing(null)}
+        />
+      )}
       {deleting && (
         <DeleteDialog
           title="Eliminar ítem"
