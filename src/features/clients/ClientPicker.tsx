@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { IconSearch, IconX } from '@tabler/icons-react'
-import { clientsApi } from '@/features/clients/api'
+import { clientsApi, type ClientKind } from '@/features/clients/api'
 import { cx } from '@/lib/cx'
 
 export interface ClientOption {
@@ -18,10 +18,12 @@ interface ClientPickerProps {
   /** Errores 422 del campo `client_id`. */
   error?: string[]
   required?: boolean
+  /** Solo personas o solo empresas (`GET clients?kind=`). */
+  kind?: ClientKind
 }
 
 /** Búsqueda de cliente por documento, nombre, teléfono o email (mínimo 2 caracteres). */
-export function ClientPicker({ label = 'Cliente', value, onChange, error, required }: ClientPickerProps) {
+export function ClientPicker({ label = 'Cliente', value, onChange, error, required, kind }: ClientPickerProps) {
   const inputId = useId()
   const [input, setInput] = useState('')
   const [search, setSearch] = useState('')
@@ -32,8 +34,8 @@ export function ClientPicker({ label = 'Cliente', value, onChange, error, requir
   }, [input])
 
   const results = useQuery({
-    queryKey: ['clients', 'picker', search],
-    queryFn: () => clientsApi.list({ search, per_page: 8 }),
+    queryKey: ['clients', 'picker', kind ?? 'all', search],
+    queryFn: () => clientsApi.list({ search, kind, per_page: 8 }),
     enabled: value === null && search.length >= 2,
   })
 

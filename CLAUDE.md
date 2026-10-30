@@ -51,8 +51,9 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   siniestros, autorizaciones, reparto, facturas por responsable, notas de crédito externas y reportes; 282 rutas, 464
   tests). El frontend se adapta en cinco fases (`docs/plan-desarrollo.md`, "Adaptación al módulo de aseguradoras"):
   **FA0** (compatibilidad: clientes persona o empresa, respuesta del cliente al presupuesto, `credited`, varias
-  facturas por OT) en `feature/compatibilidad-aseguradoras`; después FA1 (aseguradoras y siniestros), FA2 (presupuesto
-  con aseguradora), FA3 (reparto y facturación) y FA4 (reportes).
+  facturas por OT) en `main`; FA1 (aseguradoras y siniestros: `/insurers`, `/claims`, documentos y tarjeta en la
+  recepción) en `feature/aseguradoras-siniestros`; después FA2 (presupuesto con aseguradora), FA3 (reparto y
+  facturación) y FA4 (reportes).
 * **Pendientes fuera del plan:** notificaciones por WhatsApp en el backend (sin diseño ni fase).
 
 ---

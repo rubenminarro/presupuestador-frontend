@@ -54,6 +54,14 @@ export interface Reception extends ReceptionSummary {
   service_categories: { id: number; name: string }[]
   /** Para `reception-check-lists/{id}`. */
   check_list: { id: number; status: CheckListStatus } | null
+  /** Siniestro vigente (M3): solo con `claims.show`; `null` si no tiene. */
+  claim?: {
+    id: number
+    code: string
+    claim_number: string | null
+    status: { value: 'open' | 'closed' | 'cancelled'; label: string }
+    insurer: string | null
+  } | null
   created_at: string
 }
 

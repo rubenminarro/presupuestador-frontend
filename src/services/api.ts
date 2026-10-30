@@ -131,6 +131,12 @@ export async function postData<T>(url: string, body?: unknown): Promise<T> {
   return data.data
 }
 
+/** POST cuyo `meta` trae algo que la pantalla muestra (p. ej. `meta.warnings` del alta de una aseguradora). */
+export async function postWithMeta<T, M>(url: string, body?: unknown): Promise<{ data: T; meta: M | null }> {
+  const { data } = await api.post<ApiEnvelope<T, M>>(url, body)
+  return { data: data.data, meta: data.meta ?? null }
+}
+
 export async function putData<T>(url: string, body?: unknown): Promise<T> {
   const { data } = await api.put<ApiEnvelope<T>>(url, body)
   return data.data
@@ -141,8 +147,9 @@ export async function patchData<T>(url: string, body?: unknown): Promise<T> {
   return data.data
 }
 
-export async function deleteData<T = null>(url: string): Promise<T> {
-  const { data } = await api.delete<ApiEnvelope<T>>(url)
+/** `body` para las bajas que piden motivo (p. ej. un documento de siniestro). */
+export async function deleteData<T = null>(url: string, body?: unknown): Promise<T> {
+  const { data } = await api.delete<ApiEnvelope<T>>(url, body === undefined ? undefined : { data: body })
   return data.data
 }
 
