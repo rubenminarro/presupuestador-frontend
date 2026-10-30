@@ -12,6 +12,7 @@ import { ErrorState, LoadingState } from '@/components/ui/States'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
 import { INVOICE_PAYMENT_STATUS, INVOICE_STATUS, invoicesApi, type Invoice, type InvoiceItem } from '@/features/invoices/api'
+import { CreditNotesCard } from '@/features/invoices/CreditNotes'
 import { EditInvoiceModal, InvoiceItemModal, IssueInvoiceModal } from '@/features/invoices/InvoiceModals'
 import { PAYMENT_STATUS, type Payment } from '@/features/payments/api'
 import { PaymentDetailModal } from '@/features/payments/PaymentDetailModal'
@@ -150,6 +151,7 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
                 <InvoicePaymentsTable payments={invoice.payments ?? []} />
               </div>
             )}
+            <CreditNotesCard invoice={invoice} />
           </div>
         </div>
       </PageBody>

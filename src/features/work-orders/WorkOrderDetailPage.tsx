@@ -9,6 +9,7 @@ import { SelectField, TextareaField } from '@/components/ui/FormField'
 import { ErrorState, LoadingState } from '@/components/ui/States'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
+import { WorkOrderAllocation } from '@/features/allocations/WorkOrderAllocation'
 import { WorkOrderInvoice } from '@/features/invoices/WorkOrderInvoice'
 import { useActiveMechanics } from '@/features/mechanics/api'
 import { receptionVehicleLabel } from '@/features/receptions/api'
@@ -199,6 +200,11 @@ function WorkOrderDetail({ workOrder }: { workOrder: WorkOrder }) {
               <WorkOrderPartsCard workOrder={workOrder} />
             </div>
           </div>
+          {workOrder.requires_allocation && can('work-order-allocations.show') && (
+            <div className="col-12">
+              <WorkOrderAllocation workOrder={workOrder} />
+            </div>
+          )}
         </div>
       </PageBody>
 

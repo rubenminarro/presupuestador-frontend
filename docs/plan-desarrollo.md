@@ -742,3 +742,44 @@ backend y no los informa por responsable); se ven la marca de cada línea, lo au
       campo; con IVA: 220.000 quedaron 200.000 sin IVA, versión 2 parcial) y la re-aceptación (100.000, lo no
       autorizado); cajero ve la excepción usada con su OT; mecánico, sin advertencias del siniestro. Datos verificados
       en la base. Sin errores de consola ni HTTP salvo el 422 provocado.
+
+### FA3 — Reparto y facturación (rama `feature/reparto-facturacion`)
+
+Decisiones del usuario (2026-10-30): el backend informa lo vendido por concepto (`concepts` en el reparto, rama
+`feature/reparto-conceptos`, handoff 2.73) en lugar de deducirlo de las porciones; el borrador se edita en una tabla con
+una columna por tipo de porción; los bloqueos nuevos de la entrega se muestran con el mensaje del backend (sin repetir la
+regla); la nota de crédito se carga por línea con un botón "Todo".
+
+Ajustes respecto del diseño: el reparto es una sección a todo el ancho al pie de la OT (la página no usa pestañas); la
+absorción del taller no se elige en la tabla: la columna "Taller" usa la única excepción sin usar de la OT (el backend no
+admite dos a la vez), que se muestra arriba.
+
+- [x] Sección "Reparto (sin IVA)" en la OT (`requires_allocation` y `work-order-allocations.show`): sin reparto, "Generar
+      reparto" (cajero, OT completada); con uno confirmado, "Corregir reparto" (copia en una versión nueva). Versiones
+      sustituidas al pie.
+- [x] Borrador: tabla por concepto con columnas Aseguradora, Dueño, No cubierto y Taller ("—" donde no aplica: la
+      aseguradora y "no cubierto" solo en los conceptos que puede cubrir, R4), lo autorizado por ítem, diferencia por
+      concepto y totales; deducible de la OT y notas. Reglas (`checks`) con su resultado: la cumplida con una etiqueta
+      propia, la que falla con el mensaje del backend. Guardar, Confirmar (sin cambios pendientes y con todas las reglas
+      cumplidas) y Descartar. `ALLOCATION_HAS_INVOICES` lista las facturas con enlaces. Confirmar y generar esperan la
+      recarga antes del éxito, para que la versión sustituida no siga ofreciendo acciones.
+- [x] Confirmado: responsables con su importe sin IVA y su factura (de `invoices[]` de la OT por `allocation_id` y
+      `client_id`), "Generar factura" por responsable (`invoices.store`; deshabilitado con el deducible desconocido o
+      mayor a 0, con el motivo); porciones por concepto en solo lectura.
+- [x] Absorción del taller: el jefe de taller la otorga desde la sección (importe sugerido = lo del taller en el
+      borrador, motivo); aviso con la disponible.
+- [x] Factura: tarjeta "Notas de crédito" (número, timbrado, fecha, motivo, líneas, estado, quién y cuándo, anulación);
+      "Registrar nota de crédito" con la factura emitida y saldo (cuánto le queda a cada línea, botón "Todo", total contra
+      el saldo) y "Anular" con motivo.
+- [x] Entrega: sin cambios (los bloqueos nuevos llegan con el mensaje del backend).
+- [x] Tests (29 en total): grilla y cuerpo del reparto (`gridFromAllocation`, `allocationLinesInput`,
+      `conceptDifference`, `portionApplies`), `AllocationTable` (columnas que no aplican y diferencia al editar),
+      `creditableByItem` y `creditNoteInput`.
+- [x] Revisión con datos que se guardan (2026-10-30), en una base MySQL temporal recién sembrada (`synctaller_fa3`,
+      después se borró), sobre OT-000020 (siniestro abierto, v2 confirmada y facturada, v3 en borrador): jefe de taller
+      otorga una absorción de 10.000; cajero pasa 10.000 de la lámpara del dueño al taller, guarda y confirma →
+      `ALLOCATION_HAS_INVOICES` con las dos facturas; registra una nota equivocada en la factura de la aseguradora y la
+      anula, y registra la correcta por todo ("Acreditada", saldo 0); con la factura del dueño anulada (pago y factura
+      anulados por los Services, fuera de FA3), confirma la v3 (absorción consumida) y genera las facturas de la
+      aseguradora (1.650.000, crédito) y del dueño (44.000, contado). Recepcionista, solo lectura; mecánico, sin la
+      sección. Datos verificados en la base. Sin errores de consola ni HTTP salvo el 409 esperado.

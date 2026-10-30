@@ -72,6 +72,8 @@ export interface Invoice {
   payment_summary: { paid_total: string; credited_total: string; balance: string; status: InvoicePaymentStatus | null }
   /** Solo en `GET /invoices/{id}`. */
   payments?: Payment[]
+  /** Notas de crédito registradas sobre la factura, también las anuladas (P10). Solo en `GET /invoices/{id}`. */
+  credit_notes?: CreditNote[]
   issued_at: string | null
   issued_by: number | null
   cancelled_at: string | null
@@ -95,6 +97,76 @@ export interface InvoiceItemInput {
   description: string
   tax_rate: TaxRate
   discount: number
+}
+
+export type CreditNoteStatus = 'registered' | 'cancelled'
+
+/**
+ * `InvoiceCreditNoteResource` (P10): nota de crédito emitida fuera del sistema y registrada sobre la factura. Importes
+ * con IVA, en guaraníes, salvo `base_amount` (sin IVA). Inmutable: un registro mal cargado se anula con motivo.
+ */
+export interface CreditNote {
+  id: number
+  invoice_id: number
+  number: string
+  stamp_number: string | null
+  issue_date: string
+  reason: string
+  status: { value: CreditNoteStatus; label: string }
+  total: string
+  items?: { id: number; invoice_item_id: number; description: string; tax_rate: TaxRate; amount: string; base_amount: string }[]
+  registered_by: { id: number; name: string } | null
+  cancelled_at: string | null
+  cancelled_by: { id: number; name: string } | null
+  cancellation_reason: string | null
+  created_at: string
+}
+
+export interface CreditNoteInput {
+  number: string
+  stamp_number: string | null
+  issue_date: string
+  reason: string
+  items: { invoice_item_id: number; amount: number }[]
+}
+
+export const CREDIT_NOTE_STATUS: StatusMap = {
+  registered: { label: 'Registrada', color: 'teal' },
+  cancelled: { label: 'Anulada', color: 'red' },
+}
+
+/** Lo que le queda por acreditar a cada línea: su total menos lo acreditado en notas vigentes (guaraníes enteros). */
+export function creditableByItem(invoice: Pick<Invoice, 'items' | 'credit_notes'>): Record<number, number> {
+  const remaining: Record<number, number> = {}
+  for (const item of invoice.items ?? []) remaining[item.id] = Math.round(Number(item.total))
+  for (const note of invoice.credit_notes ?? []) {
+    if (note.status.value !== 'registered') continue
+    for (const line of note.items ?? []) {
+      if (line.invoice_item_id in remaining) remaining[line.invoice_item_id] -= Math.round(Number(line.amount))
+    }
+  }
+  return remaining
+}
+
+/** Cuerpo del registro: solo las líneas con importe mayor a 0; timbrado vacío → null. */
+export function creditNoteInput(
+  values: { number: string; stamp_number: string; issue_date: string; reason: string },
+  amounts: Record<number, string>,
+): CreditNoteInput {
+  return {
+    number: values.number.trim(),
+    stamp_number: values.stamp_number.trim() === '' ? null : values.stamp_number.trim(),
+    issue_date: values.issue_date,
+    reason: values.reason.trim(),
+    items: Object.entries(amounts)
+      .map(([id, amount]) => ({ invoice_item_id: Number(id), amount: Number(amount.trim()) }))
+      .filter((item) => Number.isFinite(item.amount) && item.amount > 0),
+  }
+}
+
+export const creditNotesApi = {
+  create: (invoiceId: number, body: CreditNoteInput) => postData<CreditNote>(`/invoices/${invoiceId}/credit-notes`, body),
+  cancel: (invoiceId: number, id: number, reason: string) => postData<CreditNote>(`/invoices/${invoiceId}/credit-notes/${id}/cancel`, { reason }),
 }
 
 export const INVOICE_STATUS: StatusMap = {

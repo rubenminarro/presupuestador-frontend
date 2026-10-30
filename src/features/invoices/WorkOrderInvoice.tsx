@@ -64,7 +64,7 @@ export function WorkOrderInvoice({ workOrder }: { workOrder: WorkOrder }) {
     return (
       <div className="card mt-3">
         <div className="card-body text-secondary small">
-          Esta OT tiene líneas a cargo de la aseguradora: se factura por responsable desde su reparto confirmado.
+          Esta OT tiene líneas a cargo de la aseguradora: se factura por responsable desde su reparto confirmado (abajo, en "Reparto").
         </div>
       </div>
     )
