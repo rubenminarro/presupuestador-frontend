@@ -1,7 +1,7 @@
 import type { StatusMap } from '@/components/ui/StatusBadge'
 import type { ReceptionStatus } from '@/features/receptions/api'
 import { nullIfEmpty } from '@/lib/forms'
-import { deleteData, downloadFile, getData, getPage, patchData, postData } from '@/services/api'
+import { deleteData, downloadFile, getData, getPage, isApiError, patchData, postData } from '@/services/api'
 import type { ListParams } from '@/types/api'
 
 export type ClaimStatus = 'open' | 'closed' | 'cancelled'
@@ -195,6 +195,15 @@ export function claimDocumentFormData(file: File, type: ClaimDocumentType, notes
 export const claimsApi = {
   list: (params: ListParams) => getPage<ClaimSummary>('/claims', params),
   show: (id: number) => getData<Claim>(`/claims/${id}`),
+  /** Siniestro vigente (no cancelado) de la recepción; `null` si no tiene (el backend responde 404). */
+  forReception: async (receptionId: number): Promise<Claim | null> => {
+    try {
+      return await getData<Claim>(`/receptions/${receptionId}/claim`)
+    } catch (error) {
+      if (isApiError(error) && error.status === 404) return null
+      throw error
+    }
+  },
   create: (body: ReturnType<typeof newClaimInput>) => postData<Claim>('/claims', body),
   update: (id: number, body: ReturnType<typeof claimUpdateInput>) => patchData<Claim>(`/claims/${id}`, body),
   cancel: (id: number, reason: string) => postData<Claim>(`/claims/${id}/cancel`, { reason }),

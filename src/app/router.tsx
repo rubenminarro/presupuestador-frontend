@@ -21,6 +21,7 @@ import { DiagnosticDetailPage } from '@/features/diagnostics/DiagnosticDetailPag
 import { DiagnosticsPage } from '@/features/diagnostics/DiagnosticsPage'
 import { InsurerDetailPage } from '@/features/insurers/InsurerDetailPage'
 import { InsurersPage } from '@/features/insurers/InsurersPage'
+import { InternalExceptionsPage } from '@/features/internal-exceptions/InternalExceptionsPage'
 import { InventoryPage } from '@/features/inventory/InventoryPage'
 import { InvoiceStampsPage } from '@/features/invoice-stamps/InvoiceStampsPage'
 import { InvoiceDetailPage } from '@/features/invoices/InvoiceDetailPage'
@@ -89,6 +90,7 @@ const moduleRoutes: RouteObject[] = [
   guarded('insurers/:id', 'insurers.show', <InsurerDetailPage />),
   guarded('claims', 'claims.index', <ClaimsPage />),
   guarded('claims/:id', 'claims.show', <ClaimDetailPage />),
+  guarded('internal-exceptions', 'internal-exceptions.index', <InternalExceptionsPage />),
   guarded('client-notifications', 'client-notifications.index', <ClientNotificationsPage />),
   // Bandeja interna: sin permiso, cada usuario ve solo sus avisos.
   { path: 'notifications', element: <NotificationsPage /> },

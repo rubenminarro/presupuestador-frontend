@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { DataTable, type Column } from '@/components/ui/DataTable'
 import { SelectField, TextareaField, TextField } from '@/components/ui/FormField'
 import { FormModal } from '@/components/ui/FormModal'
-import type { Budget, BudgetClientAcceptance, BudgetDecisionInput } from '@/features/budgets/api'
+import { budgetsApi, type Budget, type BudgetClientAcceptance, type BudgetDecisionInput } from '@/features/budgets/api'
 import { CLIENT_DECISION_CHANNELS, type ClientDecisionChannel } from '@/features/work-orders/api'
 import { formatDateTime, formatMoney } from '@/lib/format'
 import { nullIfEmpty } from '@/lib/forms'
+import { useApiMutation } from '@/lib/useApiMutation'
 import { validationErrors } from '@/services/api'
 
 /**
@@ -80,6 +81,54 @@ export function ClientDecisionModal({
         errors={errors}
         hint="Opcional; al menos 3 caracteres si se completa."
       />
+    </FormModal>
+  )
+}
+
+/**
+ * Re-aceptación del dueño (M7): sobre el presupuesto aprobado, cuando su parte subió (lo no autorizado por la
+ * aseguradora, un deducible mayor o la ejecución real). El medio es obligatorio; el importe lo calcula el backend.
+ */
+export function ReacceptModal({ budget, onClose }: { budget: Budget; onClose: () => void }) {
+  const [channel, setChannel] = useState<ClientDecisionChannel | ''>('')
+  const [contact, setContact] = useState('')
+  const [notes, setNotes] = useState('')
+  const mutation = useApiMutation(() => budgetsApi.reaccept(budget.id, { channel, contact: nullIfEmpty(contact), notes: nullIfEmpty(notes) }), {
+    invalidate: [['budgets'], ['work-orders']],
+    successMessage: 'Re-aceptación registrada.',
+    onSuccess: onClose,
+  })
+  const errors = validationErrors(mutation.error)
+
+  return (
+    <FormModal
+      title={`Re-aceptación del dueño · ${budget.code}`}
+      onClose={onClose}
+      onSubmit={() => mutation.mutate()}
+      isSubmitting={mutation.isPending}
+      submitLabel="Registrar re-aceptación"
+    >
+      <p className="text-secondary">
+        El dueño acepta su parte actual del trabajo (sin IVA), que calcula el sistema. Queda en el historial de respuestas y
+        pasa a ser el importe aceptado para el reparto.
+      </p>
+      <SelectField
+        label="Medio de la respuesta"
+        name="channel"
+        required
+        value={channel}
+        onChange={(event) => setChannel(event.target.value as ClientDecisionChannel | '')}
+        errors={errors}
+      >
+        <option value="">Seleccionar…</option>
+        {Object.entries(CLIENT_DECISION_CHANNELS).map(([value, label]) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </SelectField>
+      <TextField label="Contacto" name="contact" maxLength={150} value={contact} onChange={(event) => setContact(event.target.value)} errors={errors} />
+      <TextareaField label="Notas" name="notes" rows={2} maxLength={500} value={notes} onChange={(event) => setNotes(event.target.value)} errors={errors} />
     </FormModal>
   )
 }

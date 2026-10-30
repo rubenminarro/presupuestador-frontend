@@ -4,7 +4,7 @@ import type { InvoiceCondition, InvoicePaymentStatus, InvoiceStatus } from '@/fe
 import type { Mechanic } from '@/features/mechanics/api'
 import type { PartUnit } from '@/features/parts/api'
 import type { ReceptionSummary } from '@/features/receptions/api'
-import { getData, getPage, patchData, postData, putData } from '@/services/api'
+import { getData, getPage, patchData, postData, postWithMeta, putData } from '@/services/api'
 import type { ListParams } from '@/types/api'
 
 export type WorkOrderStatus = 'pending' | 'in_progress' | 'paused' | 'completed' | 'cancelled'
@@ -150,6 +150,22 @@ export interface WorkOrder {
   invoices_count?: number
   /** El presupuesto tiene líneas de la aseguradora y la recepción un siniestro: se factura por responsable (M8–M9). */
   requires_allocation?: boolean
+  /** La recepción tiene un siniestro abierto (M7, P5): un extra queda a cargo del dueño. */
+  has_claim?: boolean
+  /**
+   * Advertencia de B (M7), solo con `claims.show`: la parte potencial del dueño supera lo que aceptó, o subió el
+   * deducible desde su aceptación. Informativa; null si no hay nada que advertir.
+   */
+  owner_amount_warning?: {
+    accepted_amount: string
+    potential_amount: string
+    difference: string
+    amount_exceeded: boolean
+    accepted_deductible: string | null
+    current_deductible: string | null
+    deductible_increased: boolean
+    message: string
+  } | null
   /** Solo con `work-orders.view-economics`. */
   economic_summary?: EconomicSummary
   created_at: string
@@ -210,7 +226,13 @@ export type ItemAction = 'start' | 'complete' | 'cancel'
 export const workOrdersApi = {
   list: (params: ListParams) => getPage<WorkOrder>('/work-orders', params),
   show: (id: number) => getData<WorkOrder>(`/work-orders/${id}`),
-  create: (budgetId: number, mechanicId: number | null) => postData<WorkOrder>('/work-orders', { budget_id: budgetId, mechanic_id: mechanicId }),
+  /** `internalExceptionId`: excepción "iniciar sin autorización" que se consume (M7; presupuesto con aseguradora sin autorizar). */
+  create: (budgetId: number, mechanicId: number | null, internalExceptionId: number | null = null) =>
+    postData<WorkOrder>('/work-orders', {
+      budget_id: budgetId,
+      mechanic_id: mechanicId,
+      ...(internalExceptionId !== null && { internal_exception_id: internalExceptionId }),
+    }),
   update: (id: number, body: { mechanic_id?: number | null; notes: string | null }) => patchData<WorkOrder>(`/work-orders/${id}`, body),
   action: (id: number, action: WorkOrderAction) => postData<WorkOrder>(`/work-orders/${id}/${action}`),
   itemAction: (id: number, itemId: number, action: ItemAction) => postData<WorkOrder>(`/work-orders/${id}/items/${itemId}/${action}`),
@@ -220,7 +242,8 @@ export const workOrdersApi = {
   /** null borra las horas. */
   logHours: (id: number, itemId: number, mechanicId: number, hours: number | null) =>
     patchData<ItemMechanic>(`/work-orders/${id}/items/${itemId}/mechanics/${mechanicId}/hours`, { hours }),
-  addPart: (id: number, body: WorkOrderPartInput) => postData<WorkOrderPart>(`/work-orders/${id}/parts`, body),
+  /** Extra; con siniestro abierto, `meta.warnings` avisa que queda a cargo del dueño (P5). */
+  addPart: (id: number, body: WorkOrderPartInput) => postWithMeta<WorkOrderPart, { warnings?: string[] }>(`/work-orders/${id}/parts`, body),
   updatePart: (id: number, lineId: number, body: WorkOrderPartInput) => patchData<WorkOrderPart>(`/work-orders/${id}/parts/${lineId}`, body),
   /** Extra `awaiting_approval`: aprobar lo pasa a `pending` e intenta reservar; rechazar lo cancela. */
   decidePart: (id: number, lineId: number, decision: 'approve' | 'reject', body: ClientDecisionInput) =>

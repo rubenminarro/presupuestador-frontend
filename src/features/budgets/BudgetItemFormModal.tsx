@@ -1,8 +1,16 @@
 import { useState } from 'react'
 import { FormModal } from '@/components/ui/FormModal'
 import { SearchPicker } from '@/components/ui/SearchPicker'
-import { SelectField, TextareaField, TextField } from '@/components/ui/FormField'
-import { BUDGET_ITEM_TYPES, budgetsApi, type BudgetItem, type BudgetItemInput, type BudgetItemType } from '@/features/budgets/api'
+import { FormField, SelectField, TextareaField, TextField } from '@/components/ui/FormField'
+import {
+  BUDGET_ITEM_RESPONSIBILITY,
+  BUDGET_ITEM_TYPES,
+  budgetsApi,
+  type BudgetItem,
+  type BudgetItemInput,
+  type BudgetItemResponsibility,
+  type BudgetItemType,
+} from '@/features/budgets/api'
 import { allowsFractions, partsApi, type PartUnit } from '@/features/parts/api'
 import { servicesApi } from '@/features/services/api'
 import { formatMoney } from '@/lib/format'
@@ -24,6 +32,8 @@ interface BudgetItemFormModalProps {
   budgetId: number
   /** null: alta. */
   item: BudgetItem | null
+  /** La recepción tiene un siniestro abierto: la línea puede quedar a cargo de la aseguradora (M5). */
+  hasOpenClaim?: boolean
   onClose: () => void
 }
 
@@ -31,7 +41,10 @@ interface BudgetItemFormModalProps {
  * Ítem `labor | service | part`. Precios sin IVA; el total del ítem y del presupuesto los calcula el backend. Al
  * elegir un repuesto o servicio se sugieren su nombre y su precio (se pueden cambiar).
  */
-export function BudgetItemFormModal({ budgetId, item, onClose }: BudgetItemFormModalProps) {
+export function BudgetItemFormModal({ budgetId, item, hasOpenClaim = false, onClose }: BudgetItemFormModalProps) {
+  const [responsibility, setResponsibility] = useState<BudgetItemResponsibility>(item?.responsibility.value ?? 'owner')
+  // Con siniestro abierto se elige; una línea que ya era de la aseguradora se puede devolver al dueño.
+  const showResponsibility = hasOpenClaim || item?.responsibility.value === 'insurer'
   const [type, setType] = useState<BudgetItemType>(item?.type ?? 'labor')
   const [catalog, setCatalog] = useState<CatalogOption | null>(item?.part ?? item?.service ?? null)
   const [description, setDescription] = useState(item?.description ?? '')
@@ -59,6 +72,7 @@ export function BudgetItemFormModal({ budgetId, item, onClose }: BudgetItemFormM
         // Servicio del catálogo: precio y horas vacíos se omiten (el backend toma los del catálogo).
         ...(type === 'service' && catalog && unitPrice.trim() === '' ? {} : { unit_price: toNumber(unitPrice) }),
         ...(type !== 'part' && !(type === 'service' && catalog && hours.trim() === '') && { estimated_hours: toNumber(hours) }),
+        ...(showResponsibility && { responsibility }),
       }
       return item ? budgetsApi.updateItem(budgetId, item.id, body) : budgetsApi.createItem(budgetId, { ...body, type })
     },
@@ -216,6 +230,29 @@ export function BudgetItemFormModal({ budgetId, item, onClose }: BudgetItemFormM
           </div>
         )}
       </div>
+      {showResponsibility && (
+        <FormField
+          label="A cargo de"
+          error={errors.responsibility}
+          hint="Lo que paga la aseguradora se marca a propósito; después se registra su autorización línea por línea."
+        >
+          <div className="form-selectgroup" role="radiogroup" aria-label="A cargo de">
+            {(Object.keys(BUDGET_ITEM_RESPONSIBILITY) as BudgetItemResponsibility[]).map((value) => (
+              <label key={value} className="form-selectgroup-item">
+                <input
+                  type="radio"
+                  name="responsibility"
+                  value={value}
+                  className="form-selectgroup-input"
+                  checked={responsibility === value}
+                  onChange={() => setResponsibility(value)}
+                />
+                <span className="form-selectgroup-label">{BUDGET_ITEM_RESPONSIBILITY[value]}</span>
+              </label>
+            ))}
+          </div>
+        </FormField>
+      )}
       <TextareaField label="Notas" name="notes" rows={2} maxLength={500} value={notes} onChange={(event) => setNotes(event.target.value)} errors={errors} />
     </FormModal>
   )
