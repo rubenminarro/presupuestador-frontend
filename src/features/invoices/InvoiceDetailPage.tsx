@@ -124,10 +124,16 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
                   <dl className="row mb-0">
                     <dt className="col-6 fw-normal">Pagado</dt>
                     <dd className="col-6 text-end">{formatGuarani(invoice.payment_summary.paid_total)}</dd>
+                    {Number(invoice.payment_summary.credited_total) > 0 && (
+                      <>
+                        <dt className="col-6 fw-normal">Acreditado (notas de crédito)</dt>
+                        <dd className="col-6 text-end">{formatGuarani(invoice.payment_summary.credited_total)}</dd>
+                      </>
+                    )}
                     <dt className="col-6 h3 mb-0">Saldo</dt>
                     <dd className="col-6 text-end h3 mb-0">{formatGuarani(invoice.payment_summary.balance)}</dd>
                   </dl>
-                  {invoice.payment_summary.status !== 'paid' && can('payments.store') && (
+                  {invoice.payment_summary.status !== 'paid' && invoice.payment_summary.status !== 'credited' && can('payments.store') && (
                     <button type="button" className="btn btn-primary w-100 mt-3" onClick={() => setDialog('pay')}>
                       <IconCash size={18} className="me-1" aria-hidden="true" />
                       Registrar pago

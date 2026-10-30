@@ -2,7 +2,7 @@ import type { BudgetStatus, BudgetItemType } from '@/features/budgets/api'
 import type { DiagnosticItemStatus, Priority, Severity } from '@/features/diagnostics/api'
 import type { InvoiceStatus, InvoicePaymentStatus } from '@/features/invoices/api'
 import type { FuelLevel, ReceptionStatus } from '@/features/receptions/api'
-import type { WorkOrderItemStatus, WorkOrderStatus } from '@/features/work-orders/api'
+import type { WorkOrderInvoiceSummary, WorkOrderItemStatus, WorkOrderStatus } from '@/features/work-orders/api'
 import { getData, getPage, getWithMeta } from '@/services/api'
 import type { ListParams, Pagination } from '@/types/api'
 
@@ -28,6 +28,8 @@ export interface VehicleHistory {
     /** Facturas emitidas, con IVA. */
     invoiced_total: string
     balance_due: string
+    /** Lo mismo por destinatario (M9): el dueño del vehículo y los demás (p. ej. una aseguradora). */
+    by_recipient?: Record<'owner' | 'others', { invoiced_total: string; balance_due: string }>
     /** Solo con `work-orders.view-economics`; sin IVA. */
     economics?: { sale_total: string; cost_total: string; gross_margin: string }
   }
@@ -59,7 +61,10 @@ export interface HistoryEntry {
     mechanic: string | null
     jobs: { description: string; type: BudgetItemType; status: WorkOrderItemStatus }[]
     parts_used: { part_code: string | null; name: string | null; quantity: string }[]
+    /** Clave heredada: la última factura vigente; usar `invoices`. */
     invoice: { number: string | null; status: InvoiceStatus; total: string; balance: string; payment_status: InvoicePaymentStatus | null } | null
+    /** Facturas vigentes de la OT: una por responsable si tiene reparto (M9). */
+    invoices?: WorkOrderInvoiceSummary[]
     /** Solo con `work-orders.view-economics`; sin IVA. */
     economics?: { sale_total: string; cost_total: string; gross_margin: string; is_cost_complete: boolean }
   }[]

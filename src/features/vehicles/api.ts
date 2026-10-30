@@ -20,8 +20,8 @@ export interface Vehicle {
   notes: string | null
   client?: {
     id: number
-    first_name: string
-    last_name: string
+    first_name: string | null
+    last_name: string | null
     document_number: string
     phone: string
     email: string

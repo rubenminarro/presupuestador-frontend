@@ -116,12 +116,22 @@ export function VehicleDetailPage() {
   )
 }
 
+/** Saldo total o, si hay facturas a otros (p. ej. una aseguradora, M9), el del dueño y el de los demás. */
+function invoicedHint(summary: VehicleHistory['summary']): string {
+  const balance = (value: string) => (Number(value) > 0 ? `saldo ${formatGuarani(value)}` : 'sin saldo')
+  const others = summary.by_recipient?.others
+
+  if (!others || Number(others.invoiced_total) === 0) return balance(summary.balance_due)
+
+  return `dueño: ${balance(summary.by_recipient!.owner.balance_due)} · otros: ${balance(others.balance_due)}`
+}
+
 function SummaryCards({ summary }: { summary: VehicleHistory['summary'] }) {
   const cards: [string, string, string?][] = [
     ['Visitas', String(summary.visits), summary.first_visit ? `desde ${formatDate(summary.first_visit)}` : undefined],
     ['Último ingreso', formatDate(summary.last_visit), summary.last_service_at ? `último servicio ${formatDate(summary.last_service_at)}` : undefined],
     ['Kilometraje', km(summary.last_mileage), `${summary.work_orders_completed} OT completada(s)`],
-    ['Facturado (con IVA)', formatGuarani(summary.invoiced_total), Number(summary.balance_due) > 0 ? `saldo ${formatGuarani(summary.balance_due)}` : 'sin saldo'],
+    ['Facturado (con IVA)', formatGuarani(summary.invoiced_total), invoicedHint(summary)],
   ]
 
   return (
@@ -238,14 +248,23 @@ function TimelineEntry({ entry }: { entry: HistoryEntry }) {
                 {workOrder.parts_used.map((part) => `${part.name ?? part.part_code} × ${formatQuantity(part.quantity)}`).join(', ')}
               </div>
             )}
-            {workOrder.invoice && (
-              <div className="small">
-                <span className="text-secondary">Factura: </span>
-                {workOrder.invoice.number ?? 'borrador'} · {formatGuarani(workOrder.invoice.total)}{' '}
-                <StatusBadge value={workOrder.invoice.status} map={INVOICE_STATUS} />{' '}
-                {workOrder.invoice.payment_status && <StatusBadge value={workOrder.invoice.payment_status} map={INVOICE_PAYMENT_STATUS} />}
-              </div>
-            )}
+            {workOrder.invoices
+              ? workOrder.invoices.map((invoice) => (
+                  <div key={invoice.id} className="small">
+                    <span className="text-secondary">Factura: </span>
+                    {invoice.number ?? 'borrador'} · {invoice.customer_name} · {formatGuarani(invoice.total)}{' '}
+                    <StatusBadge value={invoice.status.value} map={INVOICE_STATUS} />{' '}
+                    {invoice.payment_status && <StatusBadge value={invoice.payment_status} map={INVOICE_PAYMENT_STATUS} />}
+                  </div>
+                ))
+              : workOrder.invoice && (
+                  <div className="small">
+                    <span className="text-secondary">Factura: </span>
+                    {workOrder.invoice.number ?? 'borrador'} · {formatGuarani(workOrder.invoice.total)}{' '}
+                    <StatusBadge value={workOrder.invoice.status} map={INVOICE_STATUS} />{' '}
+                    {workOrder.invoice.payment_status && <StatusBadge value={workOrder.invoice.payment_status} map={INVOICE_PAYMENT_STATUS} />}
+                  </div>
+                )}
             {workOrder.economics && (
               <div className="small text-secondary">
                 Sin IVA: venta {formatMoney(workOrder.economics.sale_total)} · costo {formatMoney(workOrder.economics.cost_total)} · margen{' '}

@@ -47,9 +47,13 @@ de la discrepancia en lugar de "corregir" por cuenta propia. Ante dudas sobre un
   en `FormModal` con `useApiMutation` (`invalidate` por prefijo de query key, `successMessage`) y errores de
   `validationErrors(mutation.error)`; bajas con `DeleteDialog`; la ruta se registra en `src/app/router.tsx`
   (`guarded(path, permiso, página)`).
-* **Pendientes fuera del plan:** notificaciones por WhatsApp en el backend (sin diseño ni fase), runner de tests en
-  el frontend (decisión a consultar, sección 3) y clientes aseguradoras (deuda #13 del handoff del backend, a la espera
-  de los clientes del usuario).
+* **Módulo de aseguradoras (2026-10-30):** el backend ya tiene M1–M9, P10 y M11 (clientes empresa, aseguradoras,
+  siniestros, autorizaciones, reparto, facturas por responsable, notas de crédito externas y reportes; 282 rutas, 464
+  tests). El frontend se adapta en cinco fases (`docs/plan-desarrollo.md`, "Adaptación al módulo de aseguradoras"):
+  **FA0** (compatibilidad: clientes persona o empresa, respuesta del cliente al presupuesto, `credited`, varias
+  facturas por OT) en `feature/compatibilidad-aseguradoras`; después FA1 (aseguradoras y siniestros), FA2 (presupuesto
+  con aseguradora), FA3 (reparto y facturación) y FA4 (reportes).
+* **Pendientes fuera del plan:** notificaciones por WhatsApp en el backend (sin diseño ni fase).
 
 ---
 
@@ -62,7 +66,7 @@ Antes de implementar cualquier cambio:
 2. Identificar las reglas de negocio y los módulos afectados (sección 7 y backend `CLAUDE.md`, sección 6).
 3. Proponer el cambio mínimo y explicar su motivo. Las decisiones de negocio se consultan, no se suponen.
 4. Implementar solo el alcance autorizado.
-5. Ejecutar `npm run lint` y `npm run build` (incluye `tsc -b`) antes de dar algo por terminado.
+5. Ejecutar `npm run lint`, `npm run build` (incluye `tsc -b`) y `npm test` antes de dar algo por terminado.
 6. Verificar visualmente las pantallas en el navegador siempre que sea posible.
 7. Informar archivos modificados, comprobaciones ejecutadas y resultados.
 8. Documentar las decisiones de arquitectura importantes.
@@ -98,10 +102,15 @@ Antes de implementar cualquier cambio:
 | Formularios | Estado de React + `FormField` con errores `422` (sin librería extra) |
 | Gráficos | ApexCharts (`react-apexcharts`), siempre a través de `src/components/ui/Chart.tsx` (carga diferida) |
 | Calidad | ESLint (`typescript-eslint`, `react-hooks`) |
+| Tests | Vitest + Testing Library sobre jsdom (`npm test`; `vitest.config.ts` reutiliza `vite.config.ts`) |
 
 Plan de desarrollo por fases y decisiones tomadas: [`docs/plan-desarrollo.md`](docs/plan-desarrollo.md).
 
-No hay runner de tests instalado. Agregar uno (p. ej. Vitest + Testing Library) es una decisión a consultar.
+**Tests** (decisión del 2026-10-30, FA0): archivos `*.test.ts(x)` junto al código que prueban; `src/test/setup.ts` carga
+los matchers de `jest-dom` y limpia el DOM. Probar sobre todo la lógica que arma el cuerpo de un request y los
+formularios delicados (p. ej. `clientInput`, `ClientFormModal`); las llamadas a la API se simulan con `vi.spyOn` sobre
+el servicio (`clientsApi.create`), sin red. jsdom va fijado en 29.1.1: la 30 pide Node 22.22 o más (el equipo usa
+22.13). Versiones de dependencias nuevas: exactas y con al menos dos semanas de publicadas.
 
 ### Reglas de interfaz
 
@@ -180,6 +189,12 @@ Base: `/api`. Todas las respuestas son JSON (el backend fuerza `Accept: applicat
 * **Documentos emitidos son inmutables** (factura emitida, pago, entrega, movimiento de inventario, compra recibida,
   pago a proveedor): la UI no ofrece "editar", solo "anular" (con motivo) cuando corresponde.
 * **Estados** llegan como valores en inglés (`draft`, `in_progress`, …): traducirlos en un único mapa por enum.
+* **Nombre del cliente:** un cliente es persona (nombre y apellido) o empresa (razón social; `first_name` y `last_name`
+  en `null`). Mostrar siempre `display_name` (o `full_name` en los recursos anidados, que el backend arma igual);
+  nunca concatenar nombre y apellido de un cliente. Nombre y apellido de usuarios y mecánicos no cambian.
+* **Facturas de una OT:** una OT con reparto tiene una factura por responsable (aseguradora y dueño): usar `invoices[]`;
+  `invoice` es una clave heredada (la última). Estado de cobro `credited` ("Acreditada"): saldada solo con notas de
+  crédito.
 
 ---
 
@@ -207,8 +222,10 @@ no requieren permiso: cada usuario ve solo lo suyo.
 
 Detalle de reglas y `error_code`: backend `CLAUDE.md`, sección 6.
 
-* **Clientes, vehículos y datos maestros:** placa obligatoria salvo `no_plate = true` (entonces chasis). Vehículos
-  anidados en `clients/{client}/vehicles` (listar, crear, ver); editar y eliminar en `vehicles/{vehicle}`.
+* **Clientes, vehículos y datos maestros:** cliente persona o empresa (`kind`; la empresa lleva `business_name` y no
+  nombre ni apellido; el tipo cambia solo sin recepciones ni facturas, `CLIENT_KIND_NOT_EDITABLE`). Placa obligatoria
+  salvo `no_plate = true` (entonces chasis). Vehículos anidados en `clients/{client}/vehicles` (listar, crear, ver);
+  editar y eliminar en `vehicles/{vehicle}`.
 * **Recepción y checklist:** estado derivado por el backend (`pending → in_progress → repair → completed`, más
   `delivered` / `cancelled`); nunca se asigna desde la UI salvo cancelar (con motivo). Fotos de recepción.
 * **Diagnóstico:** ítems con severidad, estado y fotos. Cada ítem se elige **siempre** del catálogo
@@ -216,7 +233,8 @@ Detalle de reglas y `error_code`: backend `CLAUDE.md`, sección 6.
   edita; severidad, banderas, tiempo, descripción y recomendación llegan como sugerencia. Al editar, el ítem del
   catálogo queda fijo (se elimina y se agrega otro). Cambiar o eliminar la entrada no altera los diagnósticos hechos.
 * **Presupuestos (`BUD-…`):** `draft → sent → approved`; `sent → rejected → draft`; cancelar desde `draft|sent`.
-  Solo `draft` es editable. Ítems `labor | service | part`. Precios sin IVA; el total suma el IVA.
+  Solo `draft` es editable. Ítems `labor | service | part`. Precios sin IVA; el total suma el IVA. Aprobar y rechazar
+  aceptan la respuesta del cliente (medio, contacto y notas, todo opcional); el detalle trae `client_acceptances`.
 * **Órdenes de trabajo (`OT-000001`):** nacen de un presupuesto aprobado. `pending → in_progress ⇄ paused →
   completed`, `pending → cancelled`. Ítems, repuestos en OT (`pending → reserved → consumed → returned`),
   asignación de mecánicos y horas. Los repuestos extra (fuera del presupuesto) nacen `awaiting_approval`: no se

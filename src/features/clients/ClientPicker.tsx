@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { IconSearch, IconX } from '@tabler/icons-react'
-import { clientName, clientsApi } from '@/features/clients/api'
+import { clientsApi } from '@/features/clients/api'
 import { cx } from '@/lib/cx'
 
 export interface ClientOption {
@@ -84,10 +84,10 @@ export function ClientPicker({ label = 'Cliente', value, onChange, error, requir
                     aria-selected={false}
                     className="list-group-item list-group-item-action"
                     onClick={() =>
-                      onChange({ id: client.id, name: clientName(client), detail: `${client.document_number} · ${client.phone}` })
+                      onChange({ id: client.id, name: client.display_name, detail: `${client.document_number} · ${client.phone}` })
                     }
                   >
-                    <div>{clientName(client)}</div>
+                    <div>{client.display_name}</div>
                     <div className="small text-secondary">
                       {client.document_number} · {client.phone} · {client.email}
                     </div>

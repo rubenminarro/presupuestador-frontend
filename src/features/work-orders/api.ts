@@ -1,6 +1,6 @@
 import type { StatusMap } from '@/components/ui/StatusBadge'
 import type { Budget } from '@/features/budgets/api'
-import type { InvoiceStatus } from '@/features/invoices/api'
+import type { InvoiceCondition, InvoicePaymentStatus, InvoiceStatus } from '@/features/invoices/api'
 import type { Mechanic } from '@/features/mechanics/api'
 import type { PartUnit } from '@/features/parts/api'
 import type { ReceptionSummary } from '@/features/receptions/api'
@@ -11,6 +11,29 @@ export type WorkOrderStatus = 'pending' | 'in_progress' | 'paused' | 'completed'
 export type WorkOrderItemStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
 export type WorkOrderPartStatus = 'awaiting_approval' | 'pending' | 'reserved' | 'consumed' | 'returned' | 'cancelled'
 export type ClientDecisionChannel = 'phone' | 'whatsapp' | 'in_person' | 'email' | 'other'
+
+/** Factura vigente de la OT (`ShowWorkOrderResource::invoices`). Importes con IVA, en guaraníes. */
+export interface WorkOrderInvoiceSummary {
+  id: number
+  number: string | null
+  status: { value: InvoiceStatus; label: string }
+  client_id: number | null
+  customer_name: string
+  condition: InvoiceCondition | null
+  allocation_id: number | null
+  total: string
+  balance: string
+  payment_status: InvoicePaymentStatus | null
+}
+
+export type WorkOrderInvoiceRow = Pick<WorkOrderInvoiceSummary, 'id' | 'number' | 'status' | 'total'> &
+  Partial<Pick<WorkOrderInvoiceSummary, 'customer_name' | 'balance' | 'payment_status'>>
+
+/** Facturas de la OT: `invoices` (M9); si solo llega la clave heredada `invoice`, esa. */
+export function workOrderInvoices(workOrder: { invoices?: WorkOrderInvoiceSummary[]; invoice?: WorkOrderInvoiceRow | null }): WorkOrderInvoiceRow[] {
+  if (workOrder.invoices) return workOrder.invoices
+  return workOrder.invoice ? [workOrder.invoice] : []
+}
 
 /** Respuesta del cliente a un repuesto extra. `decided_by` es el id del usuario que la registró. */
 export interface ClientDecision {
@@ -120,8 +143,13 @@ export interface WorkOrder {
     by_mechanic: { mechanic_id: number; employee_code: string; full_name: string; commission_amount: string }[]
   }
   parts_summary?: { total_cost: string; total_price: string; unresolved_count: number }
-  /** Solo con `invoices.show`. */
+  /** Solo con `invoices.show`. Clave heredada: la última factura vigente; usar `invoices`. */
   invoice?: { id: number; number: string | null; status: { value: InvoiceStatus; label: string }; total: string } | null
+  /** Facturas vigentes (borrador o emitida): una por responsable si la OT tiene reparto (M9). Solo con `invoices.show`. */
+  invoices?: WorkOrderInvoiceSummary[]
+  invoices_count?: number
+  /** El presupuesto tiene líneas de la aseguradora y la recepción un siniestro: se factura por responsable (M8–M9). */
+  requires_allocation?: boolean
   /** Solo con `work-orders.view-economics`. */
   economic_summary?: EconomicSummary
   created_at: string

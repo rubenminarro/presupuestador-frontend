@@ -23,8 +23,17 @@ import { TextareaField } from '@/components/ui/FormField'
 import { ErrorState, LoadingState } from '@/components/ui/States'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
-import { BUDGET_ITEM_TYPES, BUDGET_STATUS, budgetsApi, type Budget, type BudgetAction, type BudgetItem } from '@/features/budgets/api'
+import {
+  BUDGET_ITEM_TYPES,
+  BUDGET_STATUS,
+  budgetsApi,
+  type Budget,
+  type BudgetAction,
+  type BudgetDecisionInput,
+  type BudgetItem,
+} from '@/features/budgets/api'
 import { BudgetItemFormModal } from '@/features/budgets/BudgetItemFormModal'
+import { ClientAcceptancesCard, ClientDecisionModal } from '@/features/budgets/ClientDecision'
 import { isReceptionOpen, receptionVehicleLabel } from '@/features/receptions/api'
 import { BudgetWorkOrder } from '@/features/work-orders/BudgetWorkOrder'
 import { formatDate, formatDateTime, formatDecimal, formatMoney } from '@/lib/format'
@@ -87,13 +96,16 @@ function BudgetDetail({ budget }: { budget: Budget }) {
   const receptionOpen = !reception || isReceptionOpen(reception.status.value)
   const draft = budget.status === 'draft' && receptionOpen
 
-  const action = useApiMutation((value: BudgetAction) => budgetsApi.action(budget.id, value), {
-    invalidate: [['budgets'], ['receptions']],
-    onSuccess: (_data, value) => {
-      setConfirming(null)
-      toast.success(ACTIONS.find((item) => item.action === value)?.success ?? 'Presupuesto actualizado.')
+  const action = useApiMutation(
+    ({ value, decision }: { value: BudgetAction; decision?: BudgetDecisionInput }) => budgetsApi.action(budget.id, value, decision),
+    {
+      invalidate: [['budgets'], ['receptions']],
+      onSuccess: (_data, { value }) => {
+        setConfirming(null)
+        toast.success(ACTIONS.find((item) => item.action === value)?.success ?? 'Presupuesto actualizado.')
+      },
     },
-  })
+  )
 
   const downloadPdf = async () => {
     setDownloading(true)
@@ -210,6 +222,9 @@ function BudgetDetail({ budget }: { budget: Budget }) {
           </div>
           <div className="col-12 col-lg-8">
             <BudgetItemsTable budget={budget} editable={draft} />
+            {budget.client_acceptances && budget.client_acceptances.length > 0 && (
+              <ClientAcceptancesCard acceptances={budget.client_acceptances} />
+            )}
             {!receptionOpen && (budget.status === 'draft' || budget.status === 'sent') && (
               <div className="small text-secondary mt-2">La recepción está cerrada: este presupuesto ya no se modifica; solo se puede cancelar.</div>
             )}
@@ -217,7 +232,17 @@ function BudgetDetail({ budget }: { budget: Budget }) {
         </div>
       </PageBody>
 
-      {confirming && (
+      {confirming && (confirming.action === 'approve' || confirming.action === 'reject') && (
+        <ClientDecisionModal
+          budget={budget}
+          decision={confirming.action}
+          isSubmitting={action.isPending}
+          error={action.error}
+          onSubmit={(decision) => action.mutate({ value: confirming.action, decision })}
+          onClose={() => setConfirming(null)}
+        />
+      )}
+      {confirming && confirming.action !== 'approve' && confirming.action !== 'reject' && (
         <ConfirmDialog
           open
           title={`${confirming.label} presupuesto`}
@@ -229,7 +254,7 @@ function BudgetDetail({ budget }: { budget: Budget }) {
           confirmLabel={confirming.label}
           variant={confirming.variant === 'danger' ? 'danger' : confirming.variant === 'warning' ? 'warning' : 'primary'}
           isLoading={action.isPending}
-          onConfirm={() => action.mutate(confirming.action)}
+          onConfirm={() => action.mutate({ value: confirming.action })}
           onClose={() => setConfirming(null)}
         />
       )}

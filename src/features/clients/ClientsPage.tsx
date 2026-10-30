@@ -4,7 +4,7 @@ import { IconPlus } from '@tabler/icons-react'
 import { DataTable, type Column } from '@/components/ui/DataTable'
 import { PageBody, PageHeader } from '@/components/ui/Page'
 import { useAuth } from '@/features/auth/useAuth'
-import { clientName, clientsApi, type ClientSummary } from '@/features/clients/api'
+import { clientsApi, type ClientSummary } from '@/features/clients/api'
 import { ClientFormModal } from '@/features/clients/ClientFormModal'
 import { useCreateParam } from '@/lib/useCreateParam'
 import { useListParams } from '@/lib/useListParams'
@@ -22,7 +22,7 @@ export function ClientsPage() {
   })
 
   const columns: Column<ClientSummary>[] = [
-    { key: 'name', header: 'Cliente', render: (client) => <strong>{clientName(client)}</strong> },
+    { key: 'name', header: 'Cliente', render: (client) => <strong>{client.display_name}</strong> },
     { key: 'document', header: 'RUC / CI', className: 'text-nowrap', render: (client) => client.document_number },
     { key: 'phone', header: 'Teléfono', className: 'text-nowrap', render: (client) => client.phone },
     { key: 'email', header: 'Email', render: (client) => client.email },

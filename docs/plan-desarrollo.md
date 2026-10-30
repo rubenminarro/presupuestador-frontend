@@ -13,7 +13,8 @@ Creado el 2026-10-21. Marcar `[x]` al cerrar cada punto (con lint, build y verif
 | Formularios | Estado de React + `FormField` con errores `422` | Sin librería extra hasta que haga falta |
 | Gráficos (F11) | ApexCharts (`apexcharts` + `react-apexcharts`) vía `components/ui/Chart.tsx`, con carga diferida | Es la que usa Tabler en sus demos; los colores salen de sus variables CSS. ~155 kB gzip en un chunk aparte que solo baja al mostrar un gráfico |
 
-Pendiente de decidir cuando se llegue: runner de tests (Vitest + Testing Library).
+Runner de tests: Vitest + Testing Library, decidido el 2026-10-30 e instalado en FA0 (ver "Adaptación al módulo de
+aseguradoras").
 
 ## Criterios de cierre de cada fase
 
@@ -621,3 +622,61 @@ opcional. Reemplaza el switch "Guardar también en el catálogo" y el título ed
 - [x] Tabla: el código del catálogo antes del título (en lugar del badge "Catálogo").
 - [x] Revisión visual (Chrome headless, modo claro): administrador (guardar sin elegir → error en el campo; elegir,
       guardar y editar) y mecánico (mismo formulario). Sin errores salvo el 422 esperado. Base local resembrada.
+
+## Adaptación al módulo de aseguradoras (2026-10-30, fuera del plan original)
+
+El backend implementó el módulo de aseguradoras (`../synctaller-backend/docs/especificacion-aseguradoras.html`;
+`CLAUDE.md` del backend 6.1, 6.4 y 6.22–6.30): clientes empresa (M1), aseguradoras (M2), siniestros y sus documentos
+(M3–M4), responsable por línea del presupuesto (M5), autorizaciones (M6), excepciones internas y re-aceptación (M7),
+reparto económico (M8), facturas por responsable (M9), notas de crédito externas (P10) y reportes (M11). Además, la
+respuesta del cliente al presupuesto (E5). El frontend estaba al día con el backend del 2026-10-24 (239 rutas); el
+backend tiene 282.
+
+Decisiones del usuario (2026-10-30):
+
+| Tema | Decisión |
+|---|---|
+| Orden | FA0 (compatibilidad) primero y como fase propia: habilita crear empresas en producción. Después FA1 → FA4, cada una en su rama |
+| Siniestros | Ítem propio en el menú (Taller → "Siniestros", con filtros) y tarjeta en el detalle de la recepción, con el alta desde ahí |
+| Reparto (FA3) | Propuesta del backend + edición por concepto (importe y tipo de porción en una tabla), con las validaciones (`checks`) a la vista antes de confirmar |
+| Tests | Vitest + Testing Library, instalado en FA0; cada fase suma tests de sus formularios y tablas delicados |
+
+| Fase | Contenido | Backend |
+|---|---|---|
+| FA0 · Compatibilidad | Clientes persona o empresa, `display_name`, respuesta del cliente al presupuesto, `credited`, `invoices[]`, `by_recipient`, Vitest | M1, E5, P10, M9 (F) |
+| FA1 · Aseguradoras y siniestros | ABM de aseguradoras con contactos y estado; siniestros (listado, alta, edición, cancelación) y documentos privados; tarjeta en la recepción | M2–M4 |
+| FA2 · Presupuesto con aseguradora | Responsable por línea, autorización por línea con IVA declarado y evidencia, re-aceptación, excepciones internas, advertencias en la OT | M5–M7 |
+| FA3 · Reparto y facturación | Pestaña "Reparto" en la OT (generar, editar, checks, confirmar, versiones), facturas por responsable, notas de crédito externas, errores nuevos de la entrega | M8, M9, P10 |
+| FA4 · Reportes | Cuentas por cobrar, reporte de siniestros y resumen del siniestro | M11 |
+
+### FA0 — Compatibilidad (rama `feature/compatibilidad-aseguradoras`)
+
+- [x] Clientes: tipos según `ClientResource` (`kind`, `business_name`, `display_name`, `address`; nombre y apellido
+      nulables); formulario con selector Persona / Empresa (`form-selectgroup`) que muestra los campos del tipo y
+      dirección; `clientInput` arma el cuerpo sin los campos del otro tipo (el backend rechaza nombre y apellido en
+      `null` al editar). `clientName()` se eliminó: listado, buscador, detalle y alta de vehículo usan
+      `display_name`. El detalle muestra tipo y dirección. Las demás pantallas ya usaban `full_name` (el backend lo
+      arma con `display_name`).
+- [x] Presupuesto: aprobar y rechazar abren `ClientDecisionModal` (medio, contacto y notas, opcionales); las demás
+      acciones siguen con confirmación. Tarjeta "Respuestas del cliente" con `client_acceptances` (respuesta, quién y
+      cuándo, medio, notas e importe a cargo del cliente sin IVA).
+- [x] Facturas: estado de cobro `credited` ("Acreditada"); el detalle muestra lo acreditado por notas de crédito y no
+      ofrece registrar pago en una factura acreditada.
+- [x] OT: la tarjeta de facturas lista `invoices[]` (destinatario, saldo y estado de cobro) con `invoice` como respaldo
+      (`workOrderInvoices`). Una OT con `requires_allocation` no ofrece "Facturar" (el backend la rechaza): avisa que se
+      factura por responsable desde el reparto (FA3).
+- [x] Historial del vehículo: `invoices[]` por OT y, si hay facturas a otros, el saldo del dueño y el de los demás
+      (`by_recipient`).
+- [x] `error_code` nuevos (`DOCUMENT_CODE_CONFLICT`, `BUDGET_AMOUNT_OUT_OF_RANGE`, `CLIENT_IN_USE`,
+      `CLIENT_KIND_NOT_EDITABLE`, `CLIENT_LINKED_TO_INSURER`): sin cambios, `ApiError` ya muestra el `message` del
+      backend.
+- [x] Vitest 5.0.5 + Testing Library (jsdom 29.1.1, por la versión de Node), `npm test`; 8 tests: `clientInput`,
+      `ClientFormModal` (cambio de tipo, alta de empresa sin nombre ni apellido, edición) y `workOrderInvoices`.
+- [x] Contrato contrastado con la API real (cliente empresa, `OT-000020` con dos facturas, factura con notas de
+      crédito, `client_acceptances`).
+- [x] Revisión visual (2026-10-30, Chrome headless con `playwright-core`, modo claro, administrador): listado y detalle
+      de una empresa, edición con cambio de tipo, OT con dos facturas, factura con notas de crédito, respuestas del
+      cliente, historial del vehículo, formulario de aprobación (abierto y cancelado) y alta de empresa en móvil sin
+      scroll horizontal. Recepcionista: empresa (detalle y edición), respuestas del cliente, formulario de rechazo
+      (abierto y cancelado), OT con dos facturas (sin costos ni cierre económico, como corresponde a su rol) y factura
+      con notas de crédito. Sin errores de consola ni HTTP; no se guardó nada.

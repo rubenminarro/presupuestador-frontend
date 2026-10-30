@@ -7,7 +7,7 @@ import { DeleteDialog } from '@/components/ui/DeleteDialog'
 import { PageBody, PageHeader } from '@/components/ui/Page'
 import { ErrorState, LoadingState } from '@/components/ui/States'
 import { useAuth } from '@/features/auth/useAuth'
-import { clientName, clientsApi, type Client } from '@/features/clients/api'
+import { clientsApi, type Client } from '@/features/clients/api'
 import { ClientFormModal } from '@/features/clients/ClientFormModal'
 import { ClientNotificationsCard } from '@/features/notifications/ClientNotificationsCard'
 import type { Vehicle } from '@/features/vehicles/api'
@@ -66,7 +66,7 @@ function ClientDetail({ client }: { client: Client }) {
       document_number: client.document_number,
       phone: client.phone,
       email: client.email,
-      full_name: clientName(client),
+      full_name: client.display_name,
     },
   })
 
@@ -74,7 +74,7 @@ function ClientDetail({ client }: { client: Client }) {
     <>
       <PageHeader
         pretitle="Cliente"
-        title={clientName(client)}
+        title={client.display_name}
         actions={
           <>
             <Link to="/clients" className="btn btn-link">
@@ -105,12 +105,16 @@ function ClientDetail({ client }: { client: Client }) {
               </div>
               <div className="card-body">
                 <dl className="row mb-0">
-                  <dt className="col-5">RUC / CI</dt>
+                  <dt className="col-5">Tipo</dt>
+                  <dd className="col-7">{client.kind.label}</dd>
+                  <dt className="col-5">{client.kind.value === 'company' ? 'RUC' : 'RUC / CI'}</dt>
                   <dd className="col-7">{client.document_number}</dd>
                   <dt className="col-5">Teléfono</dt>
                   <dd className="col-7">{client.phone}</dd>
                   <dt className="col-5">Email</dt>
                   <dd className="col-7 text-break">{client.email}</dd>
+                  <dt className="col-5">Dirección</dt>
+                  <dd className="col-7">{client.address ?? '—'}</dd>
                   <dt className="col-5">Avisos</dt>
                   <dd className="col-7">
                     {client.notifications_enabled ? (
@@ -165,7 +169,7 @@ function ClientDetail({ client }: { client: Client }) {
           title="Eliminar cliente"
           message={
             <>
-              ¿Eliminar a <strong>{clientName(client)}</strong>? Su documento y email quedan libres para otro registro.
+              ¿Eliminar a <strong>{client.display_name}</strong>? Su documento y email quedan libres para otro registro.
             </>
           }
           onDelete={() => clientsApi.remove(client.id)}
@@ -178,7 +182,7 @@ function ClientDetail({ client }: { client: Client }) {
       {editingVehicle && (
         <VehicleFormModal
           vehicle={editingVehicle === 'new' ? null : editingVehicle}
-          fixedClient={editingVehicle === 'new' ? { id: client.id, name: clientName(client) } : undefined}
+          fixedClient={editingVehicle === 'new' ? { id: client.id, name: client.display_name } : undefined}
           onClose={() => setEditingVehicle(null)}
         />
       )}
