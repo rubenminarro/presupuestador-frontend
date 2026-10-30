@@ -1,8 +1,14 @@
 import { useState } from 'react'
 import { FormModal } from '@/components/ui/FormModal'
-import { SwitchField, TextareaField, TextField } from '@/components/ui/FormField'
-import { clientsApi, type Client } from '@/features/clients/api'
-import { nullIfEmpty } from '@/lib/forms'
+import { FormField, SwitchField, TextareaField, TextField } from '@/components/ui/FormField'
+import {
+  CLIENT_KIND_LABELS,
+  clientInput,
+  clientsApi,
+  type Client,
+  type ClientFormValues,
+  type ClientKind,
+} from '@/features/clients/api'
 import { useApiMutation } from '@/lib/useApiMutation'
 import { validationErrors } from '@/services/api'
 
@@ -12,28 +18,27 @@ interface ClientFormModalProps {
   onSaved?: (client: Client) => void
 }
 
+const KINDS: ClientKind[] = ['person', 'company']
+
 export function ClientFormModal({ client, onClose, onSaved }: ClientFormModalProps) {
-  const [documentNumber, setDocumentNumber] = useState(client?.document_number ?? '')
-  const [firstName, setFirstName] = useState(client?.first_name ?? '')
-  const [lastName, setLastName] = useState(client?.last_name ?? '')
-  const [email, setEmail] = useState(client?.email ?? '')
-  const [phone, setPhone] = useState(client?.phone ?? '')
-  const [notificationsEnabled, setNotificationsEnabled] = useState(client?.notifications_enabled ?? true)
-  const [notes, setNotes] = useState(client?.notes ?? '')
+  const [values, setValues] = useState<ClientFormValues>({
+    kind: client?.kind.value ?? 'person',
+    document_number: client?.document_number ?? '',
+    first_name: client?.first_name ?? '',
+    last_name: client?.last_name ?? '',
+    business_name: client?.business_name ?? '',
+    email: client?.email ?? '',
+    phone: client?.phone ?? '',
+    address: client?.address ?? '',
+    notifications_enabled: client?.notifications_enabled ?? true,
+    notes: client?.notes ?? '',
+  })
+  const set = <K extends keyof ClientFormValues>(key: K, value: ClientFormValues[K]) =>
+    setValues((current) => ({ ...current, [key]: value }))
 
   const mutation = useApiMutation(
     () => {
-      // Los obligatorios se envían siempre (vacíos, el backend responde 422 en el campo); las notas vacías se borran.
-      const body = {
-        document_number: documentNumber.trim(),
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        // El backend exige el email en minúsculas.
-        email: email.trim().toLowerCase(),
-        phone: phone.trim(),
-        notes: nullIfEmpty(notes),
-        notifications_enabled: notificationsEnabled,
-      }
+      const body = clientInput(values)
       return client ? clientsApi.update(client.id, body) : clientsApi.create(body)
     },
     {
@@ -46,6 +51,7 @@ export function ClientFormModal({ client, onClose, onSaved }: ClientFormModalPro
     },
   )
   const errors = validationErrors(mutation.error)
+  const isCompany = values.kind === 'company'
 
   return (
     <FormModal
@@ -55,38 +61,80 @@ export function ClientFormModal({ client, onClose, onSaved }: ClientFormModalPro
       isSubmitting={mutation.isPending}
       size="lg"
     >
+      <FormField
+        label="Tipo de cliente"
+        error={errors?.kind}
+        hint={
+          client
+            ? 'El tipo solo cambia si el cliente no tiene recepciones ni facturas; al cambiarlo se vacían los datos del tipo anterior.'
+            : undefined
+        }
+      >
+        <div className="form-selectgroup" role="radiogroup" aria-label="Tipo de cliente">
+          {KINDS.map((kind) => (
+            <label key={kind} className="form-selectgroup-item">
+              <input
+                type="radio"
+                name="kind"
+                value={kind}
+                className="form-selectgroup-input"
+                checked={values.kind === kind}
+                onChange={() => set('kind', kind)}
+              />
+              <span className="form-selectgroup-label">{CLIENT_KIND_LABELS[kind]}</span>
+            </label>
+          ))}
+        </div>
+      </FormField>
       <div className="row">
+        {isCompany ? (
+          <div className="col-md-12">
+            <TextField
+              label="Razón social"
+              name="business_name"
+              required
+              autoFocus
+              maxLength={150}
+              value={values.business_name}
+              onChange={(event) => set('business_name', event.target.value)}
+              errors={errors}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="col-md-6">
+              <TextField
+                label="Nombre"
+                name="first_name"
+                required
+                autoFocus
+                maxLength={100}
+                value={values.first_name}
+                onChange={(event) => set('first_name', event.target.value)}
+                errors={errors}
+              />
+            </div>
+            <div className="col-md-6">
+              <TextField
+                label="Apellido"
+                name="last_name"
+                required
+                maxLength={100}
+                value={values.last_name}
+                onChange={(event) => set('last_name', event.target.value)}
+                errors={errors}
+              />
+            </div>
+          </>
+        )}
         <div className="col-md-6">
           <TextField
-            label="Nombre"
-            name="first_name"
-            required
-            autoFocus
-            maxLength={100}
-            value={firstName}
-            onChange={(event) => setFirstName(event.target.value)}
-            errors={errors}
-          />
-        </div>
-        <div className="col-md-6">
-          <TextField
-            label="Apellido"
-            name="last_name"
-            required
-            maxLength={100}
-            value={lastName}
-            onChange={(event) => setLastName(event.target.value)}
-            errors={errors}
-          />
-        </div>
-        <div className="col-md-6">
-          <TextField
-            label="RUC / CI"
+            label={isCompany ? 'RUC' : 'RUC / CI'}
             name="document_number"
             required
             maxLength={20}
-            value={documentNumber}
-            onChange={(event) => setDocumentNumber(event.target.value)}
+            value={values.document_number}
+            onChange={(event) => set('document_number', event.target.value)}
             errors={errors}
             hint="Letras, números y guiones."
           />
@@ -97,21 +145,31 @@ export function ClientFormModal({ client, onClose, onSaved }: ClientFormModalPro
             name="phone"
             type="tel"
             required
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
+            value={values.phone}
+            onChange={(event) => set('phone', event.target.value)}
             errors={errors}
             hint="8 a 15 dígitos, opcionalmente con + al inicio."
           />
         </div>
-        <div className="col-md-12">
+        <div className="col-md-6">
           <TextField
             label="Email"
             name="email"
             type="email"
             required
             maxLength={50}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            value={values.email}
+            onChange={(event) => set('email', event.target.value)}
+            errors={errors}
+          />
+        </div>
+        <div className="col-md-6">
+          <TextField
+            label="Dirección"
+            name="address"
+            maxLength={255}
+            value={values.address}
+            onChange={(event) => set('address', event.target.value)}
             errors={errors}
           />
         </div>
@@ -119,8 +177,8 @@ export function ClientFormModal({ client, onClose, onSaved }: ClientFormModalPro
       <SwitchField
         label="Enviar avisos por email (presupuestos, vehículo listo, vencimientos)"
         name="notifications_enabled"
-        checked={notificationsEnabled}
-        onChange={setNotificationsEnabled}
+        checked={values.notifications_enabled}
+        onChange={(checked) => set('notifications_enabled', checked)}
         errors={errors}
       />
       <TextareaField
@@ -128,8 +186,8 @@ export function ClientFormModal({ client, onClose, onSaved }: ClientFormModalPro
         name="notes"
         rows={2}
         maxLength={1000}
-        value={notes}
-        onChange={(event) => setNotes(event.target.value)}
+        value={values.notes}
+        onChange={(event) => set('notes', event.target.value)}
         errors={errors}
       />
     </FormModal>

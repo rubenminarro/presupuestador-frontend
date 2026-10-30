@@ -5,7 +5,8 @@ import type { ListParams } from '@/types/api'
 
 export type InvoiceStatus = 'draft' | 'issued' | 'cancelled'
 export type InvoiceCondition = 'cash' | 'credit'
-export type InvoicePaymentStatus = 'unpaid' | 'partial' | 'paid'
+/** `credited`: saldada solo con notas de crédito registradas, sin pagos (P10). */
+export type InvoicePaymentStatus = 'unpaid' | 'partial' | 'paid' | 'credited'
 export type TaxRate = 0 | 5 | 10
 
 /** Línea de la factura: precios con IVA incluido, en guaraníes; `base_unit_price` es el precio sin IVA de la OT. */
@@ -67,7 +68,8 @@ export interface Invoice {
     discount: string
     total: string
   }
-  payment_summary: { paid_total: string; balance: string; status: InvoicePaymentStatus | null }
+  /** El saldo descuenta pagos y notas de crédito (`credited_total`, P10). */
+  payment_summary: { paid_total: string; credited_total: string; balance: string; status: InvoicePaymentStatus | null }
   /** Solo en `GET /invoices/{id}`. */
   payments?: Payment[]
   issued_at: string | null
@@ -105,6 +107,7 @@ export const INVOICE_PAYMENT_STATUS: StatusMap = {
   unpaid: { label: 'Pendiente', color: 'yellow' },
   partial: { label: 'Pago parcial', color: 'orange' },
   paid: { label: 'Pagada', color: 'green' },
+  credited: { label: 'Acreditada', color: 'teal' },
 }
 
 export const INVOICE_CONDITIONS: Record<InvoiceCondition, string> = {

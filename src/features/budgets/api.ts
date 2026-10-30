@@ -1,5 +1,6 @@
 import type { StatusMap } from '@/components/ui/StatusBadge'
 import type { ReceptionSummary } from '@/features/receptions/api'
+import type { ClientDecisionChannel } from '@/features/work-orders/api'
 import { deleteData, downloadFile, getData, getPage, patchData, postData } from '@/services/api'
 import type { ListParams } from '@/types/api'
 
@@ -41,8 +42,32 @@ export interface Budget {
   created_by: number
   creator?: { id: number; name: string; first_name: string; last_name: string }
   items?: BudgetItem[]
+  /** Respuestas del cliente en orden (solo en el detalle). Los presupuestos anteriores a E5 no tienen. */
+  client_acceptances?: BudgetClientAcceptance[]
   created_at: string
   updated_at: string
+}
+
+/** Tipo de respuesta del cliente (`ClientAcceptanceKind`). */
+export type ClientAcceptanceKind = 'approval' | 'rejection' | 're_acceptance'
+
+/** `BudgetClientAcceptanceResource`: inmutable; `owner_amount` es el importe sin IVA a cargo del cliente. */
+export interface BudgetClientAcceptance {
+  id: number
+  kind: { value: ClientAcceptanceKind; label: string }
+  decided_at: string
+  decided_by: { id: number; name: string } | null
+  channel: { value: ClientDecisionChannel; label: string } | null
+  contact: string | null
+  notes: string | null
+  owner_amount: string
+}
+
+/** Respuesta del cliente al aprobar o rechazar: todo opcional (sin datos se registra igual quién y cuándo). */
+export interface BudgetDecisionInput {
+  channel: ClientDecisionChannel | null
+  contact: string | null
+  notes: string | null
 }
 
 export interface BudgetItemInput {
@@ -80,7 +105,8 @@ export const budgetsApi = {
   create: (receptionId: number, notes: string | null) => postData<Budget>('/budgets', { reception_id: receptionId, notes }),
   update: (id: number, notes: string | null) => patchData<Budget>(`/budgets/${id}`, { notes }),
   remove: (id: number) => deleteData(`/budgets/${id}`),
-  action: (id: number, action: BudgetAction) => postData<Budget>(`/budgets/${id}/${action}`),
+  action: (id: number, action: BudgetAction, decision?: BudgetDecisionInput) =>
+    postData<Budget>(`/budgets/${id}/${action}`, decision),
   pdf: (budget: Pick<Budget, 'id' | 'code'>) => downloadFile(`/budgets/${budget.id}/pdf`, `presupuesto-${budget.code}.pdf`),
   createItem: (id: number, body: BudgetItemInput) => postData<BudgetItem>(`/budgets/${id}/items`, body),
   updateItem: (id: number, itemId: number, body: BudgetItemInput) => patchData<BudgetItem>(`/budgets/${id}/items/${itemId}`, body),
