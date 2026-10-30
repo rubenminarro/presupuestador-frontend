@@ -9,6 +9,8 @@ import { BrandsPage } from '@/features/brands/BrandsPage'
 import { BudgetDetailPage } from '@/features/budgets/BudgetDetailPage'
 import { BudgetsPage } from '@/features/budgets/BudgetsPage'
 import { ChecklistsPage } from '@/features/checklists/ChecklistsPage'
+import { ClaimDetailPage } from '@/features/claims/ClaimDetailPage'
+import { ClaimsPage } from '@/features/claims/ClaimsPage'
 import { ClientDetailPage } from '@/features/clients/ClientDetailPage'
 import { ClientsPage } from '@/features/clients/ClientsPage'
 import { CommissionsPage } from '@/features/commissions/CommissionsPage'
@@ -17,6 +19,8 @@ import { DeliveryDetailPage } from '@/features/deliveries/DeliveryDetailPage'
 import { DiagnosticItemTemplatesPage } from '@/features/diagnostic-item-templates/DiagnosticItemTemplatesPage'
 import { DiagnosticDetailPage } from '@/features/diagnostics/DiagnosticDetailPage'
 import { DiagnosticsPage } from '@/features/diagnostics/DiagnosticsPage'
+import { InsurerDetailPage } from '@/features/insurers/InsurerDetailPage'
+import { InsurersPage } from '@/features/insurers/InsurersPage'
 import { InventoryPage } from '@/features/inventory/InventoryPage'
 import { InvoiceStampsPage } from '@/features/invoice-stamps/InvoiceStampsPage'
 import { InvoiceDetailPage } from '@/features/invoices/InvoiceDetailPage'
@@ -81,6 +85,10 @@ const moduleRoutes: RouteObject[] = [
   guarded('supplier-payments/summary', 'supplier-payments.summary', <SupplierPaymentsSummaryPage />),
   guarded('accounts-payable', 'accounts-payable.view', <AccountsPayablePage />),
   guarded('clients', 'clients.index', <ClientsPage />),
+  guarded('insurers', 'insurers.index', <InsurersPage />),
+  guarded('insurers/:id', 'insurers.show', <InsurerDetailPage />),
+  guarded('claims', 'claims.index', <ClaimsPage />),
+  guarded('claims/:id', 'claims.show', <ClaimDetailPage />),
   guarded('client-notifications', 'client-notifications.index', <ClientNotificationsPage />),
   // Bandeja interna: sin permiso, cada usuario ve solo sus avisos.
   { path: 'notifications', element: <NotificationsPage /> },

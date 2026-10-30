@@ -680,3 +680,32 @@ Decisiones del usuario (2026-10-30):
       scroll horizontal. Recepcionista: empresa (detalle y edición), respuestas del cliente, formulario de rechazo
       (abierto y cancelado), OT con dos facturas (sin costos ni cierre económico, como corresponde a su rol) y factura
       con notas de crédito. Sin errores de consola ni HTTP; no se guardó nada.
+
+### FA1 — Aseguradoras y siniestros (rama `feature/aseguradoras-siniestros`)
+
+Decisiones del usuario (2026-10-30): el alta de aseguradora ofrece cliente nuevo o existente (selector); para buscar
+solo empresas se agregó `GET clients?kind=company` en el backend (rama `feature/filtro-tipo-cliente`, handoff 2.72); el
+siniestro se registra desde la recepción (el listado es de consulta).
+
+- [x] Servicios: `deleteData` acepta body (motivo de una baja) y `postWithMeta` devuelve `meta` (avisos del alta).
+      `ClientPicker` acepta `kind`.
+- [x] Aseguradoras (`/insurers`, menú Clientes): listado con búsqueda y filtro de estado; alta con cliente nuevo
+      (razón social, RUC, teléfono, email y dirección; errores en `client.*`) o existente (buscador de empresas) y
+      `meta.warnings` como avisos; detalle con datos del cliente (enlace a su ficha, donde se editan), plazo, notas,
+      activar / desactivar, edición (plazo y notas) y baja (`INSURER_IN_USE` sugiere desactivar). Contactos: alta,
+      edición y baja, rol y principal (único).
+- [x] Siniestros (`/claims`, menú Taller): listado con búsqueda y filtros de aseguradora y estado; detalle con
+      siniestro, recepción y vehículo, asegurado, perito, cobertura (deducible desconocido o mayor a 0: aviso de
+      bloqueo), edición y cancelación con motivo (solo abierto y con la recepción abierta).
+- [x] Documentos del siniestro: subir (PDF, JPG, PNG o WEBP hasta 10 MB, con tipo y notas; el backend valida el
+      contenido), listar, descargar (`downloadFile`) y dar de baja con motivo (administrador; no la evidencia de una
+      autorización).
+- [x] Recepción: tarjeta del siniestro vigente (con `claims.show`) o "Registrar siniestro" (recepción abierta y
+      `claims.store`); el formulario de alta elige una aseguradora activa (`SearchPicker`) y el tipo.
+- [x] Tests (15 en total): `insurerInput` (cliente nuevo o existente), `NewInsurerModal` (cambio de modo y alta),
+      `newClaimInput` / `claimUpdateInput` (deducible vacío = desconocido; la edición no manda recepción, aseguradora,
+      tipo ni asegurado vacío) y `claimDocumentFormData`.
+- [x] Revisión visual (2026-10-30, Chrome headless): recepcionista (listado y detalle de aseguradora, alta con cliente
+      nuevo y existente, contacto, listado y detalle de siniestro, subida, edición, alta desde la recepción con "De
+      tercero", móvil sin scroll horizontal), cajero (consulta y descarga, sin botones de administración) y mecánico
+      (sin menú del módulo ni tarjeta del siniestro). Sin errores de consola ni HTTP; no se guardó nada.

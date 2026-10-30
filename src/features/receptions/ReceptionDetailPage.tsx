@@ -11,6 +11,7 @@ import { ErrorState, LoadingState } from '@/components/ui/States'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { useAuth } from '@/features/auth/useAuth'
 import { ReceptionBudgets } from '@/features/budgets/ReceptionBudgets'
+import { ReceptionClaim } from '@/features/claims/ReceptionClaim'
 import { ReceptionDelivery } from '@/features/deliveries/ReceptionDelivery'
 import { DIAGNOSTIC_STATUS, diagnosticsApi, PRIORITY, type DiagnosticSummary } from '@/features/diagnostics/api'
 import { DiagnosticFormModal } from '@/features/diagnostics/DiagnosticFormModal'
@@ -99,6 +100,7 @@ function ReceptionDetail({ reception }: { reception: Reception }) {
         <div className="row row-cards">
           <div className="col-12 col-lg-5">
             <ReceptionDataCard reception={reception} />
+            <ReceptionClaim reception={reception} />
           </div>
           <div className="col-12 col-lg-7">
             {reception.check_list && can('reception-check-lists.show') ? (
