@@ -783,3 +783,31 @@ admite dos a la vez), que se muestra arriba.
       anulados por los Services, fuera de FA3), confirma la v3 (absorción consumida) y genera las facturas de la
       aseguradora (1.650.000, crédito) y del dueño (44.000, contado). Recepcionista, solo lectura; mecánico, sin la
       sección. Datos verificados en la base. Sin errores de consola ni HTTP salvo el 409 esperado.
+
+### FA4 — Reportes (rama `feature/reportes-aseguradoras`)
+
+Decisiones del usuario (2026-10-30): el reporte de siniestros agrupa sus 17 importes por etapa (cifras apiladas por
+celda; el CSV y el PDF traen cada uno en su columna); las facturas de un cliente de cuentas por cobrar se ven debajo,
+filtrando el reporte; se suman los datos que el backend ya informaba (notas de crédito y neto en Ventas, tipo de
+destinatario en Clientes). Sin cambios en el backend.
+
+Ajuste respecto del diseño: en Clientes la marca va solo en los saldos de una aseguradora (los demás son clientes).
+
+- [x] Reportes: los filtros pasan a `ReportFilters` en la pantalla y `reportParams(report, filters)` arma los de cada
+      reporte (sin vacíos ni filtros de otros reportes); CSV y PDF exportan con ellos. Menú y ruta suman
+      `reports.receivables` y `reports.claims`.
+- [x] "Cuentas por cobrar" (`reports.receivables`): a hoy, sin período; destinatario Todos / Aseguradoras / Clientes;
+      saldo, vencido, no vencido y vencido por días de atraso; saldo por destinatario; tabla por cliente (tipo,
+      documento, facturas, vence desde, máximo atraso, vencido, saldo). Clic en un cliente: sus facturas (número, OT y
+      siniestro, vencimiento, atraso, total, cobrado, acreditado, saldo) y "Todos los clientes".
+- [x] "Siniestros" (`reports.claims`): período por fecha del siniestro, aseguradora y estado; totales; una fila por
+      siniestro (enlace al detalle) con presupuesto, reparto, aseguradora y clientes apilados, y alertas.
+- [x] Detalle del siniestro: "Resumen económico" (`GET claims/{id}/summary`) con alertas, presupuestos y reparto sin
+      IVA, facturación con IVA por destinatario y sus facturas; cada bloque solo si llega (permiso).
+- [x] Ventas: notas de crédito del período y neto, si hay notas. Clientes: marca "Aseguradora" en los saldos por cobrar.
+- [x] Tests (34 en total): `reportParams` y el resumen del siniestro según los bloques que llegan.
+- [x] Revisión de solo lectura (2026-10-30) sobre la base de desarrollo: cajero en cuentas por cobrar (todos,
+      aseguradoras, un cliente, CSV), siniestros (período y estado, PDF), ventas con notas de crédito, clientes y el
+      resumen de SIN-000002; jefe de taller sin facturación; recepcionista con presupuestos, reparto y facturación (sus
+      permisos) y sin las pestañas nuevas. Sin errores de consola ni HTTP. Al elegir un cliente, mientras llegaban sus
+      facturas se veía "sin facturas": ahora muestra la carga.

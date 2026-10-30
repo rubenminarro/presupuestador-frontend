@@ -71,7 +71,16 @@ function Clients({ report }: { report: ClientsReport }) {
             rowKey={(row) => row.client_id}
             emptyMessage="No hay facturas con saldo pendiente."
             columns={[
-              { key: 'client', header: 'Cliente', render: clientLink },
+              {
+                key: 'client',
+                header: 'Cliente',
+                render: (row) => (
+                  <>
+                    {clientLink(row)}
+                    {row.recipient_type === 'insurer' && <span className="badge bg-azure-lt ms-2">{row.recipient_label}</span>}
+                  </>
+                ),
+              },
               { key: 'phone', header: 'Teléfono', render: (row) => row.phone ?? '—' },
               { key: 'count', header: 'Facturas', className: 'text-end', render: (row) => row.invoices_count },
               { key: 'oldest', header: 'Vencimiento más antiguo', render: (row) => formatDate(row.oldest_due_date) },

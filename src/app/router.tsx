@@ -108,7 +108,16 @@ const moduleRoutes: RouteObject[] = [
   guarded('commissions', 'mechanic-commissions.index', <CommissionsPage />),
   guarded(
     'reports',
-    ['reports.sales', 'reports.budgets', 'reports.profitability', 'reports.productivity', 'reports.inventory', 'reports.clients'],
+    [
+      'reports.sales',
+      'reports.budgets',
+      'reports.profitability',
+      'reports.productivity',
+      'reports.inventory',
+      'reports.clients',
+      'reports.receivables',
+      'reports.claims',
+    ],
     <ReportsPage />,
   ),
   guarded('services', 'services.index', <ServicesPage />),
