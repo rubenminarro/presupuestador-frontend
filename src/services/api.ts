@@ -147,6 +147,12 @@ export async function patchData<T>(url: string, body?: unknown): Promise<T> {
   return data.data
 }
 
+/** PATCH cuyo `meta` trae algo que la pantalla muestra (p. ej. `meta.warnings` al cambiar la tasa de IVA). */
+export async function patchWithMeta<T, M>(url: string, body?: unknown): Promise<{ data: T; meta: M | null }> {
+  const { data } = await api.patch<ApiEnvelope<T, M>>(url, body)
+  return { data: data.data, meta: data.meta ?? null }
+}
+
 /** `body` para las bajas que piden motivo (p. ej. un documento de siniestro). */
 export async function deleteData<T = null>(url: string, body?: unknown): Promise<T> {
   const { data } = await api.delete<ApiEnvelope<T>>(url, body === undefined ? undefined : { data: body })

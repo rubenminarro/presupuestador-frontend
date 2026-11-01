@@ -13,10 +13,11 @@ import {
   type Branding,
 } from '@/features/system-settings/api'
 import { useBranding } from '@/features/system-settings/useBranding'
+import { WorkshopSettingsCard } from '@/features/system-settings/WorkshopSettingsCard'
 import { useApiMutation } from '@/lib/useApiMutation'
 import { validationErrors } from '@/services/api'
 
-/** Configuración general del sistema (solo administrador): el logo y el ícono de la pestaña. */
+/** Configuración general del sistema (solo administrador): los datos del taller, el logo y el ícono de la pestaña. */
 export function SystemSettingsPage() {
   const branding = useBranding()
 
@@ -25,6 +26,9 @@ export function SystemSettingsPage() {
       <PageHeader pretitle="Administración" title="Configuración del sistema" />
       <PageBody>
         <div className="row row-cards">
+          <div className="col-lg-8">
+            <WorkshopSettingsCard />
+          </div>
           <div className="col-lg-8">
             <ImageCard
               title="Logo del sistema"

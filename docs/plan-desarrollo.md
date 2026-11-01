@@ -845,3 +845,17 @@ con aviso; la columna del deducible en el reparto aparece solo cuando se usa.
       Encontró que el resumen del siniestro seguía diciendo "el deducible no se factura": corregido en el backend
       (`fix/deducible-fiscal-pendiente`). Con el interruptor apagado (base de desarrollo, solo lectura) no aparece la
       modalidad. Sin errores de consola ni HTTP.
+
+## T1 — Datos del taller (rama `feature/configuracion-taller`, 2026-11-01)
+
+El backend pasó los datos del taller a la base (T1, `CLAUDE.md` 6.32 del backend). Tarjeta "Datos del taller" en
+Configuración del sistema, solo para el administrador.
+
+- [x] Comprobantes (`company.*`), tasa de IVA, remitente y recordatorios (`GET|PATCH system-settings/workshop`).
+- [x] Se envían solo los campos cambiados (`changedWorkshopSettings`): mandar todo fijaría en la base los valores del
+      `.env`. Un campo vaciado va en `null` y vuelve al valor por defecto.
+- [x] Aviso a la vista al cambiar la tasa de IVA, antes de guardar, además de `meta.warnings` al guardar.
+- [x] Tests (42 en total): cuerpo del `PATCH`, guardar sin cambios deshabilitado y aviso de la tasa.
+- [x] El diálogo "Facturar OT" ya no afirma "IVA 10%": la tasa por defecto es configurable.
+- [x] Revisión en Chrome (2026-11-01) sobre una copia temporal de la base: validación, aviso, guardado, recarga, vaciar un
+      campo, PDF, factura al 5 % y 403 de la recepcionista, sin errores de consola.
