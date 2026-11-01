@@ -859,3 +859,10 @@ Configuración del sistema, solo para el administrador.
 - [x] El diálogo "Facturar OT" ya no afirma "IVA 10%": la tasa por defecto es configurable.
 - [x] Revisión en Chrome (2026-11-01) sobre una copia temporal de la base: validación, aviso, guardado, recarga, vaciar un
       campo, PDF, factura al 5 % y 403 de la recepcionista, sin errores de consola.
+
+## Zona horaria (rama `fix/zona-horaria`, 2026-11-01)
+
+El backend pasó a hora de Paraguay (handoff 2.79). La API sigue enviando UTC, así que el frontend no cambia.
+
+- [x] `AuthorizationFormModal` usa `todayInput()`: con `toISOString()` proponía mañana a la noche, y el backend lo rechazaría
+      como fecha futura. Test con la hora simulada (43 en total).

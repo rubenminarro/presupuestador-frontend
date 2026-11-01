@@ -53,6 +53,16 @@ describe('AuthorizationFormModal', () => {
     expect(screen.getByLabelText('Perito')).toHaveValue('Ramón Giménez')
   })
 
+  it('la fecha propuesta es la del taller, también a la noche', () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 10, 2, 22, 0))
+
+    renderModal()
+
+    expect(screen.getByLabelText('Fecha')).toHaveValue('2026-11-02')
+    vi.useRealTimers()
+  })
+
   it('una parcial pide el importe y se envía con la unidad elegida', async () => {
     const user = userEvent.setup()
     const create = vi.spyOn(insurerAuthorizationsApi, 'create').mockResolvedValue({ id: 5 } as InsurerAuthorization)
