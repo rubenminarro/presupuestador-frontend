@@ -88,8 +88,8 @@ export function WorkOrderInvoice({ workOrder }: { workOrder: WorkOrder }) {
         title="Facturar OT"
         message={
           <>
-            ¿Generar la factura de <strong>{workOrder.code}</strong>? Se crea en borrador, al contado y con IVA 10%, con los datos
-            del cliente; antes de emitirla se pueden ajustar.
+            ¿Generar la factura de <strong>{workOrder.code}</strong>? Se crea en borrador, al contado y con la tasa de IVA por
+            defecto, con los datos del cliente; antes de emitirla se pueden ajustar.
           </>
         }
         confirmLabel="Generar borrador"
