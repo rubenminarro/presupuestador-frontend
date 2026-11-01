@@ -123,6 +123,8 @@ versión exacta. Desde `react-apexcharts` 1.8.0 y `apexcharts` 5.1.0 ya no son M
 de USD 2 millones de ingresos anuales; la comercial y la OEM son pagas, y la OEM puede aplicar a un SaaS con gráficos
 interactivos). Revisar la licencia antes del primer taller comercial.
 
+Para la fecha de hoy, `todayInput()` (`src/lib/format.ts`), nunca `toISOString()`: es UTC y a la noche da el día siguiente.
+
 Después de un `git pull`, instalar con `npm ci`, no con `npm install`: así el lock queda igual en todos los equipos.
 
 ### Reglas de interfaz

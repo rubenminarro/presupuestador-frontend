@@ -21,7 +21,7 @@ import {
   type AuthorizationRow,
 } from '@/features/insurer-authorizations/api'
 import { CLIENT_DECISION_CHANNELS, type ClientDecisionChannel } from '@/features/work-orders/api'
-import { formatDecimal, formatMoney } from '@/lib/format'
+import { formatDecimal, formatMoney, todayInput } from '@/lib/format'
 import { toast } from '@/lib/toast'
 import { useApiMutation } from '@/lib/useApiMutation'
 import { isApiError, validationErrors } from '@/services/api'
@@ -35,7 +35,7 @@ export function AuthorizationFormModal({ budget, claim, onClose }: { budget: Bud
   const insurerItems = (budget.items ?? []).filter((item) => item.responsibility.value === 'insurer')
   const [header, setHeader] = useState<AuthorizationHeader>({
     amounts_include_tax: null,
-    decided_at: new Date().toISOString().slice(0, 10),
+    decided_at: todayInput(),
     channel: '',
     authorization_number: '',
     adjuster_name: claim.adjuster.name ?? '',
