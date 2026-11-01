@@ -118,6 +118,13 @@ formularios delicados (p. ej. `clientInput`, `ClientFormModal`); las llamadas a 
 el servicio (`clientsApi.create`), sin red. jsdom va fijado en 29.1.1: la 30 pide Node 22.22 o más (el equipo usa
 22.13). Versiones de dependencias nuevas: exactas y con al menos dos semanas de publicadas.
 
+**Licencia de los gráficos** (decisión del usuario del 2026-11-01): `apexcharts` 8.7.0 y `react-apexcharts` 2.2.0, en
+versión exacta. Desde `react-apexcharts` 1.8.0 y `apexcharts` 5.1.0 ya no son MIT: la licencia es dual (gratis por debajo
+de USD 2 millones de ingresos anuales; la comercial y la OEM son pagas, y la OEM puede aplicar a un SaaS con gráficos
+interactivos). Revisar la licencia antes del primer taller comercial.
+
+Después de un `git pull`, instalar con `npm ci`, no con `npm install`: así el lock queda igual en todos los equipos.
+
 ### Reglas de interfaz
 
 1. **Tabler UI** es el sistema visual principal ([docs](https://docs.tabler.io/ui)). CSS propio solo cuando sea
