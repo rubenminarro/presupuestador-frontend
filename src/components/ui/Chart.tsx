@@ -2,13 +2,8 @@ import { lazy, Suspense, useMemo } from 'react'
 import type { ApexOptions } from 'apexcharts'
 import { LoadingState } from '@/components/ui/States'
 
-// ApexCharts pesa ~150 kB gzip: se carga recién cuando una pantalla muestra un gráfico.
-// react-apexcharts es CommonJS: en desarrollo el componente llega envuelto en otro `default`.
-const ApexChart = lazy(async () => {
-  const module = await import('react-apexcharts')
-  const component = module.default as typeof module.default | { default: typeof module.default }
-  return { default: 'default' in component ? component.default : component }
-})
+// ApexCharts pesa ~280 kB gzip: se carga recién cuando una pantalla muestra un gráfico.
+const ApexChart = lazy(() => import('react-apexcharts'))
 
 const TABLER_COLORS = ['primary', 'green', 'orange', 'purple', 'cyan', 'red', 'yellow', 'pink']
 
